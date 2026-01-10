@@ -1,12 +1,12 @@
 #include "funkit/base/FunkyLogSystem.h"
 
+#include <algorithm>
 #include <filesystem>
 #include <fstream>
 #include <future>
 #include <iostream>
 #include <string>
 #include <thread>
-#include <algorithm> 
 
 #include "funkit/base/compression.h"
 

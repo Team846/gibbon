@@ -243,8 +243,7 @@ swerve::DrivetrainConfigs DrivetrainConstructor::getDrivetrainConfigs() {
     camera_y_offsets.emplace_back(offset.to<double>());
   }
 
-  swerve::DrivetrainConfigs configs{
-      .navX_connection_mode = user_values.navx_connection_mode,
+  swerve::DrivetrainConfigs configs{.pigeon_CAN_id = user_values.pigeon_CAN_id,
       .module_common_config = module_common_config,
       .module_unique_configs = {FR_config, FL_config, BL_config, BR_config},
       .wheelbase_horizontal_dim = robot_constants::base::wheelbase_x,
