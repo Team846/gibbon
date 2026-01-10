@@ -11,7 +11,7 @@ on:
 jobs:
   compilation_check:
     runs-on: ubuntu-22.04
-    container: wpilib/roborio-cross-ubuntu:2025-22.04
+    container: wpilib/roborio-cross-ubuntu:2026-22.04-py314
 
 
     steps:

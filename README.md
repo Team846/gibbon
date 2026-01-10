@@ -1,8 +1,8 @@
-# 2025 Codebase for FRC Team 846
+# 2026 Codebase for FRC Team 846
 
-[![Compilation Check](https://github.com/Team846/pongo/actions/workflows/compilation_check.yaml/badge.svg)](https://github.com/Team846/pongo/actions/workflows/compilation_check.yaml)
-[![Formatting Check](https://github.com/Team846/pongo/actions/workflows/formatting_check.yaml/badge.svg)](https://github.com/Team846/pongo/actions/workflows/formatting_check.yaml)
-[![CppCheck](https://github.com/Team846/pongo/actions/workflows/cpp_check.yaml/badge.svg)](https://github.com/Team846/pongo/actions/workflows/cpp_check.yaml)
+[![Compilation Check](https://github.com/Team846/Gibbon/actions/workflows/compilation_check.yaml/badge.svg)](https://github.com/Team846/Gibbon/actions/workflows/compilation_check.yaml)
+[![Formatting Check](https://github.com/Team846/Gibbon/actions/workflows/formatting_check.yaml/badge.svg)](https://github.com/Team846/Gibbon/actions/workflows/formatting_check.yaml)
+[![CppCheck](https://github.com/Team846/Gibbon/actions/workflows/cpp_check.yaml/badge.svg)](https://github.com/Team846/Gibbon/actions/workflows/cpp_check.yaml)
 
 ## Overview
 

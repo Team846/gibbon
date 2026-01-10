@@ -30,7 +30,7 @@ struct ModulePorts {
 };
 
 struct UserSettableValues {
-  studica::AHRS::NavXComType navx_connection_mode;
+  int pigeon_CAN_id;
   pdcsu::units::inch_t wheel_diameter;
   double drive_gear_ratio;
   swerve::steer_conv_unit steer_reduction;
@@ -60,8 +60,7 @@ struct UserSettableValues {
 // User Settable Values. Also set weight and dims in robot_constants.h
 //--------------------------------------------------------
 UserSettableValues GetUserSettableValues() {
-  return UserSettableValues{
-      .navx_connection_mode = studica::AHRS::NavXComType::kMXP_SPI,
+  return UserSettableValues{.pigeon_CAN_id = ports::drivetrain_::kPIGEON_CANID,
       .wheel_diameter = inch_t{4},
       .drive_gear_ratio = 6.75,
       .steer_reduction = scalar_t{(7_tr / 150_tr).to<double>()},

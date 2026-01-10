@@ -5,6 +5,7 @@
 #include <array>
 #include <memory>
 
+#include "ctre/phoenix6/Pigeon2.hpp"
 #include "funkit/robot/GenericSubsystem.h"
 #include "funkit/robot/calculators/AprilTagCalculator.h"
 #include "funkit/robot/swerve/control/swerve_ol_calculator.h"
@@ -14,7 +15,6 @@
 #include "funkit/robot/swerve/path_logger.h"
 #include "funkit/robot/swerve/swerve_module.h"
 #include "pdcsu_units.h"
-#include "studica/AHRS.h"
 #include "util/math/uvec.h"
 
 namespace funkit::robot::swerve {
@@ -31,7 +31,7 @@ Contains all configs related to the specific drivetrain in use.
 using Vector2D = pdcsu::util::math::uVec<pdcsu::units::inch_t, 2>;
 
 struct DrivetrainConfigs {
-  studica::AHRS::NavXComType navX_connection_mode;
+  int pigeon_CAN_id;
 
   SwerveModuleCommonConfig module_common_config;
   std::array<SwerveModuleUniqueConfig, 4> module_unique_configs;
@@ -143,7 +143,7 @@ private:
   DrivetrainConfigs configs_;
   std::array<std::unique_ptr<SwerveModuleSubsystem>, 4> modules_;
 
-  studica::AHRS navX_;
+  ctre::phoenix6::hardware::Pigeon2 pigeon_;
 
   funkit::robot::swerve::odometry::SwerveOdometryCalculator odometry_;
   funkit::robot::swerve::control::SwerveOpenLoopCalculator ol_calculator_;
