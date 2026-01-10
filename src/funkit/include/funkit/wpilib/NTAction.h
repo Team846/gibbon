@@ -1,0 +1,21 @@
+#pragma once
+
+#include <wpi/sendable/Sendable.h>
+
+#include <functional>
+
+namespace funkit::wpilib {
+
+// Use with SmartDashboard::PutData to have buttons call functions on the
+// dashboard
+class NTAction : public wpi::Sendable {
+public:
+  NTAction(std::function<void()> callback);
+
+  void InitSendable(wpi::SendableBuilder& builder);
+
+private:
+  std::function<void()> callback_;
+};
+
+}  // namespace funkit::wpilib

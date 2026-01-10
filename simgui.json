@@ -1,0 +1,210 @@
+{
+  "HALProvider": {
+    "Other Devices": {
+      "window": {
+        "visible": false
+      }
+    }
+  },
+  "NTProvider": {
+    "types": {
+      "/FMSInfo": "FMSInfo",
+      "/SmartDashboard/AutoSimField": "Field2d",
+      "/SmartDashboard/GPDField": "Field2d",
+      "/SmartDashboard/MainField": "Field2d",
+      "/SmartDashboard/SendableChooser[0]": "String Chooser",
+      "/SmartDashboard/brake_for_time": "Command",
+      "/SmartDashboard/get_prune_list": "Command",
+      "/SmartDashboard/home_telescope_elevator_climber": "Command",
+      "/SmartDashboard/prune_prefs": "Command",
+      "/SmartDashboard/set_cancoder_offsets": "Command",
+      "/SmartDashboard/start_path_recording": "Command",
+      "/SmartDashboard/stop_path_recording": "Command",
+      "/SmartDashboard/verify_hardware": "Command",
+      "/SmartDashboard/zero_bearing": "Command",
+      "/SmartDashboard/zero_coral_wrist": "Command",
+      "/SmartDashboard/zero_odometry": "Command"
+    },
+    "windows": {
+      "/SmartDashboard/GPDField": {
+        "bottom": 1638,
+        "height": 8.051901817321777,
+        "left": 534,
+        "right": 3466,
+        "top": 291,
+        "width": 17.54825210571289,
+        "window": {
+          "visible": true
+        }
+      }
+    }
+  },
+  "NetworkTables": {
+    "persistent": {
+      "Preferences": {
+        "Robot": {
+          "open": true
+        },
+        "SwerveDrivetrain": {
+          "BR": {
+            "open": true
+          },
+          "open": true,
+          "steer_gains": {
+            "open": true
+          }
+        },
+        "open": true
+      }
+    },
+    "transitory": {
+      "Preferences": {
+        "open": true
+      },
+      "Shuffleboard": {
+        ".metadata": {
+          "open": true
+        },
+        "open": true
+      },
+      "SmartDashboard": {
+        "SwerveDrivetrain": {
+          "FL": {
+            "open": true,
+            "readings": {
+              "open": true
+            },
+            "target": {
+              "open": true
+            }
+          },
+          "FR": {
+            "open": true,
+            "readings": {
+              "open": true
+            }
+          },
+          "open": true,
+          "readings": {
+            "open": true
+          },
+          "target": {
+            "open": true
+          }
+        },
+        "open": true,
+        "verify_hardware": {
+          "open": true
+        },
+        "zero_bearing": {
+          "open": true
+        }
+      }
+    }
+  },
+  "NetworkTables Info": {
+    "Clients": {
+      "open": true
+    },
+    "Connections": {
+      "open": true
+    },
+    "Elastic@1": {
+      "Subscribers": {
+        "open": true
+      },
+      "open": true
+    },
+    "Server": {
+      "Publishers": {
+        "open": true
+      },
+      "Subscribers": {
+        "open": true
+      },
+      "open": true
+    },
+    "visible": true
+  },
+  "Plot": {
+    "Plot <0>": {
+      "plots": [
+        {
+          "axis": [
+            {
+              "autoFit": true
+            }
+          ],
+          "backgroundColor": [
+            0.0,
+            0.0,
+            0.0,
+            0.8500000238418579
+          ],
+          "height": 0,
+          "series": [
+            {
+              "color": [
+                0.2980392277240753,
+                0.44705885648727417,
+                0.6901960968971252,
+                1.0
+              ],
+              "id": "NT:/SmartDashboard/SwerveDrivetrain/FR/readings/steer_motor_pos (deg)"
+            },
+            {
+              "color": [
+                0.8666667342185974,
+                0.5176470875740051,
+                0.32156863808631897,
+                1.0
+              ],
+              "id": "NT:/SmartDashboard/SwerveDrivetrain/FL/readings/steer_motor_pos (deg)"
+            },
+            {
+              "color": [
+                0.3333333432674408,
+                0.658823549747467,
+                0.4078431725502014,
+                1.0
+              ],
+              "id": "NT:/SmartDashboard/SwerveDrivetrain/FL/target/steer_dir (deg)"
+            }
+          ]
+        }
+      ],
+      "window": {
+        "visible": false
+      }
+    },
+    "Plot <1>": {
+      "plots": [
+        {
+          "backgroundColor": [
+            0.0,
+            0.0,
+            0.0,
+            0.8500000238418579
+          ],
+          "height": 332
+        }
+      ],
+      "window": {
+        "visible": false
+      }
+    },
+    "Plot <2>": {
+      "plots": [
+        {
+          "backgroundColor": [
+            0.0,
+            0.0,
+            0.0,
+            0.8500000238418579
+          ],
+          "height": 314
+        }
+      ]
+    }
+  }
+}

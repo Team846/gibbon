@@ -1,0 +1,265 @@
+#include "funkit/robot/GenericRobot.h"
+
+#include <cameraserver/CameraServer.h>
+#include <frc/DSControlWord.h>
+#include <frc/DataLogManager.h>
+#include <frc/RobotController.h>
+#include <frc/livewindow/LiveWindow.h>
+#include <frc2/command/Command.h>
+#include <frc2/command/Commands.h>
+#include <frc2/command/FunctionalCommand.h>
+#include <frc2/command/ParallelRaceGroup.h>
+#include <frc2/command/button/Trigger.h>
+#include <hal/Notifier.h>
+#include <units/time.h>
+
+#include "frc2/command/ParallelDeadlineGroup.h"
+#include "frc2/command/WaitCommand.h"
+#include "funkit/base/Loggable.h"
+#include "funkit/control/MonkeyMaster.h"
+#include "funkit/robot/GenericCommand.h"
+#include "funkit/wpilib/NTAction.h"
+#include "funkit/wpilib/time.h"
+
+namespace funkit::robot {
+frc::SendableChooser<std::string> GenericRobot::auto_chooser_;
+
+GenericRobot::GenericRobot(GenericRobotContainer* container)
+    : funkit::base::Loggable{"Robot"}, generic_robot_container_{container} {
+  next_loop_time_ = funkit::wpilib::CurrentFPGATime();
+
+  int32_t status = 0x00;
+  notifier_ = HAL_InitializeNotifier(&status);
+  FRC_CheckErrorStatus(status, "{}", "InitializeNotifier");
+
+  HAL_SetNotifierName(notifier_, "Robot", &status);
+
+  RegisterPreference("update_tick_1", 100);
+  RegisterPreference("update_tick_2", 201);
+  RegisterPreference("update_reset_tick", 200);
+}
+
+GenericRobot::~GenericRobot() {
+  int32_t status = 0x00;
+  HAL_StopNotifier(notifier_, &status);
+  HAL_CleanNotifier(notifier_);
+}
+
+void GenericRobot::StartCompetition() {
+  // Silence warnings related to missing joystick
+  // (Doesn't do anything when connected to FMS)
+
+  frc::DriverStation::SilenceJoystickConnectionWarning(true);
+
+  // Disable live window
+  frc::LiveWindow::DisableAllTelemetry();
+
+  // Start Data Log Manager
+  frc::DataLogManager::Start();
+  frc::DriverStation::StartDataLog(frc::DataLogManager::GetLog(), false);
+
+  funkit::base::FunkyLogSystem::Start(20000);
+
+  // Setup MonkeyMaster
+  funkit::control::MonkeyMaster::Setup();
+
+  // Add dashboard buttons
+
+  frc::SmartDashboard::PutData("verify_hardware",
+      new funkit::wpilib::NTAction([this] { VerifyHardware(); }));
+
+  frc::SmartDashboard::PutData(
+      "get_prune_list", new funkit::wpilib::NTAction([this] {
+        for (const std::string& x : funkit::base::Loggable::ListKeysToPrune()) {
+          Log("Key {} found in prune list.", x);
+        }
+      }));
+
+  frc::SmartDashboard::PutData("prune_prefs",
+      new funkit::wpilib::NTAction(
+          [this] { funkit::base::Loggable::PrunePreferences(this); }));
+
+  // Setup all subsystems and set initial targets to zero.
+  generic_robot_container_->Setup();
+  generic_robot_container_->ZeroTargets();
+
+  // Verify robot hardware
+  VerifyHardware();
+
+  OnInitialize();
+
+  // Report to driver station that robot is ready
+  Log("\n********** Robot initialized **********\n");
+  HAL_ObserveUserProgramStarting();
+
+  for (;;) {
+    frc::DriverStation::RefreshData();
+    next_loop_time_ += kPeriod;
+
+    // Set new notifier time
+    int32_t status = 0x00;
+    HAL_UpdateNotifierAlarm(notifier_,
+        units::millisecond_t{next_loop_time_.value()}.to<uint64_t>(), &status);
+    FRC_CheckErrorStatus(status, "{}", "UpdateNotifierAlarm");
+
+    // Wait for notifier
+    auto time = HAL_WaitForNotifierAlarm(notifier_, &status);
+    FRC_CheckErrorStatus(status, "{}", "WaitForNotifierAlarm");
+
+    if (time == 0x00 || status != 0x00) { break; }
+
+    // Start loop timing
+    auto loop_start_time = funkit::wpilib::CurrentFPGATime();
+
+    // Get current control mode
+    frc::DSControlWord word{};
+    Mode mode = Mode::kNone;
+    if (word.IsDisabled()) {
+      HAL_ObserveUserProgramDisabled();
+      mode = Mode::kDisabled;
+    } else if (word.IsAutonomous()) {
+      HAL_ObserveUserProgramAutonomous();
+      mode = Mode::kAutonomous;
+    } else if (word.IsTeleop()) {
+      HAL_ObserveUserProgramTeleop();
+      mode = Mode::kTeleop;
+    } else if (word.IsTest()) {
+      HAL_ObserveUserProgramTest();
+      mode = Mode::kTest;
+    }
+
+    // If mode changed
+    if (last_mode_ != mode) {
+      if (mode == Mode::kDisabled) {
+        OnDisable();
+        // Clear command scheduler
+        Log("Clearing command scheduler");
+        frc2::CommandScheduler::GetInstance().CancelAll();
+        frc::EventLoop loop;
+        loop.Clear();
+      } else if (mode == Mode::kAutonomous) {
+        // Get and run selected auto command
+        OnEnable();
+        std::string option_name = auto_chooser_.GetSelected();
+        auto_command_ = autos_[option_name];
+
+        if (auto_command_ != nullptr) {
+          Log("Running auto: {}", option_name);
+
+          auto_command_->Schedule();
+        } else {
+          Error("Auto command [{}] null!", option_name);
+        }
+      } else if (mode == Mode::kTeleop) {
+        // Cancel auto command and setup teleop defaults/triggers
+        OnEnable();
+        if (auto_command_ != nullptr) {
+          Log("Cancelling auto command");
+          auto_command_->Cancel();
+          auto_command_ = nullptr;
+        }
+
+        Log("Setting up teleop default/triggers");
+        InitTeleop();
+      } else if (mode == Mode::kTest) {
+        OnEnable();
+        // Cancel auto command and setup Test defaults/triggers
+        if (auto_command_ != nullptr) {
+          Log("Cancelling auto command");
+          auto_command_->Cancel();
+          auto_command_ = nullptr;
+        }
+
+        Log("Setting up test default/triggers");
+        InitTest();
+      }
+
+      last_mode_ = mode;
+    }
+
+    OnPeriodic();
+
+    // Update subsystem readings
+    generic_robot_container_->UpdateReadings();
+
+    // Tick command scheduler
+    frc2::CommandScheduler::GetInstance().Run();
+
+    // Update subsystem hardware
+    generic_robot_container_->UpdateHardware();
+
+    // Tick MonkeyMaster
+    funkit::control::MonkeyMaster::Tick(mode == Mode::kDisabled);
+
+    // Update dashboards
+    update_tick_counter_ += 1;
+    if (update_tick_counter_ == GetPreferenceValue_int("update_tick_1")) {
+      frc::SmartDashboard::UpdateValues();
+    } else if (update_tick_counter_ ==
+               GetPreferenceValue_int("update_tick_2")) {
+    } else if (update_tick_counter_ >=
+               GetPreferenceValue_int("update_reset_tick")) {
+      update_tick_counter_ = 0;
+    }
+
+    // Update graphs
+    // Graph("time_remaining", frc::DriverStation::GetMatchTime().to<int>());
+    // Graph("mode", static_cast<int>(mode));
+
+    Graph("ds_battery_voltage", frc::DriverStation::GetBatteryVoltage());
+
+    // Graph("error_count", (int)funkit::base::Loggable::GetErrorCount());
+    // Graph("warn_count", (int)funkit::base::Loggable::GetWarnCount());
+
+    Graph("can_bus_usage",
+        (double)(100 *
+                 frc::RobotController::GetCANStatus().percentBusUtilization));
+    // Graph(
+    //     "can_bus_off_count",
+    //     frc::RobotController::GetCANStatus().busOffCount);
+    // Graph("can_tx_error_count",
+    //     frc::RobotController::GetCANStatus().transmitErrorCount);
+    // Graph("can_rx_error_count",
+    //     frc::RobotController::GetCANStatus().receiveErrorCount);
+
+    ms_t loop_time = funkit::wpilib::CurrentFPGATime() - loop_start_time;
+    Graph("loop_time", loop_time);
+
+    // Flush all queued SmartDashboard values to NetworkTables
+    frc::SmartDashboard::UpdateValues();
+
+    // Check loop time
+    if (loop_time > 2.5 * kPeriod) {
+      Warn("Loop overrun: {} ms (loop period: {} ms)",
+          loop_time.value() * 1000.0, kPeriod.value() * 1000.0);
+
+      next_loop_time_ += pdcsu::units::second_t{
+          static_cast<int>(loop_time.value() / kPeriod.value()) *
+          kPeriod.value()};
+    }
+  }
+}
+
+void GenericRobot::EndCompetition() {
+  Log("\n********** Robot code ending **********\n");
+}
+
+void GenericRobot::VerifyHardware() {
+  generic_robot_container_->VerifyHardware();
+}
+
+void GenericRobot::AddAuto(std::string name, frc2::Command* command) {
+  auto_chooser_.AddOption(name, name);
+  autos_[name] = command;
+  frc::SmartDashboard::PutData(&auto_chooser_);
+  frc::SmartDashboard::UpdateValues();
+}
+
+void GenericRobot::AddDefaultAuto(std::string name, frc2::Command* command) {
+  auto_chooser_.SetDefaultOption(name, name);
+  autos_[name] = command;
+  frc::SmartDashboard::PutData(&auto_chooser_);
+  frc::SmartDashboard::UpdateValues();
+}
+
+}  // namespace funkit::robot

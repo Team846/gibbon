@@ -1,0 +1,121 @@
+#pragma once
+
+#include <frc2/command/Command.h>
+#include <frc2/command/CommandHelper.h>
+#include <frc2/command/InstantCommand.h>
+#include <frc2/command/ParallelCommandGroup.h>
+#include <frc2/command/SequentialCommandGroup.h>
+
+#include "funkit/base/Loggable.h"
+#include "funkit/wpilib/time.h"
+
+namespace funkit::robot {
+
+template <typename RobotContainer, typename Subclass>
+class GenericCommand : public frc2::CommandHelper<frc2::Command, Subclass>,
+                       public funkit::base::Loggable {
+public:
+  GenericCommand(RobotContainer& container, std::string name)
+      : Loggable{name}, container_{container} {
+    frc2::Command::SetName(name);
+    Log("Constructing instance of command {}.", name);
+  }
+
+  virtual ~GenericCommand() {
+    Log("Destroying instance of command {}.", name());
+  }
+
+  virtual void OnInit() = 0;
+  virtual void OnEnd(bool interrupted) = 0;
+  virtual void Periodic() = 0;
+
+  void Initialize() override final {
+    Log("Command {} initialized.", name());
+    OnInit();
+
+    command_start_time_ = funkit::wpilib::CurrentFPGATime();
+  }
+
+  void End(bool interrupted) override final {
+    pdcsu::units::second_t total_time =
+        funkit::wpilib::CurrentFPGATime() - command_start_time_;
+
+    Log("Command {} {}. Took {} ms to complete. Avg periodic {} ms. Peak "
+        "periodic {} ms.",
+        name(), interrupted ? "interrupted" : "finished",
+        total_time.value() * 1000.0, avg_periodic_time_.value() * 1000.0,
+        max_periodic_time_.value() * 1000.0);
+
+    OnEnd(interrupted);
+  }
+
+  void Execute() override final {
+    const pdcsu::units::second_t start_time = funkit::wpilib::CurrentFPGATime();
+    Periodic();
+    const pdcsu::units::second_t end_time = funkit::wpilib::CurrentFPGATime();
+
+    const auto elapsed_time = end_time - start_time;
+
+    if (elapsed_time > pdcsu::units::second_t{0.003}) {
+      Warn("Command {} periodic overrun. Took {} ms.", name(),
+          elapsed_time.value() * 1000.0);
+    }
+
+    avg_periodic_time_ = pdcsu::units::second_t{
+        (avg_periodic_time_.value() * num_periodic_loops_ +
+            elapsed_time.value()) /
+        (num_periodic_loops_ + 1)};
+    max_periodic_time_ = std::max(max_periodic_time_, elapsed_time);
+
+    num_periodic_loops_++;
+  }
+
+protected:
+  RobotContainer& container_;
+
+private:
+  pdcsu::units::second_t avg_periodic_time_ = pdcsu::units::second_t{0};
+  int num_periodic_loops_ = 0;
+
+  pdcsu::units::second_t max_periodic_time_ = pdcsu::units::second_t{0};
+
+  pdcsu::units::second_t command_start_time_ = pdcsu::units::second_t{0};
+};
+
+template <typename RobotContainer, typename Subclass,
+    wpi::DecayedDerivedFrom<frc2::Command>... Commands>
+class GenericCommandGroup
+    : public frc2::CommandHelper<frc2::SequentialCommandGroup, Subclass>,
+      public funkit::base::Loggable {
+public:
+  GenericCommandGroup(
+      RobotContainer& container, std::string name, Commands&&... commands)
+      : Loggable{name}, container_{container} {
+    frc2::Command::SetName(name);
+
+    frc2::SequentialCommandGroup::AddCommands(start_command_addition);
+    frc2::SequentialCommandGroup::AddCommands(
+        std::forward<Commands>(commands)...);
+    frc2::SequentialCommandGroup::AddCommands(end_command_addition);
+
+    Log("Constructing instance of command group {}.", name);
+  }
+
+protected:
+  RobotContainer& container_;
+  pdcsu::units::second_t command_start_time_ = pdcsu::units::second_t{0};
+
+private:
+  frc2::InstantCommand end_command_addition{[&] {
+    // Log("Command group ending. Took {} ms to complete.",
+    // (funkit::wpilib::CurrentFPGATime() - command_start_time_)
+    //     .template to<double>()); TODO:Find out why we can't log
+  }};
+
+  frc2::InstantCommand start_command_addition{[&] {
+    // Log("Command group starting {}", 1);
+    command_start_time_ = funkit::wpilib::CurrentFPGATime();
+  }};
+};
+
+}  // namespace funkit::robot

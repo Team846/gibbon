@@ -1,0 +1,85 @@
+#include "funkit/robot/swerve/odometry/swerve_odometry_calculator.h"
+
+#include "pdcsu_units.h"
+#include "util/math/uvec.h"
+
+using Vec2D = funkit::robot::swerve::odometry::Vector2D;
+
+#define w_h \
+  pdcsu::units::inch_t { constants_.horizontal_wheelbase_dim.value() / 2.0 }
+#define w_f \
+  pdcsu::units::inch_t { constants_.forward_wheelbase_dim.value() / 2.0 }
+
+namespace funkit::robot::swerve::odometry {
+
+SwerveOdometryCalculator::SwerveOdometryCalculator() {}
+
+SwerveOdometryOutput SwerveOdometryCalculator::calculate(
+    SwerveOdometryInputs inputs) {
+  std::array<Vec2D, 4> wheel_positions{
+      Vec2D{w_h, w_f}, Vec2D{-w_h, w_f}, Vec2D{-w_h, -w_f}, Vec2D{w_h, -w_f}};
+
+  auto module_diffs = inputs.drive_pos - previous_module_positions_;
+  previous_module_positions_ = inputs.drive_pos;
+
+  std::array<Vec2D, 4> wheel_vecs;
+
+  for (int i = 0; i < 4; i++) {
+    wheel_vecs[i] = Vec2D{module_diffs[i], inputs.steer_pos[i], true};
+  }
+
+  pdcsu::units::inch_t sum_dx{0};
+  pdcsu::units::inch_t sum_dy{0};
+  double sum_dtheta_x = 0.0;
+  double sum_dtheta_y = 0.0;
+  double sum_rr = 0.0;
+
+  for (int i = 0; i < 4; i++) {
+    double md_x = wheel_vecs[i][0].value();
+    double md_y = wheel_vecs[i][1].value();
+    double r_x = wheel_positions[i][0].value();
+    double r_y = wheel_positions[i][1].value();
+
+    sum_dx += pdcsu::units::inch_t{md_x};
+    sum_dy += pdcsu::units::inch_t{md_y};
+
+    sum_dtheta_x += md_x * r_y;
+    sum_dtheta_y -= md_y * r_x;
+
+    sum_rr += r_x * r_x + r_y * r_y;
+  }
+
+  pdcsu::units::inch_t dx = sum_dx / 4.0;
+  pdcsu::units::inch_t dy = sum_dy / 4.0;
+
+  pdcsu::units::radian_t dtheta{(sum_dtheta_x + sum_dtheta_y) / sum_rr};
+
+  Vec2D displacement;
+
+  constexpr pdcsu::units::radian_t EPSILON_dtheta{1e-6};
+
+  if (pdcsu::units::u_abs(dtheta).value() > EPSILON_dtheta.value()) {
+    double dtheta_val = dtheta.value();
+
+    double sin_term = pdcsu::units::u_sin(dtheta) / dtheta_val;
+    double cos_term = (1 - pdcsu::units::u_cos(dtheta)) / dtheta_val;
+
+    displacement = Vec2D{
+        pdcsu::units::inch_t{sin_term * dx.value() - cos_term * dy.value()},
+        pdcsu::units::inch_t{cos_term * dx.value() + sin_term * dy.value()}};
+  } else {
+    displacement = Vec2D{dx, dy};
+  }
+
+  displacement *= inputs.odom_ff_;
+
+  pdcsu::units::degree_t dtheta_deg{
+      pdcsu::units::degree_t{dtheta.value() * 180.0 / 3.14159265358979323846}};
+  last_position_ += displacement.rotate(inputs.bearing - dtheta_deg);
+
+  odom_bearing_ += dtheta_deg;
+
+  return {last_position_ + position_offset_, odom_bearing_};
+}
+
+}  // namespace funkit::robot::swerve::odometry

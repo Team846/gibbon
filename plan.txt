@@ -1,0 +1,8 @@
+2.
+ConstructICNOR(...)
+AttachICNORLearner(...)
+
+has optional icnor
+
+3. Reimpl supreme limiter, Cooked
+4. chimpcheck compatible auto/teleop/start
