@@ -99,7 +99,9 @@ void GenericRobot::StartCompetition() {
     // Set new notifier time
     int32_t status = 0x00;
     HAL_UpdateNotifierAlarm(notifier_,
-        units::millisecond_t{next_loop_time_.value()}.to<uint64_t>(), &status);
+        units::microsecond_t{next_loop_time_.value() * 1000000.0}
+            .to<uint64_t>(),
+        &status);
     FRC_CheckErrorStatus(status, "{}", "UpdateNotifierAlarm");
 
     // Wait for notifier

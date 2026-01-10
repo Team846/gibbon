@@ -1,13 +1,15 @@
 #include "funkit/wpilib/time.h"
 
+#include <units/time.h>
+
 #include "pdcsu_units.h"
 
 namespace funkit::wpilib {
 
 pdcsu::units::second_t CurrentFPGATime() {
   int err;
-
-  return pdcsu::units::ms_t(HAL_GetFPGATime(&err) / 1000.0);
+  units::microsecond_t ustime(HAL_GetFPGATime(&err));
+  return pdcsu::units::second_t(ustime.value() / 1000000.0);
 }
 
 }  // namespace funkit::wpilib
