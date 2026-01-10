@@ -2,6 +2,8 @@
 
 #include <fmt/core.h>
 
+#include <filesystem>
+#include <fstream>
 #include <mutex>
 #include <queue>
 #include <string>
@@ -59,6 +61,8 @@ public:
   }
 
 private:
+  static uintmax_t MIN_SPACE;
+
   static void LogThread(int rateLimit, std::string logFileName);
 
   static int gameState;

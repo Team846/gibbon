@@ -24,6 +24,8 @@ struct ports {
     static constexpr int kFLCANCoder_CANID = 6;
     static constexpr int kBLCANCoder_CANID = 9;
     static constexpr int kBRCANCoder_CANID = 12;
+
+    static constexpr int kPIGEON_CANID = 14;
   };
 
   struct leds_ {

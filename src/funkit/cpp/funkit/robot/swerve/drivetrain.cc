@@ -17,11 +17,17 @@ DrivetrainSubsystem::DrivetrainSubsystem(DrivetrainConfigs configs)
     : GenericSubsystem{"SwerveDrivetrain"},
       configs_{configs},
       modules_{},
-      navX_{configs.navX_connection_mode, studica::AHRS::k200Hz} {
+      pigeon_{configs.pigeon_CAN_id, ""} {
   for (int i = 0; i < 4; i++) {
     modules_[i] = std::make_unique<SwerveModuleSubsystem>(*this,
         configs_.module_unique_configs[i], configs_.module_common_config);
   }
+
+  pigeon_.OptimizeBusUtilization();
+  pigeon_.GetYaw().SetUpdateFrequency(100_Hz);
+  pigeon_.GetAngularVelocityZWorld().SetUpdateFrequency(100_Hz);
+  pigeon_.GetAccelerationX().SetUpdateFrequency(100_Hz);
+  pigeon_.GetAccelerationY().SetUpdateFrequency(100_Hz);
 
   funkit::control::config::MotorGenome drive_genome_backup{
       .motor_current_limit = pdcsu::units::amp_t{160.0},
@@ -155,8 +161,8 @@ void DrivetrainSubsystem::ZeroBearing() {
   }
   for (int attempts = 1; attempts <= kMaxAttempts; ++attempts) {
     Log("Gyro zero attempt {}/{}", attempts, kMaxAttempts);
-    if (navX_.IsConnected() && !navX_.IsCalibrating()) {
-      navX_.ZeroYaw();
+    if (pigeon_.IsConnected() && pigeon_.GetYaw().GetStatus().IsOK()) {
+      pigeon_.SetYaw(0_deg);
       Log("Zeroed bearing");
 
       // for (SwerveModuleSubsystem* module : modules_) {
@@ -171,7 +177,7 @@ void DrivetrainSubsystem::ZeroBearing() {
   }
   Error("Unable to zero after {} attempts, forcing zero", kMaxAttempts);
 
-  navX_.ZeroYaw();
+  pigeon_.SetYaw(0_deg);
   // for (SwerveModuleSubsystem* module : modules_) {
   //   module->ZeroWithCANcoder();
   // }
@@ -243,10 +249,12 @@ DrivetrainReadings DrivetrainSubsystem::ReadFromHardware() {
   pose_estimator.Update(
       cached_pose_variance_, cached_velocity_variance_, cached_accel_variance_);
 
-  pdcsu::units::degree_t bearing{pdcsu::units::degree_t{navX_.GetAngle()}};
+  pdcsu::units::degree_t bearing{
+      pdcsu::units::degree_t{pigeon_.GetYaw().GetValueAsDouble()}};
   bearing += bearing_offset_;
 
-  pdcsu::units::degps_t yaw_rate{pdcsu::units::degps_t{navX_.GetRate()}};
+  pdcsu::units::degps_t yaw_rate{pdcsu::units::degps_t{
+      pigeon_.GetAngularVelocityZWorld().GetValueAsDouble()}};
 
   cached_bearing_latency_ =
       GetPreferenceValue_unit_type<pdcsu::units::second_t>("bearing_latency");
@@ -366,11 +374,9 @@ DrivetrainReadings DrivetrainSubsystem::ReadFromHardware() {
   Graph("readings/position_y", new_pose.position[1]);
   Graph("readings/odom_bearing", odom_output.odom_bearing);
 
-  static constexpr double g_to_fps2 =
-      funkit::math::constants::physics::g.to<double>() * 3.28084;
   pdcsu::util::math::uVec<pdcsu::units::fps2_t, 2> accl{
-      pdcsu::units::fps2_t{navX_.GetWorldLinearAccelX() * g_to_fps2},
-      pdcsu::units::fps2_t{navX_.GetWorldLinearAccelY() * g_to_fps2}};
+      pdcsu::units::fps2_t{pigeon_.GetAccelerationX().GetValueAsDouble()},
+      pdcsu::units::fps2_t{pigeon_.GetAccelerationY().GetValueAsDouble()}};
 
   Graph("readings/accel_x", accl[0]);
   Graph("readings/accel_y", accl[1]);

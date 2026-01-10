@@ -11,7 +11,7 @@ on:
 jobs:
   compilation_check:
     runs-on: ubuntu-22.04
-    container: wpilib/roborio-cross-ubuntu:2025-22.04
+    container: wpilib/roborio-cross-ubuntu:2026-22.04-py314
 
 
     steps:
@@ -38,11 +38,13 @@ jobs:
 
       - name: Update package index
         if: steps.cache-deps.outputs.cache-hit != 'true'
-        run: sudo apt-get update
+        run: apt-get update
 
       - name: Install dependencies
         if: steps.cache-deps.outputs.cache-hit != 'true'
-        run: sudo apt-get install -y wget build-essential
+        run: |
+          apt-get install -y wget build-essential python3
+          ln -sf /usr/bin/python3 /usr/bin/python
 
       - name: Download and Install PCRE
         if: steps.cache-deps.outputs.cache-hit != 'true'
@@ -52,7 +54,7 @@ jobs:
           cd pcre-8.45
           ./configure
           make
-          sudo make install
+          make install
 
       - name: Download and Install CppCheck
         if: steps.cache-deps.outputs.cache-hit != 'true'
@@ -61,24 +63,30 @@ jobs:
           tar -xzf cppcheck.tar.gz
           cd cppcheck-2.12.1
           make MATCHCOMPILER=yes HAVE_RULES=yes CFGDIR=cfg
-          sudo cp cppcheck /usr/local/bin/
-          sudo cp -r cfg /usr/local/bin/cfg
+          cp cppcheck /usr/local/bin/
+          cp -r cfg /usr/local/bin/cfg
 
       - name: Set Library Path
-        run: echo "/usr/local/lib" | sudo tee -a /etc/ld.so.conf.d/local.conf && sudo ldconfig
+        run: echo "/usr/local/lib" | tee -a /etc/ld.so.conf.d/local.conf && ldconfig
 
       - name: Install clang-format
         run: |
-          sudo apt-get update
-          sudo apt-get install -y wget lsb-release software-properties-common
+          apt-get update
+          apt-get install -y wget lsb-release software-properties-common
           wget https://apt.llvm.org/llvm.sh
           chmod +x llvm.sh
-          sudo ./llvm.sh 18
-          sudo apt-get install -y clang-format-18
-          sudo ln -sf /usr/bin/clang-format-18 /usr/bin/clang-format
+          ./llvm.sh 18
+          apt-get install -y clang-format-18
+          ln -sf /usr/bin/clang-format-18 /usr/bin/clang-format
 
       - name: Grant execute permission for gradlew
         run: chmod +x gradlew
+
+      - name: Install Java 17
+        run: |
+          apt-get update
+          apt-get install -y openjdk-17-jdk
+          echo "JAVA_HOME=/usr/lib/jvm/java-17-openjdk-amd64" >> $GITHUB_ENV
 
       - name: Install Roborio Toolchain
         run: ./gradlew installRoborioToolchain

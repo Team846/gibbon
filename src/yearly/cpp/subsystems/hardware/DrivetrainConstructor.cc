@@ -30,7 +30,7 @@ struct ModulePorts {
 };
 
 struct UserSettableValues {
-  studica::AHRS::NavXComType navx_connection_mode;
+  int pigeon_CAN_id;
   pdcsu::units::inch_t wheel_diameter;
   double drive_gear_ratio;
   swerve::steer_conv_unit steer_reduction;
@@ -60,8 +60,7 @@ struct UserSettableValues {
 // User Settable Values. Also set weight and dims in robot_constants.h
 //--------------------------------------------------------
 UserSettableValues GetUserSettableValues() {
-  return UserSettableValues{
-      .navx_connection_mode = studica::AHRS::NavXComType::kMXP_SPI,
+  return UserSettableValues{.pigeon_CAN_id = ports::drivetrain_::kPIGEON_CANID,
       .wheel_diameter = inch_t{4},
       .drive_gear_ratio = 6.75,
       .steer_reduction = scalar_t{(7_tr / 150_tr).to<double>()},
@@ -244,8 +243,7 @@ swerve::DrivetrainConfigs DrivetrainConstructor::getDrivetrainConfigs() {
     camera_y_offsets.emplace_back(offset.to<double>());
   }
 
-  swerve::DrivetrainConfigs configs{
-      .navX_connection_mode = user_values.navx_connection_mode,
+  swerve::DrivetrainConfigs configs{.pigeon_CAN_id = user_values.pigeon_CAN_id,
       .module_common_config = module_common_config,
       .module_unique_configs = {FR_config, FL_config, BL_config, BR_config},
       .wheelbase_horizontal_dim = robot_constants::base::wheelbase_x,
