@@ -161,7 +161,7 @@ spotless {
     cpp {
         target fileTree('.') {
             include '**/*.cpp', '**/*.cc', '**/*.h', '**/*.hpp'
-            exclude '**/build/**', '**/build-*/**'
+            exclude '**/build/**', '**/build-*/**', '**/pdcsu*/**'
         }
         def selectedClangVersion = project.hasProperty('fromCI') ? '18.1.8' : '18.1.8'
 

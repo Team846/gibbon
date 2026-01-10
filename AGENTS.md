@@ -22,17 +22,17 @@ This document provides a comprehensive overview of the FRC Team 846 codebase arc
 
 ## Project Overview
 
-This is the **2025 FRC codebase for Team 846**, written in **C++** using **WPILib 2025.3.2**. The codebase implements a custom robot architecture built on top of WPILib's command-based framework.
+This is the **2026 FRC codebase for Team 846 (Gibbon)**, written in **C++** using **WPILib 2026.1.1**. The codebase implements a custom robot architecture built on top of WPILib's command-based framework.
 
 ### Key Technologies
 - **Language**: C++17/20
-- **Framework**: WPILib 2025.3.2
-- **Build System**: Gradle (WPILib GradleRIO plugin)
+- **Framework**: WPILib 2026.1.1
+- **Build System**: Gradle (WPILib GradleRIO plugin 2026.1.1)
 - **Vendor Libraries**: 
-  - Phoenix 6 (CTRE motor controllers)
-  - REVLib (REV motor controllers)
-  - Studica (NavX/AHRS support)
-- **Code Quality**: Spotless (clang-format), CppCheck
+  - Phoenix 6 v26.1.0 (CTRE motor controllers)
+  - REVLib 2026.0.0 (REV motor controllers)
+- **Code Quality**: Spotless (clang-format 18.1.8), CppCheck 2.16.0
+- **PDCSU**: tr12
 
 ### Project Philosophy
 - **Subsystem-based architecture**: Each hardware component is a subsystem
@@ -81,9 +81,9 @@ Most classes inherit from **`funkit::base::Loggable`** which provides:
 ## Directory Structure
 
 ```
-monkeynet/
+Gibbon/
 ├── src/
-│   ├── yearly/                    # Year-specific robot code (2025 season)
+│   ├── yearly/                    # Year-specific robot code (2026 season)
 │   │   ├── cpp/                  # Implementation files (.cc)
 │   │   │   ├── subsystems/
 │   │   │   │   ├── abstract/     # Abstract/logic subsystems (not hardware)
@@ -121,7 +121,7 @@ monkeynet/
 │   │           │   ├── calculators/  # Robot calculators (e.g., AprilTag)
 │   │           │   └── swerve/       # Swerve drive implementation
 │   │           └── wpilib/       # WPILib utilities
-│   ├── pdcsu_tr08/               # PDCSU library (external, auto-downloaded)
+│   ├── pdcsu_tr12/               # PDCSU library (external, auto-downloaded)
 │   └── deploy/                   # Files to deploy to RoboRIO
 │       └── autos/                # Autonomous sequence files
 ├── build/                        # Build outputs (generated)
@@ -460,10 +460,10 @@ Loggers form a tree structure:
 **Main file**: `build.gradle`
 
 Key features:
-- **WPILib GradleRIO plugin**: WPILib 2025.3.2
-- **Spotless**: Code formatting with clang-format
-- **CppCheck**: Static analysis
-- **PDCSU auto-download**: Downloads PDCSU library from GitHub releases
+- **WPILib GradleRIO plugin**: 2026.1.1
+- **Spotless**: Code formatting with clang-format 18.1.8
+- **CppCheck**: Static analysis (2.16.0)
+- **PDCSU auto-download**: Downloads PDCSU tr12 library from GitHub releases
 - **Multi-platform**: Supports RoboRIO and desktop (simulation)
 
 ### Build Targets
@@ -476,14 +476,13 @@ Key features:
 ### Source Organization
 
 - **C++ sources**: `src/funkit/cpp/**/*.cc`, `src/yearly/cpp/**/*.cc`
-- **Headers**: `src/funkit/include`, `src/yearly/include`, `src/pdcsu_tr08`
+- **Headers**: `src/funkit/include`, `src/yearly/include`, `src/pdcsu_tr12`
 
 ### Dependencies
 
 Managed via `vendordeps/` JSON files:
-- `Phoenix6-frc2025-latest.json`: CTRE Phoenix 6
-- `REVLib.json`: REV Robotics
-- `Studica-2025.0.1.json`: Studica NavX
+- `Phoenix6-26.1.0.json`: CTRE Phoenix 6 v26.1.0 (frcYear: 2026)
+- `REVLib.json`: REV Robotics 2026.0.0 (frcYear: 2026)
 - `WPILibNewCommands.json`: WPILib command framework
 
 ---
@@ -877,5 +876,5 @@ The codebase follows consistent naming conventions for maintainability:
 
 ---
 
-*Last Updated: Jan 2026 - Updated for MotorMonkey→MonkeyMaster rename, HigherMotorController API changes (MotorGenome, plant-based unit conversion), and removal of HMCHelper*
+*Last Updated: Jan 2026 - Updated for 2026 season with WPILib 2026.1.1, Phoenix 6 v26.1.0, REVLib 2026.0.0, and PDCSU tr12. Previous updates include MotorMonkey→MonkeyMaster rename, HigherMotorController API changes (MotorGenome, plant-based unit conversion), and removal of HMCHelper*
 
