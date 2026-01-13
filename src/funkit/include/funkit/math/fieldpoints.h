@@ -44,10 +44,11 @@ struct FieldPoint {
         {point[0], point[1]}, bearing + pdcsu::units::degree_t{180}, velocity};
   }
 
+  // Welded
   static constexpr pdcsu::units::inch_t field_size_y =
-      pdcsu::units::inch_t{690.875};
+      pdcsu::units::inch_t{651.22};
   static constexpr pdcsu::units::inch_t field_size_x =
-      pdcsu::units::inch_t{317};
+      pdcsu::units::inch_t{317.69};
 };
 
 }  // namespace funkit::math

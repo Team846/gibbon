@@ -15,6 +15,7 @@
 #include "funkit/robot/swerve/path_logger.h"
 #include "funkit/robot/swerve/swerve_module.h"
 #include "pdcsu_units.h"
+// #include "studica/AHRS.h"
 #include "util/math/uvec.h"
 
 namespace funkit::robot::swerve {
@@ -144,6 +145,7 @@ private:
   std::array<std::unique_ptr<SwerveModuleSubsystem>, 4> modules_;
 
   ctre::phoenix6::hardware::Pigeon2 pigeon_;
+  // studica::AHRS navX_;
 
   funkit::robot::swerve::odometry::SwerveOdometryCalculator odometry_;
   funkit::robot::swerve::control::SwerveOpenLoopCalculator ol_calculator_;

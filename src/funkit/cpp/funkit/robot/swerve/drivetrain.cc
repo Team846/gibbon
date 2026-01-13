@@ -17,6 +17,7 @@ DrivetrainSubsystem::DrivetrainSubsystem(DrivetrainConfigs configs)
     : GenericSubsystem{"SwerveDrivetrain"},
       configs_{configs},
       modules_{},
+      // navX_{studica::AHRS::kMXP_SPI, studica::AHRS::k200Hz},
       pigeon_{configs.pigeon_CAN_id, ""} {
   for (int i = 0; i < 4; i++) {
     modules_[i] = std::make_unique<SwerveModuleSubsystem>(*this,
@@ -161,8 +162,10 @@ void DrivetrainSubsystem::ZeroBearing() {
   }
   for (int attempts = 1; attempts <= kMaxAttempts; ++attempts) {
     Log("Gyro zero attempt {}/{}", attempts, kMaxAttempts);
+    // if (navX_.IsConnected() && !navX_.IsCalibrating()) {
     if (pigeon_.IsConnected() && pigeon_.GetYaw().GetStatus().IsOK()) {
       pigeon_.SetYaw(0_deg);
+      // navX_.ZeroYaw();
       Log("Zeroed bearing");
 
       // for (SwerveModuleSubsystem* module : modules_) {
@@ -178,6 +181,7 @@ void DrivetrainSubsystem::ZeroBearing() {
   Error("Unable to zero after {} attempts, forcing zero", kMaxAttempts);
 
   pigeon_.SetYaw(0_deg);
+  // navX_.ZeroYaw();
   // for (SwerveModuleSubsystem* module : modules_) {
   //   module->ZeroWithCANcoder();
   // }
@@ -251,10 +255,13 @@ DrivetrainReadings DrivetrainSubsystem::ReadFromHardware() {
 
   pdcsu::units::degree_t bearing{
       pdcsu::units::degree_t{pigeon_.GetYaw().GetValueAsDouble()}};
+  // pdcsu::units::degree_t bearing{pdcsu::units::degree_t{navX_.GetAngle()}};
+
   bearing += bearing_offset_;
 
   pdcsu::units::degps_t yaw_rate{pdcsu::units::degps_t{
       pigeon_.GetAngularVelocityZWorld().GetValueAsDouble()}};
+  // pdcsu::units::degps_t yaw_rate{pdcsu::units::degps_t{navX_.GetRate()}};
 
   cached_bearing_latency_ =
       GetPreferenceValue_unit_type<pdcsu::units::second_t>("bearing_latency");
@@ -377,6 +384,12 @@ DrivetrainReadings DrivetrainSubsystem::ReadFromHardware() {
   pdcsu::util::math::uVec<pdcsu::units::fps2_t, 2> accl{
       pdcsu::units::fps2_t{pigeon_.GetAccelerationX().GetValueAsDouble()},
       pdcsu::units::fps2_t{pigeon_.GetAccelerationY().GetValueAsDouble()}};
+
+  // static constexpr double g_to_fps2 =
+  //     funkit::math::constants::physics::g.to<double>() * 3.28084;
+  // pdcsu::util::math::uVec<pdcsu::units::fps2_t, 2> accl{
+  //     pdcsu::units::fps2_t{navX_.GetWorldLinearAccelX() * g_to_fps2},
+  //     pdcsu::units::fps2_t{navX_.GetWorldLinearAccelY() * g_to_fps2}};
 
   Graph("readings/accel_x", accl[0]);
   Graph("readings/accel_y", accl[1]);
