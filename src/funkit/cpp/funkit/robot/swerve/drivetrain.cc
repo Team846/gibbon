@@ -18,7 +18,7 @@ DrivetrainSubsystem::DrivetrainSubsystem(DrivetrainConfigs configs)
       configs_{configs},
       modules_{},
       // navX_{studica::AHRS::kMXP_SPI, studica::AHRS::k200Hz},
-      pigeon_{configs.pigeon_CAN_id, ""} {
+      pigeon_{configs.pigeon_CAN_id, ctre::phoenix6::CANBus{""}} {
   for (int i = 0; i < 4; i++) {
     modules_[i] = std::make_unique<SwerveModuleSubsystem>(*this,
         configs_.module_unique_configs[i], configs_.module_common_config);

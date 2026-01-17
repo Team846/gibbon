@@ -212,8 +212,8 @@ size_t MonkeyMaster::ConstructController(
 
   } else if (funkit::control::base::MotorMonkeyTypeHelper::is_spark_max(type)) {
     this_controller = controller_registry[slot_id] =
-        new funkit::control::hardware::SparkMAX_interm{
-            params.can_id, pdcsu::units::ms_t{params.max_wait_time.value()}};
+        new funkit::control::hardware::SparkMAX_interm{params.can_id,
+            pdcsu::units::ms_t{params.max_wait_time.value()}, type};
   } else if (funkit::control::base::MotorMonkeyTypeHelper::is_spark_flex(
                  type)) {
     this_controller = controller_registry[slot_id] =

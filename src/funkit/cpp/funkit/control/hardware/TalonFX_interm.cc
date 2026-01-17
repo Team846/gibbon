@@ -15,7 +15,7 @@ bool TalonFX_interm::VerifyConnected() { return talon_.IsAlive(); }
 
 TalonFX_interm::TalonFX_interm(
     int can_id, std::string_view bus, pdcsu::units::ms_t max_wait_time)
-    : talon_(can_id, bus),
+    : talon_(can_id, ctre::phoenix6::CANBus{bus}),
       max_wait_time_(units::millisecond_t{max_wait_time.value()}) {}
 
 void TalonFX_interm::Tick() {

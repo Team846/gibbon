@@ -7,6 +7,7 @@
 #include <variant>
 
 #include "IntermediateController.h"
+#include "funkit/control/hardware/Cooked.h"
 #include "pdcsu_units.h"
 
 namespace funkit::control::hardware {
@@ -20,7 +21,7 @@ SparkMAX or SparkFLEX hardware.
 class SparkMXFX_interm : public IntermediateController {
 public:
   SparkMXFX_interm(int can_id, pdcsu::units::ms_t max_wait_time,
-      bool is_controller_spark_flex);
+      bool is_controller_spark_flex, base::MotorMonkeyType mmtype);
 
   void Tick() override;
 
@@ -73,6 +74,8 @@ private:
   funkit::control::hardware::ControllerErrorCodes last_error_;
 
   int can_id_;
+
+  Cooked cooked;
 };
 
 /*
@@ -83,7 +86,8 @@ SparkMAX hardware. Derives from SparkMXFX_interm.
 */
 class SparkMAX_interm : public SparkMXFX_interm {
 public:
-  SparkMAX_interm(int can_id, pdcsu::units::ms_t max_wait_time);
+  SparkMAX_interm(int can_id, pdcsu::units::ms_t max_wait_time,
+      base::MotorMonkeyType mmtype);
 };
 
 /*
