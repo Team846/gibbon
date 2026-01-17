@@ -46,8 +46,9 @@ public:
   Cooked(CookedConfig config);
 
   // Returns the new safe current limit to prevent the motor from overcooking
-  [[nodiscard]] amp_t RecordDraw(amp_t current, radps_t speed);
-  [[nodiscard]] double RecordDraw(double dc, radps_t speed);
+  [[nodiscard]] amp_t Record(
+      amp_t current, radps_t speed, double measured_temp);
+  [[nodiscard]] double Record(double dc, radps_t speed, double measured_temp);
 
 private:
   CookedConfig config_;
@@ -60,5 +61,10 @@ private:
 
   static constexpr double cook_temp{100.0};
   static constexpr second_t min_cook_time{15};
+
+  static constexpr double thresh_meas_temp{60.0};
+  static constexpr double meas_temp_cut_scale{0.6};
+
+  static constexpr double temp_relocalize_ema_growth{0.933};
 };
 }

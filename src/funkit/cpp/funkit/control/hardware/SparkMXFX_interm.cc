@@ -51,7 +51,8 @@ void SparkMXFX_interm::Tick() {
   rev::REVLibError last_status_code = rev::REVLibError::kOk;
   if (double* dc = std::get_if<double>(&last_command_)) {
     double dc_u = *dc;
-    dc_u = cooked.RecordDraw(dc_u, radps_t(Read(ReadType::kReadVelocity)));
+    dc_u = cooked.Record(dc_u, radps_t(Read(ReadType::kReadVelocity)),
+        Read(ReadType::kTemperature));
     last_status_code = pid_controller_->SetSetpoint(
         dc_u, rev::spark::SparkBase::ControlType::kDutyCycle);
   } else if (pdcsu::units::radps_t* vel =
@@ -144,6 +145,12 @@ void SparkMXFX_interm::EnableStatusFrames(config::StatusFrameSelections frames,
     configs.signals.PrimaryEncoderVelocityPeriodMs(
         static_cast<int>(velocity_ms.value()));
     configs.signals.PrimaryEncoderVelocityAlwaysOn(true);
+    configs.signals.OutputCurrentPeriodMs(
+        static_cast<int>(velocity_ms.value()));
+    // configs.signals.OutputCurrentAlwaysOn(true);
+    // configs.signals.MotorTemperatureAlwaysOn(true);
+    configs.signals.MotorTemperaturePeriodMs(
+        1000);  // Temperature required less often
   } else {
     configs.signals.PrimaryEncoderVelocityPeriodMs(32767);
     configs.signals.PrimaryEncoderVelocityAlwaysOn(false);
@@ -162,9 +169,13 @@ void SparkMXFX_interm::EnableStatusFrames(config::StatusFrameSelections frames,
     configs.signals.AnalogPositionPeriodMs(
         static_cast<int>(analog_position_ms.value()));
     configs.signals.AnalogPositionAlwaysOn(true);
+    configs.signals.LimitsPeriodMs(static_cast<int>(faults_ms.value()));
+    // configs.signals.LimitsAlwaysOn(true);
   } else {
     configs.signals.AnalogPositionPeriodMs(32767);
     configs.signals.AnalogPositionAlwaysOn(false);
+    configs.signals.LimitsPeriodMs(32767);
+    // configs.signals.LimitsAlwaysOn(false);
   }
 
   if (vector_has(frames, config::StatusFrame::kAbsoluteFrame)) {
@@ -235,6 +246,7 @@ ReadResponse SparkMXFX_interm::Read(ReadType type) {
         esc_->GetAbsoluteEncoder().GetPosition());
     return turn_wpi.to<double>();
   }
+  case ReadType::kTemperature: return esc_->GetMotorTemperature();
   default: return 0.0;
   }
 }

@@ -27,7 +27,7 @@ public:
     RegisterPreference("init_gpd", true);
     RegisterPreference("init_ictest", true);
 
-    bool drivetrain_init = (GetPreferenceValue_bool("init_drivetrain"));
+    // bool drivetrain_init = (GetPreferenceValue_bool("init_drivetrain"));
     bool leds_init = (GetPreferenceValue_bool("init_leds"));
     bool gpd_init = (GetPreferenceValue_bool("init_gpd"));
     bool ictest_init = (GetPreferenceValue_bool("init_ictest"));

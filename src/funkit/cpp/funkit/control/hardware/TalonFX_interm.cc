@@ -207,7 +207,11 @@ ReadResponse TalonFX_interm::Read(ReadType type) {
                ctre::phoenix6::signals::ReverseLimitValue::ClosedToGround)
                ? 1.0
                : -1.0;
-  case ReadType::kAbsPosition: return 0.0;
+  case ReadType::kTemperature:
+    return talon_.GetDeviceTemp().GetValue().to<double>();
+  case ReadType::kAbsPosition:
+    throw std::runtime_error(
+        "ReadType absolute error not implemented for TalonFX");
   default: return 0.0;
   }
 }

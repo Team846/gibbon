@@ -148,7 +148,7 @@ void GenericRobot::StartCompetition() {
         if (auto_command_ != nullptr) {
           Log("Running auto: {}", option_name);
 
-          auto_command_->Schedule();
+          frc2::CommandScheduler::GetInstance().Schedule(auto_command_);
         } else {
           Error("Auto command [{}] null!", option_name);
         }
