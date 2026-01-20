@@ -30,7 +30,7 @@ struct ModulePorts {
 };
 
 struct UserSettableValues {
-  int pigeon_CAN_id;
+  std::variant<swerve::PigeonConnection, swerve::NavXConnection> imu_connection;
   pdcsu::units::inch_t wheel_diameter;
   double drive_gear_ratio;
   swerve::steer_conv_unit steer_reduction;
@@ -50,8 +50,8 @@ struct UserSettableValues {
     ModulePorts BL;
     ModulePorts BR;
   } module_ports;
-  std::vector<units::inch_t> camera_x_offsets;
-  std::vector<units::inch_t> camera_y_offsets;
+  std::vector<pdcsu::units::inch_t> camera_x_offsets;
+  std::vector<pdcsu::units::inch_t> camera_y_offsets;
   size_t num_cameras;
   std::map<int, funkit::robot::calculators::AprilTagData> april_locations;
 };
@@ -60,7 +60,10 @@ struct UserSettableValues {
 // User Settable Values. Also set weight and dims in robot_constants.h
 //--------------------------------------------------------
 UserSettableValues GetUserSettableValues() {
-  return UserSettableValues{.pigeon_CAN_id = ports::drivetrain_::kPIGEON_CANID,
+  return UserSettableValues{
+      .imu_connection =
+          swerve::NavXConnection{
+              funkit::robot::swerve::NavXConnectionType::kUSB},
       .wheel_diameter = inch_t{4},
       .drive_gear_ratio = 6.75,
       .steer_reduction = scalar_t{(7_tr / 150_tr).to<double>()},
@@ -84,8 +87,8 @@ UserSettableValues GetUserSettableValues() {
           .BR = {ports::drivetrain_::kBRCANCoder_CANID,
               ports::drivetrain_::kBRDrive_CANID,
               ports::drivetrain_::kBRSteer_CANID}},
-      .camera_x_offsets = {units::inch_t{-6.25}, units::inch_t{-4.5}},
-      .camera_y_offsets = {units::inch_t{4}, units::inch_t{-12.5}},
+      .camera_x_offsets = {inch_t{-6.25}, inch_t{-4.5}},
+      .camera_y_offsets = {inch_t{4}, inch_t{-12.5}},
       .num_cameras = 2,
       .april_locations = {{1, {25.38_u_in, 183.58_u_in}},
           {2, {135.09_u_in, 182.11_u_in}}, {3, {144.85_u_in, 205.87_u_in}},
@@ -239,18 +242,11 @@ swerve::DrivetrainConfigs DrivetrainConstructor::getDrivetrainConfigs() {
       .steer_plant = steer_plant,
       .bus = ""};
 
-  std::vector<inch_t> camera_x_offsets;
-  camera_x_offsets.reserve(user_values.camera_x_offsets.size());
-  for (const auto& offset : user_values.camera_x_offsets) {
-    camera_x_offsets.emplace_back(offset.to<double>());
-  }
-  std::vector<inch_t> camera_y_offsets;
-  camera_y_offsets.reserve(user_values.camera_y_offsets.size());
-  for (const auto& offset : user_values.camera_y_offsets) {
-    camera_y_offsets.emplace_back(offset.to<double>());
-  }
+  const std::vector<inch_t>& camera_x_offsets = user_values.camera_x_offsets;
+  const std::vector<inch_t>& camera_y_offsets = user_values.camera_y_offsets;
 
-  swerve::DrivetrainConfigs configs{.pigeon_CAN_id = user_values.pigeon_CAN_id,
+  swerve::DrivetrainConfigs configs{
+      .imu_connection = user_values.imu_connection,
       .module_common_config = module_common_config,
       .module_unique_configs = {FR_config, FL_config, BL_config, BR_config},
       .wheelbase_horizontal_dim = robot_constants::base::wheelbase_x,
