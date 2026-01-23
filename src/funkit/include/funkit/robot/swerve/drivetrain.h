@@ -4,6 +4,8 @@
 
 #include <array>
 #include <memory>
+#include <optional>
+#include <variant>
 
 #include "ctre/phoenix6/Pigeon2.hpp"
 #include "funkit/robot/GenericSubsystem.h"
@@ -15,7 +17,7 @@
 #include "funkit/robot/swerve/path_logger.h"
 #include "funkit/robot/swerve/swerve_module.h"
 #include "pdcsu_units.h"
-// #include "studica/AHRS.h"
+#include "studica/AHRS.h"
 #include "util/math/uvec.h"
 
 namespace funkit::robot::swerve {
@@ -23,6 +25,16 @@ class SwerveModuleSubsystem;
 }
 
 namespace funkit::robot::swerve {
+
+enum class NavXConnectionType { kMXP, kUSB };
+
+struct PigeonConnection {
+  int canID;
+};
+
+struct NavXConnection {
+  NavXConnectionType connection_type;
+};
 
 /*
 DrivetrainConfigs
@@ -32,7 +44,7 @@ Contains all configs related to the specific drivetrain in use.
 using Vector2D = pdcsu::util::math::uVec<pdcsu::units::inch_t, 2>;
 
 struct DrivetrainConfigs {
-  int pigeon_CAN_id;
+  std::variant<PigeonConnection, NavXConnection> imu_connection;
 
   SwerveModuleCommonConfig module_common_config;
   std::array<SwerveModuleUniqueConfig, 4> module_unique_configs;
@@ -141,11 +153,15 @@ private:
       pdcsu::units::fps_t speed_limit);
   void WriteToHardware(DrivetrainTarget target) override;
 
+  pdcsu::units::degree_t GetBearing();
+  pdcsu::units::degps_t GetYawRate();
+  pdcsu::util::math::uVec<pdcsu::units::fps2_t, 2> GetAcceleration();
+
   DrivetrainConfigs configs_;
   std::array<std::unique_ptr<SwerveModuleSubsystem>, 4> modules_;
 
-  ctre::phoenix6::hardware::Pigeon2 pigeon_;
-  // studica::AHRS navX_;
+  std::optional<ctre::phoenix6::hardware::Pigeon2> pigeon_;
+  std::optional<studica::AHRS> navX_;
 
   funkit::robot::swerve::odometry::SwerveOdometryCalculator odometry_;
   funkit::robot::swerve::control::SwerveOpenLoopCalculator ol_calculator_;

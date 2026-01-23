@@ -188,12 +188,12 @@ ReadResponse TalonFX_interm::Read(ReadType type) {
   case ReadType::kReadPosition: {
     auto pos_wpi = ctre::phoenix6::BaseStatusSignal::GetLatencyCompensatedValue(
         talon_.GetPosition(), talon_.GetVelocity());
-    return pos_wpi.to<double>();
+    return pos_wpi.to<double>() * 2.0 * M_PI;
   }
   case ReadType::kReadVelocity: {
     auto vel_wpi = ctre::phoenix6::BaseStatusSignal::GetLatencyCompensatedValue(
         talon_.GetVelocity(), talon_.GetAcceleration());
-    return vel_wpi.to<double>();
+    return vel_wpi.to<double>() * 2.0 * M_PI;
   }
   case ReadType::kReadCurrent:
     return talon_.GetSupplyCurrent().GetValue().to<double>();

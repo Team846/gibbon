@@ -84,9 +84,11 @@ void MonkeyMaster::Tick(bool disabled) {
   if (disabled) {
     if (!frc::RobotBase::IsSimulation()) {
       WriteMessages();
+      MonkeyMaster::loggable_.Graph("LoggableTick", -battery_voltage);
       return;
     }
   }
+  MonkeyMaster::loggable_.Graph("LoggableTick", battery_voltage);
 
   WriteMessages();
 
