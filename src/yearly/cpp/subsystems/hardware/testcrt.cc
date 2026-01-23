@@ -18,10 +18,10 @@ TurretTestSubsystem::TurretTestSubsystem()
       esc_1_{base::SPARK_MAX_NEO550, MotorConstructionParameters{16, "", true}},
       esc_2_{
           base::SPARK_MAX_NEO550, MotorConstructionParameters{21, "", true}} {
-  RegisterPreference("offset1", 0.0_u_rot);
-  RegisterPreference("offset2", 0.0_u_rot);
-  RegisterPreference("min_rots", -0.5_u_rot);
-  RegisterPreference("max_rots", 3.0_u_rot);
+  RegisterPreference("offset1", 0.0_rot_);
+  RegisterPreference("offset2", 0.0_rot_);
+  RegisterPreference("min_rots", -0.5_rot_);
+  RegisterPreference("max_rots", 3.0_rot_);
 }
 
 TurretTestSubsystem::~TurretTestSubsystem() = default;
@@ -49,8 +49,8 @@ void TurretTestSubsystem::Setup() {
 
   arm_sys_ = std::make_unique<DefArmSys>(
       def_bldc, 1, scalar_t(1.0),
-      [&](radian_t x, radps_t v) -> nm_t { return 0.0_u_Nm; },
-      0.5_u_kg * 0.0_u_m * 0.0_u_m, 0.0_u_Nm, 1.0_u_Nm / 1_u_radps, 20_u_ms);
+      [&](radian_t x, radps_t v) -> nm_t { return 0.0_Nm_; },
+      0.5_kg_ * 0.0_m_ * 0.0_m_, 0.0_Nm_, 1.0_Nm_ / 1_radps_, 20_ms_);
 
   esc_1_.Setup(
       genome, std::variant<pdcsu::util::DefLinearSys, pdcsu::util::DefArmSys>{

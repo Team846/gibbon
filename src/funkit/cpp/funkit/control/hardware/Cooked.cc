@@ -15,7 +15,7 @@ amp_t Cooked::Record(amp_t current, radps_t speed, double measured_temp) {
   second_t delta_time = new_time - time_;
   time_ = new_time;
   for (int i = 0; i < 3; i++) {  // Iteratively solve for delta_temp
-    watt_t power = current * (speed / config_.free_speed_) * 12_u_V;
+    watt_t power = current * (speed / config_.free_speed_) * 12_V_;
     delta_temp = power /
                  UnitDivision<joule_t, scalar_t>(config_.thermal_mass_) *
                  delta_time;

@@ -79,7 +79,7 @@
 
 //   for (size_t i = 0; i < 4; i++) {
 //     units::degree_t angle =
-//     units::math::abs(v_neg_dir.angleTo(wheel_vecs[i])); if (angle <
+//     units::math::abs(v_neg_dir.angleBetween(wheel_vecs[i])); if (angle <
 //     closest_angle) {
 //       closest_angle = angle;
 //       closest_wheel_vec = i;

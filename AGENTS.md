@@ -380,9 +380,9 @@ struct MotorGenome {
 
 // Create genome preferences in constructor:
 MotorGenome genome_backup{
-    .motor_current_limit = 40_u_A,
-    .smart_current_limit = 30_u_A,
-    .voltage_compensation = 12_u_V,
+    .motor_current_limit = 40_A_,
+    .smart_current_limit = 30_A_,
+    .voltage_compensation = 12_V_,
     .brake_mode = true};
 SubsystemGenomeHelper::CreateGenomePreferences(*this, "genome", genome_backup);
 
@@ -658,7 +658,7 @@ pdcsu::units::inch_t distance = pdcsu::units::inch_t{24};
 pdcsu::units::meter_t length = pdcsu::units::meter_t{1.5};
 ```
 
-**Note**: PDCSU units do not support user-defined literals like WPILib. Always use explicit constructors: `pdcsu::units::degree_t{90}` instead of `90_u_deg`.
+**Note**: PDCSU units do not support user-defined literals like WPILib. Always use explicit constructors: `pdcsu::units::degree_t{90}` instead of `90_deg_`.
 
 #### Common PDCSU Unit Types
 

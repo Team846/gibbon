@@ -9,7 +9,7 @@ plugins {
 import org.apache.tools.ant.taskdefs.condition.Os
 
 def pdcsuGroup = "tr"
-def pdcsuReleaseNumber = "14"
+def pdcsuReleaseNumber = "15"
 def pdcsuVersion = pdcsuGroup + "_" + pdcsuReleaseNumber
 
 def pdcsuFolder = file("src/pdcsu_${pdcsuGroup}${pdcsuReleaseNumber}")

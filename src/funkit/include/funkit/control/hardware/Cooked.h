@@ -8,8 +8,8 @@ namespace funkit::control::hardware {
 struct CookedConfig {
   double thermal_mass_ = 0.001;  // kg m^2 s^-2 K^-1 (J K^-1)
   double growth_rate_ = 0.99;    // s^-1
-  radps_t free_speed_ = 628_u_radps;
-  amp_t stall_current_ = 250_u_A;
+  radps_t free_speed_ = 628_radps_;
+  amp_t stall_current_ = 250_A_;
   CookedConfig(funkit::control::base::MotorMonkeyType mmtype) {
     switch (mmtype) {
     case funkit::control::base::MotorMonkeyType::SPARK_MAX_NEO550:

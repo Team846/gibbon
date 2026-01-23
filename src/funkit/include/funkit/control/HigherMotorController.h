@@ -102,8 +102,8 @@ public:
   void SetSoftLimits(config::SoftLimits soft_limits);
 
   void EnableStatusFrames(std::vector<config::StatusFrame> frames,
-      ms_t faults_ms = 20_u_ms, ms_t velocity_ms = 20_u_ms,
-      ms_t encoder_position_ms = 20_u_ms, ms_t analog_position_ms = 20_u_ms);
+      ms_t faults_ms = 20_ms_, ms_t velocity_ms = 20_ms_,
+      ms_t encoder_position_ms = 20_ms_, ms_t analog_position_ms = 20_ms_);
 
   void OverrideStatusFramePeriod(config::StatusFrame frame, ms_t period);
 
