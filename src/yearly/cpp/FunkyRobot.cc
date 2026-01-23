@@ -44,6 +44,10 @@ void FunkyRobot::OnInitialize() {
         container_.drivetrain_.SetPosition({inch_t{0}, inch_t{0}});
       }));
 
+  frc::SmartDashboard::PutData("zero_turret_encoders",
+      new funkit::wpilib::NTAction(
+          [this] { container_.turr_test.ZeroEncoders(); }));
+
   // Add path recording controls
   frc::SmartDashboard::PutData(
       "start_path_recording", new funkit::wpilib::NTAction([this] {
