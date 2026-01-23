@@ -73,4 +73,15 @@ double HorizontalDeadband(double input, double x_intercept, double max,
                       : pdcsu::units::degree_t{result};
 }
 
+int gcd(int a, int b) {
+  while (b != 0) {
+    int temp = b;
+    b = a % b;
+    a = temp;
+  }
+  return std::abs(a);
+}
+
+int lcm(int a, int b) { return std::abs(a * b) / gcd(a, b); }
+
 }  // namespace funkit::math

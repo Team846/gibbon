@@ -68,6 +68,9 @@ DrivetrainSubsystem::DrivetrainSubsystem(DrivetrainConfigs configs)
   RegisterPreference("odom_fudge_factor", 1.077);
   RegisterPreference("odom_variance", 0.2);
 
+  RegisterPreference("odom_bump_threshold", pdcsu::units::degree_t{10.0});
+  RegisterPreference("odom_bump_variance_multi", 50.0);
+
   RegisterPreference("steer_lag", pdcsu::units::second_t{0.05});
   RegisterPreference("bearing_latency", pdcsu::units::second_t{0.01});
 
@@ -107,11 +110,9 @@ DrivetrainSubsystem::DrivetrainSubsystem(DrivetrainConfigs configs)
       .cams = configs.cams,
       .april_tables = april_tables});
 
-#ifndef _WIN32
   for (int i = 0; i < 20; i++) {
     MainField_.GetObject(std::to_string(i));
   }
-#endif
   frc::SmartDashboard::PutData("MainField", &MainField_);
 }
 
@@ -311,8 +312,25 @@ DrivetrainReadings DrivetrainSubsystem::ReadFromHardware() {
 
   Vector2D delta_pos = new_pose.position - GetReadings().pose.position;
 
+  pdcsu::units::degree_t cached_odom_bump_threshold_ =
+      GetPreferenceValue_unit_type<pdcsu::units::degree_t>(
+          "odom_bump_threshold");
+
+  bool is_on_bump = pdcsu::units::u_max(
+                        pdcsu::units::degree_t{
+                            std::abs(pigeon_.GetPitch().GetValueAsDouble())},
+                        pdcsu::units::degree_t{
+                            std::abs(pigeon_.GetRoll().GetValueAsDouble())}) >
+                    cached_odom_bump_threshold_;
+  Graph("is_on_bump", is_on_bump);
+
   if (delta_pos.magnitude().value() < 10.0) {
     cached_odom_variance_ = GetPreferenceValue_double("odom_variance");
+    if (is_on_bump) {
+      cached_odom_variance_ *=
+          GetPreferenceValue_double("odom_bump_variance_multi");
+    }
+
     pose_estimator.AddOdometryMeasurement(
         {delta_pos[0].value(), delta_pos[1].value()}, cached_odom_variance_);
   }
@@ -505,14 +523,12 @@ void DrivetrainSubsystem::WriteToHardware(DrivetrainTarget target) {
   for (int i = 0; i < 4; i++)
     modules_[i]->UpdateHardware();
 
-#ifndef _WIN32
   auto pose = GetReadings().estimated_pose;
   units::inch_t pos_x_wpi(pose.position[0].value());
   units::inch_t pos_y_wpi(
       (funkit::math::FieldPoint::field_size_y - pose.position[1]).value());
   units::degree_t bearing_wpi((degree_t{180} - pose.bearing).value());
   MainField_.SetRobotPose(pos_y_wpi, pos_x_wpi, bearing_wpi);
-#endif
 }
 
 void DrivetrainSubsystem::StartPathRecording(const std::string& filename) {
@@ -530,14 +546,12 @@ bool DrivetrainSubsystem::IsPathRecording() const {
 void DrivetrainSubsystem::SetFieldObjectPose(const std::string& name,
     pdcsu::util::math::uVec<pdcsu::units::inch_t, 2> position,
     pdcsu::units::degree_t rotation) {
-#ifndef _WIN32
   units::inch_t pos_x_wpi(position[0].value());
   units::inch_t pos_y_wpi(
       (funkit::math::FieldPoint::field_size_y - position[1]).value());
   units::degree_t rotation_wpi(rotation.value());
   auto* obj = MainField_.GetObject(name);
   if (obj) { obj->SetPose(pos_y_wpi, pos_x_wpi, rotation_wpi); }
-#endif
 }
 
 }  // namespace funkit::robot::swerve

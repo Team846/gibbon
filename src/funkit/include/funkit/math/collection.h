@@ -27,7 +27,14 @@ double VerticalDeadband(double input, double y_intercept, double max,
 [[maybe_unused]] pdcsu::units::degree_t CoterminalSum(
     pdcsu::units::degree_t angle, pdcsu::units::degree_t other_angle);
 
+// Returns a modulo b, always positive.
 [[maybe_unused]] pdcsu::units::degree_t modulo(
     pdcsu::units::degree_t a, pdcsu::units::degree_t b);
+
+// Returns the greatest common divisor of two numbers.
+int gcd(int a, int b);
+
+// Returns the least common multiple of two numbers.
+int lcm(int a, int b);
 
 }  // namespace funkit::math

@@ -6,6 +6,7 @@
 #include "subsystems/hardware/DrivetrainConstructor.h"
 #include "subsystems/hardware/ictest.h"
 #include "subsystems/hardware/leds.h"
+#include "subsystems/hardware/testcrt.h"
 
 class RobotContainer : public funkit::robot::GenericRobotContainer {
 public:
@@ -18,6 +19,8 @@ public:
   GPDSubsystem GPD_{&drivetrain_};
 
   ControlInputSubsystem control_input_{&drivetrain_};
+
+  TurretTestSubsystem turr_test{};
 
   ICTestSubsystem ictest_{};
 
@@ -37,6 +40,8 @@ public:
 
     RegisterSubsystemGroupAB({{&drivetrain_, false}});  // drivetrain_init}});
     RegisterSubsystemGroupAB({{&GPD_, gpd_init}});
+
+    RegisterSubsystemGroupAB({{&turr_test, true}});
 
     RegisterSubsystemGroupA({{&ictest_, ictest_init}});
   }
