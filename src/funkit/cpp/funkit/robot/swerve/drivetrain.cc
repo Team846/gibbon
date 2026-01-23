@@ -169,9 +169,8 @@ void DrivetrainSubsystem::ZeroBearing() {
   }
   for (int attempts = 1; attempts <= kMaxAttempts; ++attempts) {
     Log("Gyro zero attempt {}/{}", attempts, kMaxAttempts);
-    bool connected = false;
     if (pigeon_.has_value()) {
-      connected =
+      bool connected =
           pigeon_->IsConnected() && pigeon_->GetYaw().GetStatus().IsOK();
       if (connected) {
         pigeon_->SetYaw(0_deg);
@@ -179,7 +178,7 @@ void DrivetrainSubsystem::ZeroBearing() {
         return;
       }
     } else if (navX_.has_value()) {
-      connected = navX_->IsConnected() && !navX_->IsCalibrating();
+      bool connected = navX_->IsConnected() && !navX_->IsCalibrating();
       if (connected) {
         navX_->ZeroYaw();
         Log("Zeroed bearing (navX)");

@@ -23,18 +23,8 @@ SwerveModuleSubsystem::SwerveModuleSubsystem(Loggable& parent,
       avg_resistance_{common_config.avg_resistance},
       circuit_resistance_{common_config.circuit_resistance},
       motor_types_{common_config.motor_types},
-      drive_params_{
-          [&]() -> funkit::control::config::MotorConstructionParameters {
-            static thread_local auto cached_params =
-                getMotorParams(unique_config, common_config);
-            return cached_params.first;
-          }()},
-      steer_params_{
-          [&]() -> funkit::control::config::MotorConstructionParameters {
-            static thread_local auto cached_params =
-                getMotorParams(unique_config, common_config);
-            return cached_params.second;
-          }()},
+      drive_params_{getMotorParams(unique_config, common_config).first},
+      steer_params_{getMotorParams(unique_config, common_config).second},
       drive_{common_config.motor_types, drive_params_},
       steer_{common_config.motor_types, steer_params_},
       drive_plant_{common_config.drive_plant},
@@ -95,17 +85,13 @@ void SwerveModuleSubsystem::Setup() {
     throw std::runtime_error("Steer genome must be set before calling Setup()");
   }
 
-  drive_.Setup(drive_genome_.value(),
-      std::variant<pdcsu::util::DefLinearSys, pdcsu::util::DefArmSys>{
-          drive_plant_});
+  drive_.Setup(drive_genome_.value(), drive_plant_);
   drive_.EnableStatusFrames(
       {StatusFrame::kPositionFrame, StatusFrame::kVelocityFrame}, ms_t{20},
       ms_t{5}, ms_t{5}, ms_t{20});
   drive_.SetPosition(meter_t{0});
 
-  steer_.Setup(steer_genome_.value(),
-      std::variant<pdcsu::util::DefLinearSys, pdcsu::util::DefArmSys>{
-          steer_plant_});
+  steer_.Setup(steer_genome_.value(), steer_plant_);
   steer_.EnableStatusFrames(
       {StatusFrame::kPositionFrame, StatusFrame::kVelocityFrame}, ms_t{20},
       ms_t{20}, ms_t{5}, ms_t{20});
