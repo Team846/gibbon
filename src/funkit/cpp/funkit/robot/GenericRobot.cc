@@ -96,6 +96,10 @@ void GenericRobot::StartCompetition() {
     frc::DriverStation::RefreshData();
     next_loop_time_ += kPeriod;
 
+    if (next_loop_time_ - funkit::wpilib::CurrentFPGATime() > kPeriod * 1.5) {
+      next_loop_time_ = funkit::wpilib::CurrentFPGATime() + kPeriod;
+    }
+
     // Set new notifier time
     int32_t status = 0x00;
     HAL_UpdateNotifierAlarm(notifier_,
@@ -160,7 +164,6 @@ void GenericRobot::StartCompetition() {
           auto_command_->Cancel();
           auto_command_ = nullptr;
         }
-
         Log("Setting up teleop default/triggers");
         InitTeleop();
       } else if (mode == Mode::kTest) {
