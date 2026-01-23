@@ -238,9 +238,7 @@ void GenericRobot::StartCompetition() {
       Warn("Loop overrun: {} ms (loop period: {} ms)",
           loop_time.value() * 1000.0, kPeriod.value() * 1000.0);
 
-      next_loop_time_ += pdcsu::units::second_t{
-          static_cast<int>(loop_time.value() / kPeriod.value()) *
-          kPeriod.value()};
+      next_loop_time_ += loop_time;
     }
   }
 }

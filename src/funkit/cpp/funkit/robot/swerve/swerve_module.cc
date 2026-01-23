@@ -196,6 +196,7 @@ void SwerveModuleSubsystem::WriteToHardware(SwerveModuleTarget target) {
   Graph("target/steer_dir", steer_dir);
 
   degree_t steer_diff = target.steer - GetReadings().steer_pos;
+  Graph("steer_error", steer_diff);
   double cosine_comp = std::cos(radian_t{steer_diff}.value());
 
   const auto& motor_specs =

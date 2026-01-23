@@ -453,9 +453,8 @@ DrivetrainSubsystem::compensateForSteerLag(
     pdcsu::util::math::uVec<pdcsu::units::fps_t, 2> uncompensated) {
   cached_steer_lag_ =
       GetPreferenceValue_unit_type<pdcsu::units::second_t>("steer_lag");
-  pdcsu::units::degree_t steer_lag_compensation = pdcsu::units::degree_t{
-      -cached_steer_lag_.value() * GetReadings().yaw_rate.value() * 180.0 /
-      3.14159265358979323846};
+  pdcsu::units::degree_t steer_lag_compensation =
+      -cached_steer_lag_ * GetReadings().yaw_rate;
 
   Graph("target/steer_lag_compensation", steer_lag_compensation);
 
