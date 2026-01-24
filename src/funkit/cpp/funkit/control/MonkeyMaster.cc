@@ -156,14 +156,18 @@ void MonkeyMaster::WriteMessages() {
 
       auto gains = genome_registry[slot_id].gains;
       if (isCTRE) {
-        DC = std::clamp((error.value() * gains.kP +
-                 UnitDivision<rotation_t, second_t>(current_velocity).value() *
-                     gains.kD) /
-             12.0, -1.0, 1.0);
+        DC = std::clamp(
+            (error.value() * gains.kP +
+                UnitDivision<rotation_t, second_t>(current_velocity).value() *
+                    gains.kD) /
+                12.0,
+            -1.0, 1.0);
       } else {
-        DC =
-            std::clamp(error.value() * gains.kP +
-            UnitDivision<rotation_t, ms_t>(current_velocity).value() * gains.kD, -1.0, 1.0);
+        DC = std::clamp(
+            error.value() * gains.kP +
+                UnitDivision<rotation_t, ms_t>(current_velocity).value() *
+                    gains.kD,
+            -1.0, 1.0);
       }
     }
     if (plant_registry[slot_id].has_value()) {
