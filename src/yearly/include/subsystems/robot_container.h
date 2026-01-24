@@ -41,7 +41,7 @@ public:
     RegisterSubsystemGroupAB({{&drivetrain_, drivetrain_init}});
     RegisterSubsystemGroupAB({{&GPD_, gpd_init}});
 
-    RegisterSubsystemGroupAB({{&turr_test, true}});
+    // RegisterSubsystemGroupAB({{&turr_test, true}});
 
     // RegisterSubsystemGroupA({{&ictest_, ictest_init}});
   }

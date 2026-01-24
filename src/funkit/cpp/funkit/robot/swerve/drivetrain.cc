@@ -51,14 +51,9 @@ DrivetrainSubsystem::DrivetrainSubsystem(DrivetrainConfigs configs)
       .smart_current_limit = pdcsu::units::amp_t{80.0},
       .voltage_compensation = pdcsu::units::volt_t{10.0},
       .brake_mode = false,
-      .gains = {.kP = 2.0, .kI = 0.0, .kD = 0.0, .kF = 0.0}};
+      .gains = {.kP = 15.0, .kI = 0.0, .kD = 0.0, .kF = 0.0}};
   funkit::control::config::SubsystemGenomeHelper::CreateGenomePreferences(
       *this, "steer_genome", steer_genome_backup);
-
-  RegisterPreference("steer_gains/_kP", 2.0);
-  RegisterPreference("steer_gains/_kI", 0.0);
-  RegisterPreference("steer_gains/_kD", 0.0);
-  RegisterPreference("steer_gains/_kF", 0.0);
 
   RegisterPreference("bearing_gains/_kP", 9);
   RegisterPreference("bearing_gains/_kI", 0.0);
