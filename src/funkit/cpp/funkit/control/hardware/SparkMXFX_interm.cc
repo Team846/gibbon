@@ -6,20 +6,21 @@
 #include <units/time.h>
 #include <units/voltage.h>
 
+#include "funkit/control/hardware/Cooked.h"
 #include "funkit/math/collection.h"
-#include "funkit/wpilib/util.h"
 #include "pdcsu_units.h"
+
+#define vector_has(vec, val) std::find(vec.begin(), vec.end(), val) != vec.end()
 
 namespace funkit::control::hardware {
 
 #define set_last_error(code) last_error_ = getErrorCode(code)
 
-#define CONFIG_RESET rev::spark::SparkBase::ResetMode::kResetSafeParameters
-#define NO_CONFIG_RESET rev::spark::SparkBase::ResetMode::kNoResetSafeParameters
+#define CONFIG_RESET rev::ResetMode::kResetSafeParameters
+#define NO_CONFIG_RESET rev::ResetMode::kNoResetSafeParameters
 
-#define PERSIST_PARAMS rev::spark::SparkBase::PersistMode::kPersistParameters
-#define NO_PERSIST_PARAMS \
-  rev::spark::SparkBase::PersistMode::kNoPersistParameters
+#define PERSIST_PARAMS rev::PersistMode::kPersistParameters
+#define NO_PERSIST_PARAMS rev::PersistMode::kNoPersistParameters
 
 #define APPLY_CONFIG_NO_RESET() \
   set_last_error(esc_->Configure(configs, NO_CONFIG_RESET, NO_PERSIST_PARAMS))
@@ -30,9 +31,9 @@ bool SparkMXFX_interm::VerifyConnected() {
   return esc_->GetFirmwareVersion() != 0;
 }
 
-SparkMXFX_interm::SparkMXFX_interm(
-    int can_id, pdcsu::units::ms_t max_wait_time, bool is_controller_spark_flex)
-    : can_id_{can_id} {
+SparkMXFX_interm::SparkMXFX_interm(int can_id, pdcsu::units::ms_t max_wait_time,
+    bool is_controller_spark_flex, base::MotorMonkeyType mmtype)
+    : can_id_{can_id}, cooked{mmtype} {
   esc_ = is_controller_spark_flex
              ? static_cast<rev::spark::SparkBase*>(new rev::spark::SparkFlex{
                    can_id, rev::spark::SparkFlex::MotorType::kBrushless})
@@ -50,18 +51,20 @@ void SparkMXFX_interm::Tick() {
   rev::REVLibError last_status_code = rev::REVLibError::kOk;
   if (double* dc = std::get_if<double>(&last_command_)) {
     double dc_u = *dc;
-    last_status_code = pid_controller_->SetReference(
+    dc_u = cooked.Record(dc_u, radps_t(Read(ReadType::kReadVelocity)),
+        Read(ReadType::kTemperature));
+    last_status_code = pid_controller_->SetSetpoint(
         dc_u, rev::spark::SparkBase::ControlType::kDutyCycle);
   } else if (pdcsu::units::radps_t* vel =
                  std::get_if<pdcsu::units::radps_t>(&last_command_)) {
     units::revolutions_per_minute_t rev_ms_t{
         vel->value() * 60.0 / (2.0 * 3.14159265358979323846)};
-    last_status_code = pid_controller_->SetReference(
+    last_status_code = pid_controller_->SetSetpoint(
         rev_ms_t.to<double>(), rev::spark::SparkBase::ControlType::kVelocity);
   } else if (pdcsu::units::radian_t* pos =
                  std::get_if<pdcsu::units::radian_t>(&last_command_)) {
     units::turn_t pos_ms_t{pos->value() / (2.0 * 3.14159265358979323846)};
-    last_status_code = pid_controller_->SetReference(
+    last_status_code = pid_controller_->SetSetpoint(
         pos_ms_t.to<double>(), rev::spark::SparkBase::ControlType::kPosition);
   }
   set_last_error(last_status_code);
@@ -112,8 +115,8 @@ void SparkMXFX_interm::SetGenome(config::MotorGenome genome) {
       !funkit::math::DEquals(last_gains_.kD, genome.gains.kD) ||
       !funkit::math::DEquals(last_gains_.kF, genome.gains.kF)) {
     gains_ = genome.gains;
-    configs.closedLoop.Pidf(
-        gains_.kP, gains_.kI, std::abs(gains_.kD), std::abs(gains_.kF));
+    configs.closedLoop.Pid(gains_.kP, gains_.kI, std::abs(gains_.kD));
+    configs.closedLoop.feedForward.kV(std::abs(gains_.kF));
     last_gains_ = genome.gains;
     config_changed = true;
   }
@@ -142,6 +145,12 @@ void SparkMXFX_interm::EnableStatusFrames(config::StatusFrameSelections frames,
     configs.signals.PrimaryEncoderVelocityPeriodMs(
         static_cast<int>(velocity_ms.value()));
     configs.signals.PrimaryEncoderVelocityAlwaysOn(true);
+    configs.signals.OutputCurrentPeriodMs(
+        static_cast<int>(velocity_ms.value()));
+    // configs.signals.OutputCurrentAlwaysOn(true);
+    // configs.signals.MotorTemperatureAlwaysOn(true);
+    configs.signals.MotorTemperaturePeriodMs(
+        1000);  // Temperature required less often
   } else {
     configs.signals.PrimaryEncoderVelocityPeriodMs(32767);
     configs.signals.PrimaryEncoderVelocityAlwaysOn(false);
@@ -160,9 +169,13 @@ void SparkMXFX_interm::EnableStatusFrames(config::StatusFrameSelections frames,
     configs.signals.AnalogPositionPeriodMs(
         static_cast<int>(analog_position_ms.value()));
     configs.signals.AnalogPositionAlwaysOn(true);
+    configs.signals.LimitsPeriodMs(static_cast<int>(faults_ms.value()));
+    // configs.signals.LimitsAlwaysOn(true);
   } else {
     configs.signals.AnalogPositionPeriodMs(32767);
     configs.signals.AnalogPositionAlwaysOn(false);
+    configs.signals.LimitsPeriodMs(32767);
+    // configs.signals.LimitsAlwaysOn(false);
   }
 
   if (vector_has(frames, config::StatusFrame::kAbsoluteFrame)) {
@@ -233,6 +246,7 @@ ReadResponse SparkMXFX_interm::Read(ReadType type) {
         esc_->GetAbsoluteEncoder().GetPosition());
     return turn_wpi.to<double>();
   }
+  case ReadType::kTemperature: return esc_->GetMotorTemperature();
   default: return 0.0;
   }
 }
@@ -245,9 +259,12 @@ void SparkMXFX_interm::SpecialConfigure(SpecialConfigureType type) {
     d_type = rev::spark::LimitSwitchConfig::Type::kNormallyOpen;
   }
 
-  configs.limitSwitch.ForwardLimitSwitchEnabled(true)
+  configs.limitSwitch
+      .ForwardLimitSwitchTriggerBehavior(
+          rev::spark::LimitSwitchConfig::Behavior::kKeepMovingMotor)
       .ForwardLimitSwitchType(d_type)
-      .ReverseLimitSwitchEnabled(true)
+      .ReverseLimitSwitchTriggerBehavior(
+          rev::spark::LimitSwitchConfig::Behavior::kKeepMovingMotor)
       .ReverseLimitSwitchType(d_type);
 
   APPLY_CONFIG_NO_RESET();
@@ -295,10 +312,12 @@ void SparkMXFX_interm::ZeroEncoder(pdcsu::units::radian_t position) {
       encoder_->SetPosition(position.value() / (2.0 * 3.14159265358979323846)));
 }
 
-SparkMAX_interm::SparkMAX_interm(int can_id, pdcsu::units::ms_t max_wait_time)
-    : SparkMXFX_interm(can_id, max_wait_time, false) {}
+SparkMAX_interm::SparkMAX_interm(
+    int can_id, pdcsu::units::ms_t max_wait_time, base::MotorMonkeyType mmtype)
+    : SparkMXFX_interm(can_id, max_wait_time, false, mmtype) {}
 
 SparkFLEX_interm::SparkFLEX_interm(int can_id, pdcsu::units::ms_t max_wait_time)
-    : SparkMXFX_interm(can_id, max_wait_time, true) {}
+    : SparkMXFX_interm(can_id, max_wait_time, true,
+          base::MotorMonkeyType::SPARK_FLEX_VORTEX) {}
 
 }  // namespace funkit::control::hardware

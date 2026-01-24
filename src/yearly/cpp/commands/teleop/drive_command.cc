@@ -18,8 +18,6 @@ void DriveCommand::Periodic() {
 
   funkit::robot::swerve::DrivetrainTarget target{};
 
-  container_.drivetrain_.SetTarget({target});
-
   double translate_x = funkit::math::HorizontalDeadband(
       ci_readings_.translate_x,
       container_.control_input_.GetPreferenceValue_double(
@@ -49,11 +47,15 @@ void DriveCommand::Periodic() {
   target.velocity = {fps_t{translate_x * max_speed.value()},
       fps_t{translate_y * max_speed.value()}};
 
-  auto delta_dir =
-      (target.velocity - container_.drivetrain_.GetReadings().pose.velocity);
+  Graph("target_velocity_x", target.velocity[0]);
+  Graph("target_velocity_y", target.velocity[1]);
 
-  Graph("delta_dir_x", delta_dir[0]);
-  Graph("delta_dir_y", delta_dir[1]);
+  //   auto delta_dir =
+  //       (target.velocity -
+  //       container_.drivetrain_.GetReadings().pose.velocity);
+
+  //   Graph("delta_dir_x", delta_dir[0]);
+  //   Graph("delta_dir_y", delta_dir[1]);
 
   // auto accel_limited = AntiTippingCalculator::LimitAcceleration(
   //     delta_dir, container_.drivetrain_.GetReadings().pose.bearing);

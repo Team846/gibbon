@@ -37,7 +37,7 @@ std::pair<funkit::math::Vector2D, bool> GPDSubsystem::getBestGP(
     degree_t min_angle{degree_t{180}};
     for (size_t i = 0; i < algae.size(); i++) {
       funkit::math::Vector2D this_algae = algae.at(i);
-      degree_t angle = robot_pose.velocity.angleTo(this_algae, true);
+      degree_t angle = robot_pose.velocity.angleBetween(this_algae, true);
 
       if (angle.value() < min_angle.value()) {
         min_angle = angle;

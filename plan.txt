@@ -1,7 +1,0 @@
-2.
-ConstructICNOR(...)
-AttachICNORLearner(...)
-
-has optional icnor
-
-3. Reimpl supreme limiter, Cooked

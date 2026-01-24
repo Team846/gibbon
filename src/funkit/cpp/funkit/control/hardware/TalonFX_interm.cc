@@ -15,7 +15,7 @@ bool TalonFX_interm::VerifyConnected() { return talon_.IsAlive(); }
 
 TalonFX_interm::TalonFX_interm(
     int can_id, std::string_view bus, pdcsu::units::ms_t max_wait_time)
-    : talon_(can_id, bus),
+    : talon_(can_id, ctre::phoenix6::CANBus{bus}),
       max_wait_time_(units::millisecond_t{max_wait_time.value()}) {}
 
 void TalonFX_interm::Tick() {
@@ -188,12 +188,12 @@ ReadResponse TalonFX_interm::Read(ReadType type) {
   case ReadType::kReadPosition: {
     auto pos_wpi = ctre::phoenix6::BaseStatusSignal::GetLatencyCompensatedValue(
         talon_.GetPosition(), talon_.GetVelocity());
-    return pos_wpi.to<double>();
+    return pos_wpi.to<double>() * 2.0 * M_PI;
   }
   case ReadType::kReadVelocity: {
     auto vel_wpi = ctre::phoenix6::BaseStatusSignal::GetLatencyCompensatedValue(
         talon_.GetVelocity(), talon_.GetAcceleration());
-    return vel_wpi.to<double>();
+    return vel_wpi.to<double>() * 2.0 * M_PI;
   }
   case ReadType::kReadCurrent:
     return talon_.GetSupplyCurrent().GetValue().to<double>();
@@ -207,7 +207,11 @@ ReadResponse TalonFX_interm::Read(ReadType type) {
                ctre::phoenix6::signals::ReverseLimitValue::ClosedToGround)
                ? 1.0
                : -1.0;
-  case ReadType::kAbsPosition: return 0.0;
+  case ReadType::kTemperature:
+    return talon_.GetDeviceTemp().GetValue().to<double>();
+  case ReadType::kAbsPosition:
+    throw std::runtime_error(
+        "ReadType absolute error not implemented for TalonFX");
   default: return 0.0;
   }
 }

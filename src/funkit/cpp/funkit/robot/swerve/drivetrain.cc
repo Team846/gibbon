@@ -14,21 +14,28 @@
 namespace funkit::robot::swerve {
 
 DrivetrainSubsystem::DrivetrainSubsystem(DrivetrainConfigs configs)
-    : GenericSubsystem{"SwerveDrivetrain"},
-      configs_{configs},
-      modules_{},
-      // navX_{studica::AHRS::kMXP_SPI, studica::AHRS::k200Hz},
-      pigeon_{configs.pigeon_CAN_id, ""} {
+    : GenericSubsystem{"SwerveDrivetrain"}, configs_{configs}, modules_{} {
+  if (std::holds_alternative<PigeonConnection>(configs_.imu_connection)) {
+    const auto& pigeon_conn =
+        std::get<PigeonConnection>(configs_.imu_connection);
+    pigeon_.emplace(pigeon_conn.canID, ctre::phoenix6::CANBus{""});
+    pigeon_->OptimizeBusUtilization();
+    pigeon_->GetYaw().SetUpdateFrequency(100_Hz);
+    pigeon_->GetAngularVelocityZWorld().SetUpdateFrequency(100_Hz);
+    pigeon_->GetAccelerationX().SetUpdateFrequency(100_Hz);
+    pigeon_->GetAccelerationY().SetUpdateFrequency(100_Hz);
+  } else if (std::holds_alternative<NavXConnection>(configs_.imu_connection)) {
+    const auto& navx_conn = std::get<NavXConnection>(configs_.imu_connection);
+    auto connection_type = navx_conn.connection_type == NavXConnectionType::kMXP
+                               ? studica::AHRS::kMXP_SPI
+                               : studica::AHRS::kUSB1;
+    navX_.emplace(connection_type, studica::AHRS::k200Hz);
+  }
+
   for (int i = 0; i < 4; i++) {
     modules_[i] = std::make_unique<SwerveModuleSubsystem>(*this,
         configs_.module_unique_configs[i], configs_.module_common_config);
   }
-
-  pigeon_.OptimizeBusUtilization();
-  pigeon_.GetYaw().SetUpdateFrequency(100_Hz);
-  pigeon_.GetAngularVelocityZWorld().SetUpdateFrequency(100_Hz);
-  pigeon_.GetAccelerationX().SetUpdateFrequency(100_Hz);
-  pigeon_.GetAccelerationY().SetUpdateFrequency(100_Hz);
 
   funkit::control::config::MotorGenome drive_genome_backup{
       .motor_current_limit = pdcsu::units::amp_t{160.0},
@@ -44,14 +51,9 @@ DrivetrainSubsystem::DrivetrainSubsystem(DrivetrainConfigs configs)
       .smart_current_limit = pdcsu::units::amp_t{80.0},
       .voltage_compensation = pdcsu::units::volt_t{10.0},
       .brake_mode = false,
-      .gains = {.kP = 2.0, .kI = 0.0, .kD = 0.0, .kF = 0.0}};
+      .gains = {.kP = 15.0, .kI = 0.0, .kD = 0.0, .kF = 0.0}};
   funkit::control::config::SubsystemGenomeHelper::CreateGenomePreferences(
       *this, "steer_genome", steer_genome_backup);
-
-  RegisterPreference("steer_gains/_kP", 2.0);
-  RegisterPreference("steer_gains/_kI", 0.0);
-  RegisterPreference("steer_gains/_kD", 0.0);
-  RegisterPreference("steer_gains/_kF", 0.0);
 
   RegisterPreference("bearing_gains/_kP", 9);
   RegisterPreference("bearing_gains/_kI", 0.0);
@@ -162,16 +164,21 @@ void DrivetrainSubsystem::ZeroBearing() {
   }
   for (int attempts = 1; attempts <= kMaxAttempts; ++attempts) {
     Log("Gyro zero attempt {}/{}", attempts, kMaxAttempts);
-    // if (navX_.IsConnected() && !navX_.IsCalibrating()) {
-    if (pigeon_.IsConnected() && pigeon_.GetYaw().GetStatus().IsOK()) {
-      pigeon_.SetYaw(0_deg);
-      // navX_.ZeroYaw();
-      Log("Zeroed bearing");
-
-      // for (SwerveModuleSubsystem* module : modules_) {
-      //   module->ZeroWithCANcoder();
-      // }
-      return;
+    if (pigeon_.has_value()) {
+      bool connected =
+          pigeon_->IsConnected() && pigeon_->GetYaw().GetStatus().IsOK();
+      if (connected) {
+        pigeon_->SetYaw(0_deg);
+        Log("Zeroed bearing (Pigeon)");
+        return;
+      }
+    } else if (navX_.has_value()) {
+      bool connected = navX_->IsConnected() && !navX_->IsCalibrating();
+      if (connected) {
+        navX_->ZeroYaw();
+        Log("Zeroed bearing (navX)");
+        return;
+      }
     }
 
     Warn("Attempt to zero failed, sleeping {} ms...", kSleepTimeMs);
@@ -180,8 +187,11 @@ void DrivetrainSubsystem::ZeroBearing() {
   }
   Error("Unable to zero after {} attempts, forcing zero", kMaxAttempts);
 
-  pigeon_.SetYaw(0_deg);
-  // navX_.ZeroYaw();
+  if (pigeon_.has_value()) {
+    pigeon_->SetYaw(0_deg);
+  } else if (navX_.has_value()) {
+    navX_->ZeroYaw();
+  }
   // for (SwerveModuleSubsystem* module : modules_) {
   //   module->ZeroWithCANcoder();
   // }
@@ -243,6 +253,44 @@ pdcsu::units::degps_t DrivetrainSubsystem::ApplyBearingPID(
   return output;
 }
 
+pdcsu::units::degree_t DrivetrainSubsystem::GetBearing() {
+  if (pigeon_.has_value()) {
+    auto bearing_wpi =
+        ctre::phoenix6::BaseStatusSignal::GetLatencyCompensatedValue(
+            pigeon_->GetYaw(), pigeon_->GetAngularVelocityZWorld());
+    return pdcsu::units::degree_t{bearing_wpi.to<double>()};
+  } else if (navX_.has_value()) {
+    return pdcsu::units::degree_t{navX_->GetAngle()};
+  }
+  throw std::runtime_error("Neither Pigeon nor navX IMU is available");
+}
+
+pdcsu::units::degps_t DrivetrainSubsystem::GetYawRate() {
+  if (pigeon_.has_value()) {
+    return pdcsu::units::degps_t{
+        pigeon_->GetAngularVelocityZWorld().GetValue().to<double>()};
+  } else if (navX_.has_value()) {
+    return pdcsu::units::degps_t{navX_->GetRate()};
+  }
+  throw std::runtime_error("Neither Pigeon nor navX IMU is available");
+}
+
+pdcsu::util::math::uVec<pdcsu::units::fps2_t, 2>
+DrivetrainSubsystem::GetAcceleration() {
+  if (pigeon_.has_value()) {
+    return {pdcsu::units::fps2_t{
+                pigeon_->GetAccelerationX().GetValue().to<double>()},
+        pdcsu::units::fps2_t{
+            pigeon_->GetAccelerationY().GetValue().to<double>()}};
+  } else if (navX_.has_value()) {
+    static constexpr double g_to_fps2 =
+        funkit::math::constants::physics::g.to<double>() * 3.28084;
+    return {pdcsu::units::fps2_t{navX_->GetWorldLinearAccelX() * g_to_fps2},
+        pdcsu::units::fps2_t{navX_->GetWorldLinearAccelY() * g_to_fps2}};
+  }
+  throw std::runtime_error("Neither Pigeon nor navX IMU is available");
+}
+
 DrivetrainReadings DrivetrainSubsystem::ReadFromHardware() {
   cached_pose_variance_ =
       GetPreferenceValue_double("pose_estimator/pose_variance");
@@ -253,15 +301,10 @@ DrivetrainReadings DrivetrainSubsystem::ReadFromHardware() {
   pose_estimator.Update(
       cached_pose_variance_, cached_velocity_variance_, cached_accel_variance_);
 
-  pdcsu::units::degree_t bearing{
-      pdcsu::units::degree_t{pigeon_.GetYaw().GetValueAsDouble()}};
-  // pdcsu::units::degree_t bearing{pdcsu::units::degree_t{navX_.GetAngle()}};
+  pdcsu::units::degree_t bearing = GetBearing();
+  pdcsu::units::degps_t yaw_rate = GetYawRate();
 
   bearing += bearing_offset_;
-
-  pdcsu::units::degps_t yaw_rate{pdcsu::units::degps_t{
-      pigeon_.GetAngularVelocityZWorld().GetValueAsDouble()}};
-  // pdcsu::units::degps_t yaw_rate{pdcsu::units::degps_t{navX_.GetRate()}};
 
   cached_bearing_latency_ =
       GetPreferenceValue_unit_type<pdcsu::units::second_t>("bearing_latency");
@@ -381,15 +424,7 @@ DrivetrainReadings DrivetrainSubsystem::ReadFromHardware() {
   Graph("readings/position_y", new_pose.position[1]);
   Graph("readings/odom_bearing", odom_output.odom_bearing);
 
-  pdcsu::util::math::uVec<pdcsu::units::fps2_t, 2> accl{
-      pdcsu::units::fps2_t{pigeon_.GetAccelerationX().GetValueAsDouble()},
-      pdcsu::units::fps2_t{pigeon_.GetAccelerationY().GetValueAsDouble()}};
-
-  // static constexpr double g_to_fps2 =
-  //     funkit::math::constants::physics::g.to<double>() * 3.28084;
-  // pdcsu::util::math::uVec<pdcsu::units::fps2_t, 2> accl{
-  //     pdcsu::units::fps2_t{navX_.GetWorldLinearAccelX() * g_to_fps2},
-  //     pdcsu::units::fps2_t{navX_.GetWorldLinearAccelY() * g_to_fps2}};
+  pdcsu::util::math::uVec<pdcsu::units::fps2_t, 2> accl = GetAcceleration();
 
   Graph("readings/accel_x", accl[0]);
   Graph("readings/accel_y", accl[1]);
@@ -413,9 +448,8 @@ DrivetrainSubsystem::compensateForSteerLag(
     pdcsu::util::math::uVec<pdcsu::units::fps_t, 2> uncompensated) {
   cached_steer_lag_ =
       GetPreferenceValue_unit_type<pdcsu::units::second_t>("steer_lag");
-  pdcsu::units::degree_t steer_lag_compensation = pdcsu::units::degree_t{
-      -cached_steer_lag_.value() * GetReadings().yaw_rate.value() * 180.0 /
-      3.14159265358979323846};
+  pdcsu::units::degree_t steer_lag_compensation =
+      -cached_steer_lag_ * GetReadings().yaw_rate;
 
   Graph("target/steer_lag_compensation", steer_lag_compensation);
 

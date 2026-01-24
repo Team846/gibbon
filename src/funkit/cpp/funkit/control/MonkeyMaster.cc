@@ -11,11 +11,13 @@
 #include <string_view>
 #include <vector>
 
+#include "funkit/control/SupremeLimiter.h"
 #include "funkit/control/hardware/SparkMXFX_interm.h"
 #include "funkit/control/hardware/TalonFX_interm.h"
 #include "funkit/control/hardware/simulation/SIMLEVEL.h"
 #include "funkit/control/hardware/simulation/VirtualMonkey.h"
 #include "funkit/math/collection.h"
+#include "pdcsu_control.h"
 #include "pdcsu_units.h"
 
 namespace funkit::control {
@@ -71,6 +73,9 @@ config::MotorGenome MonkeyMaster::genome_registry[CONTROLLER_REGISTRY_SIZE]{};
 
 pdcsu::units::nm_t MonkeyMaster::load_registry[CONTROLLER_REGISTRY_SIZE]{};
 
+std::optional<pdcsu::util::BasePlant>
+    MonkeyMaster::plant_registry[CONTROLLER_REGISTRY_SIZE]{};
+
 pdcsu::units::volt_t MonkeyMaster::battery_voltage{pdcsu::units::volt_t{0}};
 
 std::queue<MonkeyMaster::MotorMessage> MonkeyMaster::control_messages{};
@@ -84,9 +89,11 @@ void MonkeyMaster::Tick(bool disabled) {
   if (disabled) {
     if (!frc::RobotBase::IsSimulation()) {
       WriteMessages();
+      MonkeyMaster::loggable_.Graph("LoggableTick", -battery_voltage);
       return;
     }
   }
+  MonkeyMaster::loggable_.Graph("LoggableTick", battery_voltage);
 
   WriteMessages();
 
@@ -126,14 +133,59 @@ void MonkeyMaster::WriteMessages() {
     control_messages.pop();
   }
 
+  std::vector<PerDeviceInformation> per_device_information;
   for (const auto& msg : messages_to_process) {
-    auto* controller = controller_registry[msg.slot_id];
     size_t slot_id = msg.slot_id;
+    auto* controller = controller_registry[slot_id];
+
+    double DC = 0.0;
+
+    if (msg.type == MotorMessage::Type::DC) {
+      DC = std::clamp(std::get<double>(msg.value), -1.0, 1.0);
+    } else if (msg.type == MotorMessage::Type::Position) {
+      bool isCTRE = control::base::MotorMonkeyTypeHelper::is_talon_fx(
+          slot_id_to_type_[slot_id]);
+
+      radian_t position = std::get<pdcsu::units::radian_t>(msg.value);
+      radian_t current_position{
+          controller->Read(hardware::ReadType::kReadPosition)};
+      radps_t current_velocity{
+          controller->Read(hardware::ReadType::kReadVelocity)};
+
+      rotation_t error = position - current_position;
+
+      auto gains = genome_registry[slot_id].gains;
+      if (isCTRE) {
+        DC = std::clamp(
+            (error.value() * gains.kP +
+                UnitDivision<rotation_t, second_t>(current_velocity).value() *
+                    gains.kD) /
+                12.0,
+            -1.0, 1.0);
+      } else {
+        DC = std::clamp(
+            error.value() * gains.kP +
+                UnitDivision<rotation_t, ms_t>(current_velocity).value() *
+                    gains.kD,
+            -1.0, 1.0);
+      }
+    }
+    if (plant_registry[slot_id].has_value()) {
+      per_device_information.push_back({slot_id, *plant_registry[slot_id],
+          radps_t{controller->Read(hardware::ReadType::kReadVelocity)}, DC});
+    }
+  }
+
+  auto limited_dcs =
+      SupremeLimiter::Limit(per_device_information, battery_voltage);
+
+  for (const auto& msg : messages_to_process) {
+    size_t slot_id = msg.slot_id;
+    auto* controller = controller_registry[slot_id];
 
     switch (msg.type) {
     case MotorMessage::Type::DC: {
-      double duty_cycle = std::get<double>(msg.value);
-      base::ControlRequest cr = duty_cycle;
+      base::ControlRequest cr = limited_dcs[slot_id];
       if (!controller->IsDuplicateControlMessage(cr) ||
           controller->GetLastErrorCode() !=
               funkit::control::hardware::ControllerErrorCodes::kAllOK) {
@@ -186,7 +238,7 @@ bool MonkeyMaster::VerifyConnected(size_t slot_id) {
 size_t MonkeyMaster::ConstructController(
     funkit::control::base::MotorMonkeyType type,
     funkit::control::config::MotorConstructionParameters params,
-    config::MotorGenome genome) {
+    pdcsu::util::BasePlant plant, config::MotorGenome genome) {
   slot_counter_++;
 
   size_t slot_id = slot_counter_;
@@ -212,8 +264,8 @@ size_t MonkeyMaster::ConstructController(
 
   } else if (funkit::control::base::MotorMonkeyTypeHelper::is_spark_max(type)) {
     this_controller = controller_registry[slot_id] =
-        new funkit::control::hardware::SparkMAX_interm{
-            params.can_id, pdcsu::units::ms_t{params.max_wait_time.value()}};
+        new funkit::control::hardware::SparkMAX_interm{params.can_id,
+            pdcsu::units::ms_t{params.max_wait_time.value()}, type};
   } else if (funkit::control::base::MotorMonkeyTypeHelper::is_spark_flex(
                  type)) {
     this_controller = controller_registry[slot_id] =
@@ -226,6 +278,8 @@ size_t MonkeyMaster::ConstructController(
   }
 
   if (this_controller == nullptr) { return slot_id; }
+
+  plant_registry[slot_id] = plant;
 
   genome_registry[slot_id] = genome;
 

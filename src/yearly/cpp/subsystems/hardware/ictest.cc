@@ -27,17 +27,17 @@ ICTestSubsystem::ICTestSubsystem()
       esc_2_{base::SPARK_MAX_NEO,
           MotorConstructionParameters{ports::ictest_::kMotor2_CANID, "", true}},
       max_vel_mps_(0.0) {
-  MotorGenome genome_backup{.motor_current_limit = 40_u_A,
-      .smart_current_limit = 30_u_A,
-      .voltage_compensation = 12_u_V,
+  MotorGenome genome_backup{.motor_current_limit = 40_A_,
+      .smart_current_limit = 30_A_,
+      .voltage_compensation = 12_V_,
       .brake_mode = true,
       .gains = {.kP = 0.0, .kI = 0.0, .kD = 0.0, .kF = 0.0}};
   SubsystemGenomeHelper::CreateGenomePreferences(
       *this, "genome", genome_backup);
 
   RegisterPreference("end_mass_lbs", 7.0);
-  RegisterPreference("circuit_resistance", 0.01_u_ohm);
-  RegisterPreference("friction_newtons", 1.0_u_N);
+  RegisterPreference("circuit_resistance", 0.01_ohm_);
+  RegisterPreference("friction_newtons", 1.0_N_);
   RegisterPreference("num_motors", 2);
   RegisterPreference("viscous_damping", 0.0);
   RegisterPreference("gear_ratio_in_per_rot", 2.2146);
@@ -63,10 +63,10 @@ void ICTestSubsystem::Setup() {
   double gear_ratio_in_per_rot =
       GetPreferenceValue_double("gear_ratio_in_per_rot");
   meter_t travel_per_rot = inch_t(gear_ratio_in_per_rot);
-  UnitDivision<radian_t, meter_t> gear_ratio = 1_u_rot / travel_per_rot;
+  UnitDivision<radian_t, meter_t> gear_ratio = 1_rot_ / travel_per_rot;
 
   kg_t mass = pound_t(GetPreferenceValue_double("end_mass_lbs"));
-  mps2_t effective_gravity = 1.0_u_mps2;
+  mps2_t effective_gravity = 1.0_mps2_;
   newton_t friction = newton_t(GetPreferenceValue_double("friction_newtons"));
   double viscous_damping_val = GetPreferenceValue_double("viscous_damping");
   UnitDivision<newton_t, rpm_t> viscous_damping =
@@ -105,11 +105,11 @@ void ICTestSubsystem::Setup() {
   icnor_controller_->setConstraints(radps_t(free_speed_radps * 0.95),
       amp_t(genome.smart_current_limit.value()));
 
-  icnor_controller_->setTolerance(0.6_u_rad, 1.2_u_rad);
+  icnor_controller_->setTolerance(0.6_rad_, 1.2_rad_);
 
   icnor_controller_->setProjectionHorizon(1);
 
-  icnor_controller_->setDesaturationThresh(9_u_rad);
+  icnor_controller_->setDesaturationThresh(9_rad_);
 
   max_vel_mps_ = max_vel_real.value();
 
@@ -157,7 +157,7 @@ void ICTestSubsystem::WriteToHardware(ICTestTarget target) {
   meter_t target_pos_real = inch_t(target.pos.value());
   radian_t target_pos_native = linear_sys_->toNative(target_pos_real);
   Graph("target_pos", inch_t{target.pos.value()});
-  radps_t target_vel_native = 0_u_radps;
+  radps_t target_vel_native = 0_radps_;
 
   double output = icnor_controller_->getOutput(target_pos_native,
       target_vel_native, current_pos_native, current_vel_native);

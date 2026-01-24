@@ -13,58 +13,58 @@ Commands set targets to these subsystems. Some commands are like actions, such a
 
 ```
 Gibbon/
-├── src/
-│   ├── yearly/                    # Year-specific robot code (2026 season)
-│   │   ├── cpp/                  # Implementation files (.cc)
-│   │   │   ├── subsystems/       # Subsystem implementations
-│   │   │   │   ├── abstract/     # Abstract/logic subsystems
-│   │   │   │   └── hardware/     # Hardware subsystems
-│   │   │   ├── commands/         # Command implementations
-│   │   │   │   ├── general/      # General commands
-│   │   │   │   └── teleop/       # Teleoperated commands
-│   │   │   ├── calculators/      # Utility calculators
-│   │   │   ├── autos/            # Autonomous routines
-│   │   │   └── FunkyRobot.cc     # Main robot class
-│   │   ├── include/              # Header files (.h)
-│   │   │   ├── subsystems/       # Subsystem headers
-│   │   │   ├── commands/         # Command headers
-│   │   │   ├── autos/            # Autonomous definitions
-│   │   │   ├── calculators/      # Calculator headers
-│   │   │   ├── ports.h           # Hardware port definitions
-│   │   │   ├── robot_constants.h # Robot constants
-│   │   │   └── FunkyRobot.h      # Main robot header
-│   │   └── resources/            # Non-code resources
-│   │       ├── deploy/           # Files deployed to RoboRIO
-│   │       ├── logsclient/       # Log client scripts
-│   │       ├── ntbackup/         # NetworkTables backup
-│   │       └── swervevis/        # Swerve visualization tools
-│   ├── funkit/                   # Custom architecture library
-│   │   ├── cpp/                  # Implementation files
-│   │   │   └── funkit/
-│   │   │       ├── base/         # Base classes (Loggable, logging)
-│   │   │       ├── control/      # Motor control system
-│   │   │       ├── math/         # Math utilities
-│   │   │       ├── robot/        # Robot framework
-│   │   │       └── wpilib/       # WPILib utilities
-│   │   └── include/              # Header files
-│   │       └── funkit/
-│   │           ├── base/         # Base class headers
-│   │           ├── control/      # Motor control headers
-│   │           ├── math/         # Math utility headers
-│   │           ├── robot/        # Robot framework headers
-│   │           └── wpilib/       # WPILib utility headers
-│   ├── pdcsu_tr12/               # PDCSU library (auto-downloaded)
-│   └── deploy/                   # Files to deploy to RoboRIO
-│       └── autos/                # Scriptable autonomous routines (unused)
-├── build/                        # Build outputs (generated)
-│   └── tmp/                      # Build logs
-├── vendordeps/                   # Vendor dependency JSON files
-│   ├── Phoenix6-26.1.0.json     # CTRE Phoenix 6
-│   ├── REVLib.json              # REV Robotics
-│   └── WPILibNewCommands.json   # WPILib commands
-├── gradle/                       # Gradle wrapper
-├── build.gradle                  # Main build configuration
-└── README.md                     # This file
+??? src/
+?   ??? yearly/                    # Year-specific robot code (2026 season)
+?   ?   ??? cpp/                  # Implementation files (.cc)
+?   ?   ?   ??? subsystems/       # Subsystem implementations
+?   ?   ?   ?   ??? abstract/     # Abstract/logic subsystems
+?   ?   ?   ?   ??? hardware/     # Hardware subsystems
+?   ?   ?   ??? commands/         # Command implementations
+?   ?   ?   ?   ??? general/      # General commands
+?   ?   ?   ?   ??? teleop/       # Teleoperated commands
+?   ?   ?   ??? calculators/      # Utility calculators
+?   ?   ?   ??? autos/            # Autonomous routines
+?   ?   ?   ??? FunkyRobot.cc     # Main robot class
+?   ?   ??? include/              # Header files (.h)
+?   ?   ?   ??? subsystems/       # Subsystem headers
+?   ?   ?   ??? commands/         # Command headers
+?   ?   ?   ??? autos/            # Autonomous definitions
+?   ?   ?   ??? calculators/      # Calculator headers
+?   ?   ?   ??? ports.h           # Hardware port definitions
+?   ?   ?   ??? robot_constants.h # Robot constants
+?   ?   ?   ??? FunkyRobot.h      # Main robot header
+?   ?   ??? resources/            # Non-code resources
+?   ?       ??? deploy/           # Files deployed to RoboRIO
+?   ?       ??? logsclient/       # Log client scripts
+?   ?       ??? ntbackup/         # NetworkTables backup
+?   ?       ??? swervevis/        # Swerve visualization tools
+?   ??? funkit/                   # Custom architecture library
+?   ?   ??? cpp/                  # Implementation files
+?   ?   ?   ??? funkit/
+?   ?   ?       ??? base/         # Base classes (Loggable, logging)
+?   ?   ?       ??? control/      # Motor control system
+?   ?   ?       ??? math/         # Math utilities
+?   ?   ?       ??? robot/        # Robot framework
+?   ?   ?       ??? wpilib/       # WPILib utilities
+?   ?   ??? include/              # Header files
+?   ?       ??? funkit/
+?   ?           ??? base/         # Base class headers
+?   ?           ??? control/      # Motor control headers
+?   ?           ??? math/         # Math utility headers
+?   ?           ??? robot/        # Robot framework headers
+?   ?           ??? wpilib/       # WPILib utility headers
+?   ??? pdcsu_tr12/               # PDCSU library (auto-downloaded)
+?   ??? deploy/                   # Files to deploy to RoboRIO
+?       ??? autos/                # Scriptable autonomous routines (unused)
+??? build/                        # Build outputs (generated)
+?   ??? tmp/                      # Build logs
+??? vendordeps/                   # Vendor dependency JSON files
+?   ??? Phoenix6-26.1.0.json     # CTRE Phoenix 6
+?   ??? REVLib.json              # REV Robotics
+?   ??? WPILibNewCommands.json   # WPILib commands
+??? gradle/                       # Gradle wrapper
+??? build.gradle                  # Main build configuration
+??? README.md                     # This file
 ```
 
 ## First Time Setup - Windows

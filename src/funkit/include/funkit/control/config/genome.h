@@ -70,42 +70,41 @@ Helper class for loading and saving genome preferences for subsystems.
 struct SubsystemGenomeHelper {
   static void CreateGainsPreferences(funkit::base::Loggable& sub,
       const std::string& gains_name, const Gains& backup) {
-    sub.RegisterPreference(
-        fmt::format("{}/{}", sub.name(), gains_name), backup.kP);
-    sub.RegisterPreference(
-        fmt::format("{}/{}", sub.name(), gains_name), backup.kI);
-    sub.RegisterPreference(
-        fmt::format("{}/{}", sub.name(), gains_name), backup.kD);
-    sub.RegisterPreference(
-        fmt::format("{}/{}", sub.name(), gains_name), backup.kF);
+    sub.RegisterPreference(fmt::format("{}/{}", gains_name, "kP"), backup.kP);
+    sub.RegisterPreference(fmt::format("{}/{}", gains_name, "kI"), backup.kI);
+    sub.RegisterPreference(fmt::format("{}/{}", gains_name, "kD"), backup.kD);
+    sub.RegisterPreference(fmt::format("{}/{}", gains_name, "kF"), backup.kF);
   }
 
   static Gains LoadGainsPreferences(
       funkit::base::Loggable& sub, const std::string& gains_name) {
     Gains gains;
 
-    gains.kP = sub.GetPreferenceValue_double(
-        fmt::format("{}/{}", sub.name(), gains_name));
-    gains.kI = sub.GetPreferenceValue_double(
-        fmt::format("{}/{}", sub.name(), gains_name));
-    gains.kD = sub.GetPreferenceValue_double(
-        fmt::format("{}/{}", sub.name(), gains_name));
-    gains.kF = sub.GetPreferenceValue_double(
-        fmt::format("{}/{}", sub.name(), gains_name));
+    gains.kP =
+        sub.GetPreferenceValue_double(fmt::format("{}/{}", gains_name, "kP"));
+    gains.kI =
+        sub.GetPreferenceValue_double(fmt::format("{}/{}", gains_name, "kI"));
+    gains.kD =
+        sub.GetPreferenceValue_double(fmt::format("{}/{}", gains_name, "kD"));
+    gains.kF =
+        sub.GetPreferenceValue_double(fmt::format("{}/{}", gains_name, "kF"));
 
     return gains;
   }
 
   static void CreateGenomePreferences(funkit::base::Loggable& sub,
       const std::string& genome_name, const MotorGenome& backup) {
-    sub.RegisterPreference(fmt::format("{}/{}", sub.name(), genome_name),
+    sub.RegisterPreference(
+        fmt::format("{}/{}", genome_name, "motor_current_limit"),
         backup.motor_current_limit);
-    sub.RegisterPreference(fmt::format("{}/{}", sub.name(), genome_name),
+    sub.RegisterPreference(
+        fmt::format("{}/{}", genome_name, "smart_current_limit"),
         backup.smart_current_limit);
-    sub.RegisterPreference(fmt::format("{}/{}", sub.name(), genome_name),
+    sub.RegisterPreference(fmt::format("{}/{}/{}", sub.name(), genome_name,
+                               "voltage_compensation"),
         backup.voltage_compensation);
     sub.RegisterPreference(
-        fmt::format("{}/{}", sub.name(), genome_name), backup.brake_mode);
+        fmt::format("{}/{}", genome_name, "brake_mode"), backup.brake_mode);
     CreateGainsPreferences(
         sub, fmt::format("{}/gains", genome_name), backup.gains);
   }
@@ -116,15 +115,15 @@ struct SubsystemGenomeHelper {
 
     genome.motor_current_limit =
         sub.GetPreferenceValue_unit_type<pdcsu::units::amp_t>(
-            fmt::format("{}/{}", sub.name(), genome_name));
+            fmt::format("{}/{}", genome_name, "motor_current_limit"));
     genome.smart_current_limit =
         sub.GetPreferenceValue_unit_type<pdcsu::units::amp_t>(
-            fmt::format("{}/{}", sub.name(), genome_name));
+            fmt::format("{}/{}", genome_name, "smart_current_limit"));
     genome.voltage_compensation =
         sub.GetPreferenceValue_unit_type<pdcsu::units::volt_t>(
-            fmt::format("{}/{}", sub.name(), genome_name));
+            fmt::format("{}/{}", genome_name, "voltage_compensation"));
     genome.brake_mode = sub.GetPreferenceValue_bool(
-        fmt::format("{}/{}", sub.name(), genome_name));
+        fmt::format("{}/{}", genome_name, "brake_mode"));
     genome.gains =
         LoadGainsPreferences(sub, fmt::format("{}/gains", genome_name));
 

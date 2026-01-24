@@ -3,7 +3,6 @@
 #include <cmath>
 
 #include "funkit/control/calculators/CircuitResistanceCalculator.h"
-#include "funkit/control/config/genome.h"
 #include "funkit/math/constants.h"
 #include "pdcsu_units.h"
 #include "ports.h"
@@ -30,7 +29,7 @@ struct ModulePorts {
 };
 
 struct UserSettableValues {
-  int pigeon_CAN_id;
+  std::variant<swerve::PigeonConnection, swerve::NavXConnection> imu_connection;
   pdcsu::units::inch_t wheel_diameter;
   double drive_gear_ratio;
   swerve::steer_conv_unit steer_reduction;
@@ -50,8 +49,8 @@ struct UserSettableValues {
     ModulePorts BL;
     ModulePorts BR;
   } module_ports;
-  std::vector<units::inch_t> camera_x_offsets;
-  std::vector<units::inch_t> camera_y_offsets;
+  std::vector<pdcsu::units::inch_t> camera_x_offsets;
+  std::vector<pdcsu::units::inch_t> camera_y_offsets;
   size_t num_cameras;
   std::map<int, funkit::robot::calculators::AprilTagData> april_locations;
 };
@@ -60,10 +59,13 @@ struct UserSettableValues {
 // User Settable Values. Also set weight and dims in robot_constants.h
 //--------------------------------------------------------
 UserSettableValues GetUserSettableValues() {
-  return UserSettableValues{.pigeon_CAN_id = ports::drivetrain_::kPIGEON_CANID,
+  return UserSettableValues{
+      .imu_connection =
+          swerve::NavXConnection{
+              funkit::robot::swerve::NavXConnectionType::kUSB},
       .wheel_diameter = inch_t{4},
       .drive_gear_ratio = 6.75,
-      .steer_reduction = scalar_t{(7_tr / 150_tr).to<double>()},
+      .steer_reduction = 150_rot_ / 7_rot_,
       .wheel_contact_radius = inch_t{0.4},
       .steer_inertia_coeff = 0.285,
       .drive_friction = 0.02,
@@ -84,26 +86,26 @@ UserSettableValues GetUserSettableValues() {
           .BR = {ports::drivetrain_::kBRCANCoder_CANID,
               ports::drivetrain_::kBRDrive_CANID,
               ports::drivetrain_::kBRSteer_CANID}},
-      .camera_x_offsets = {units::inch_t{-6.25}, units::inch_t{-4.5}},
-      .camera_y_offsets = {units::inch_t{4}, units::inch_t{-12.5}},
+      .camera_x_offsets = {inch_t{-6.25}, inch_t{-4.5}},
+      .camera_y_offsets = {inch_t{4}, inch_t{-12.5}},
       .num_cameras = 2,
-      .april_locations = {{1, {25.38_u_in, 183.58_u_in}},
-          {2, {135.09_u_in, 182.11_u_in}}, {3, {144.85_u_in, 205.87_u_in}},
-          {4, {158.85_u_in, 205.87_u_in}}, {5, {182.60_u_in, 182.11_u_in}},
-          {6, {292.32_u_in, 183.58_u_in}}, {7, {292.32_u_in, 180.63_u_in}},
-          {8, {182.60_u_in, 168.11_u_in}}, {9, {172.85_u_in, 492.88_u_in}},
-          {10, {158.85_u_in, 158.34_u_in}}, {11, {135.09_u_in, 168.11_u_in}},
-          {12, {25.38_u_in, 180.63_u_in}}, {13, {26.22_u_in, 0.30_u_in}},
-          {14, {43.22_u_in, 0.30_u_in}}, {15, {147.47_u_in, 0.32_u_in}},
-          {16, {164.47_u_in, 0.32_u_in}}, {17, {292.32_u_in, 467.63_u_in}},
-          {18, {182.60_u_in, 469.11_u_in}}, {19, {172.85_u_in, 445.35_u_in}},
-          {20, {158.85_u_in, 445.35_u_in}}, {21, {135.09_u_in, 469.11_u_in}},
-          {22, {25.38_u_in, 467.63_u_in}}, {23, {25.38_u_in, 470.58_u_in}},
-          {24, {135.09_u_in, 483.11_u_in}}, {25, {144.85_u_in, 492.88_u_in}},
-          {26, {158.85_u_in, 492.88_u_in}}, {27, {182.60_u_in, 483.11_u_in}},
-          {28, {292.32_u_in, 470.58_u_in}}, {29, {291.47_u_in, 650.92_u_in}},
-          {30, {274.47_u_in, 650.92_u_in}}, {31, {170.22_u_in, 650.90_u_in}},
-          {32, {153.22_u_in, 650.90_u_in}}}};  // TODO: Double check locations
+      .april_locations = {{1, {25.38_in_, 183.58_in_}},
+          {2, {135.09_in_, 182.11_in_}}, {3, {144.85_in_, 205.87_in_}},
+          {4, {158.85_in_, 205.87_in_}}, {5, {182.60_in_, 182.11_in_}},
+          {6, {292.32_in_, 183.58_in_}}, {7, {292.32_in_, 180.63_in_}},
+          {8, {182.60_in_, 168.11_in_}}, {9, {172.85_in_, 492.88_in_}},
+          {10, {158.85_in_, 158.34_in_}}, {11, {135.09_in_, 168.11_in_}},
+          {12, {25.38_in_, 180.63_in_}}, {13, {26.22_in_, 0.30_in_}},
+          {14, {43.22_in_, 0.30_in_}}, {15, {147.47_in_, 0.32_in_}},
+          {16, {164.47_in_, 0.32_in_}}, {17, {292.32_in_, 467.63_in_}},
+          {18, {182.60_in_, 469.11_in_}}, {19, {172.85_in_, 445.35_in_}},
+          {20, {158.85_in_, 445.35_in_}}, {21, {135.09_in_, 469.11_in_}},
+          {22, {25.38_in_, 467.63_in_}}, {23, {25.38_in_, 470.58_in_}},
+          {24, {135.09_in_, 483.11_in_}}, {25, {144.85_in_, 492.88_in_}},
+          {26, {158.85_in_, 492.88_in_}}, {27, {182.60_in_, 483.11_in_}},
+          {28, {292.32_in_, 470.58_in_}}, {29, {291.47_in_, 650.92_in_}},
+          {30, {274.47_in_, 650.92_in_}}, {31, {170.22_in_, 650.90_in_}},
+          {32, {153.22_in_, 650.90_in_}}}};  // TODO: Double check locations
 }
 
 //--------------------------------------------------------
@@ -124,15 +126,7 @@ swerve::SwerveModuleUniqueConfig CreateModuleConfig(const std::string& name,
 }  // namespace
 
 DrivetrainConstructor::DrivetrainConstructor()
-    : Loggable{"DrivetrainConstructor"} {
-  RegisterPreference("drive_motor_current_limit", 160_u_A);
-  RegisterPreference("steer_motor_current_limit", 120_u_A);
-  RegisterPreference("drive_motor_smart_current_limit", 120_u_A);
-  RegisterPreference("steer_motor_smart_current_limit", 80_u_A);
-
-  RegisterPreference("drive_motor_voltage_compensation", 16_u_V);
-  RegisterPreference("steer_motor_voltage_compensation", 10_u_V);
-}
+    : Loggable{"DrivetrainConstructor"} {}
 
 swerve::DrivetrainConfigs DrivetrainConstructor::getDrivetrainConfigs() {
   const UserSettableValues user_values = GetUserSettableValues();
@@ -208,15 +202,14 @@ swerve::DrivetrainConfigs DrivetrainConstructor::getDrivetrainConfigs() {
   using namespace pdcsu::units;
   using namespace pdcsu::util;
 
-  auto drive_genome_voltage =
-      GetPreferenceValue_unit_type<volt_t>("drive_motor_voltage_compensation");
   DefBLDC def_bldc{motor_specs.stall_current, motor_specs.free_current,
-      motor_specs.stall_torque, motor_specs.free_speed, drive_genome_voltage};
+      motor_specs.stall_torque, motor_specs.free_speed, 12_V_};
 
   UnitDivision<radian_t, meter_t> drive_gear_ratio{
-      (drive_reduction_value_for_plant * 12.0) / M_PI};
+      (2.0 * M_PI * 3.28084) /
+      drive_reduction_value_for_plant};  // 3.28084 ft/m
   pdcsu::util::DefLinearSys drive_plant{def_bldc, 1, drive_gear_ratio,
-      1.0_u_mps2, kg_t{0.0}, newton_t{user_values.drive_friction},
+      1.0_mps2_, kg_t{0.0}, newton_t{user_values.drive_friction},
       UnitDivision<newton_t, rpm_t>{0.0}, ms_t{20.0}, avg_resistance};
 
   scalar_t steer_gear_ratio{user_values.steer_reduction.value()};
@@ -239,18 +232,11 @@ swerve::DrivetrainConfigs DrivetrainConstructor::getDrivetrainConfigs() {
       .steer_plant = steer_plant,
       .bus = ""};
 
-  std::vector<inch_t> camera_x_offsets;
-  camera_x_offsets.reserve(user_values.camera_x_offsets.size());
-  for (const auto& offset : user_values.camera_x_offsets) {
-    camera_x_offsets.emplace_back(offset.to<double>());
-  }
-  std::vector<inch_t> camera_y_offsets;
-  camera_y_offsets.reserve(user_values.camera_y_offsets.size());
-  for (const auto& offset : user_values.camera_y_offsets) {
-    camera_y_offsets.emplace_back(offset.to<double>());
-  }
+  const std::vector<inch_t>& camera_x_offsets = user_values.camera_x_offsets;
+  const std::vector<inch_t>& camera_y_offsets = user_values.camera_y_offsets;
 
-  swerve::DrivetrainConfigs configs{.pigeon_CAN_id = user_values.pigeon_CAN_id,
+  swerve::DrivetrainConfigs configs{
+      .imu_connection = user_values.imu_connection,
       .module_common_config = module_common_config,
       .module_unique_configs = {FR_config, FL_config, BL_config, BR_config},
       .wheelbase_horizontal_dim = robot_constants::base::wheelbase_x,

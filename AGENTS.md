@@ -380,9 +380,9 @@ struct MotorGenome {
 
 // Create genome preferences in constructor:
 MotorGenome genome_backup{
-    .motor_current_limit = 40_u_A,
-    .smart_current_limit = 30_u_A,
-    .voltage_compensation = 12_u_V,
+    .motor_current_limit = 40_A_,
+    .smart_current_limit = 30_A_,
+    .voltage_compensation = 12_V_,
     .brake_mode = true};
 SubsystemGenomeHelper::CreateGenomePreferences(*this, "genome", genome_backup);
 
@@ -658,7 +658,7 @@ pdcsu::units::inch_t distance = pdcsu::units::inch_t{24};
 pdcsu::units::meter_t length = pdcsu::units::meter_t{1.5};
 ```
 
-**Note**: PDCSU units do not support user-defined literals like WPILib. Always use explicit constructors: `pdcsu::units::degree_t{90}` instead of `90_u_deg`.
+**Note**: PDCSU units do not support user-defined literals like WPILib. Always use explicit constructors: `pdcsu::units::degree_t{90}` instead of `90_deg_`.
 
 #### Common PDCSU Unit Types
 
@@ -802,33 +802,39 @@ The drivetrain includes path recording functionality:
 
 9. **HAL timing units**: `HAL_GetFPGATime()` returns **microseconds**, NOT milliseconds. The implementation in `src/funkit/cpp/funkit/wpilib/time.cc` had a bug where it wrapped the microsecond value in `pdcsu::units::ms_t`, causing a 1000x timing error. The correct implementation converts microseconds to seconds: `pdcsu::units::second_t(time_us / 1000000.0)`. Similarly, `HAL_UpdateNotifierAlarm()` expects microseconds. Always verify HAL function units with the WPILib documentation.
 
+10. **Static thread_local caching bug in SwerveModuleSubsystem**: The `SwerveModuleSubsystem` constructor had `static thread_local` cached parameters in lambdas that caused all four swerve modules to share the same motor parameters (including CAN IDs) from the first constructed module. The bug was in initializer list lambdas that cached `getMotorParams()` results. This caused all steer motors to read the same angle. **Never use `static thread_local` in constructor initializer lists when each instance needs unique values**. The fix was to directly call `getMotorParams()` without caching: `drive_params_{getMotorParams(unique_config, common_config).first}` instead of using a lambda with `static thread_local auto cached_params`.
+
+11. **Inverted steer gear ratio**: The steer gear ratio in `DrivetrainConstructor.cc` was inverted, causing steer position readings to be 21.4x too large. PDCSU's `DefArmSys` expects `gear_ratio` to represent "motor rotations per output rotation" because it uses `toReal(motor_pos) = motor_pos / gear_ratio`. For a 150:7 gearbox (150 motor rotations → 7 output rotations), the gear ratio should be `150_tr / 7_tr = 21.43`, NOT `7_tr / 150_tr = 0.0467`. **Always verify gear ratio direction**: if the gearbox is N:M (N motor rotations → M output rotations), use `N/M` for PDCSU plants.
+
+12. **Inverted drive gear ratio**: The drive gear ratio formula in `DrivetrainConstructor.cc` was inverted, causing drive position readings to be 68x too small. PDCSU's `DefLinearSys` expects `gear_ratio` (type `UnitDivision<radian_t, meter_t>`) to represent "motor radians per meter" because it uses `toReal(motor_radians) = motor_radians / gear_ratio` to get meters. The formula was `(drive_reduction_value * 12.0) / M_PI` which gave ~1.94 rad/m, but should be `(2.0 * M_PI * 3.28084) / drive_reduction_value` which gives ~132.9 rad/m. **For DefLinearSys**: gear_ratio = (2π × conversion_to_feet) / (feet_per_motor_rotation).
+
 ### Windows Terminal Environment
 
-10. **PowerShell syntax**: This repository uses Windows PowerShell. The `&&` operator does NOT work in PowerShell. Use semicolons (`;`) to chain commands, or use separate commands. For example:
+13. **PowerShell syntax**: This repository uses Windows PowerShell. The `&&` operator does NOT work in PowerShell. Use semicolons (`;`) to chain commands, or use separate commands. For example:
    - ❌ Wrong: `cd src && move funkit funkit`
    - ✅ Correct: `cd src; Move-Item -Path funkit -Destination funkit` or use separate commands
 
 ### Development Guidelines
 
-11. **Always inherit from base classes**: Use `GenericSubsystem`, `GenericCommand`, `Loggable`
+14. **Always inherit from base classes**: Use `GenericSubsystem`, `GenericCommand`, `Loggable`
 
-12. **Register preferences**: All configurable values should be preferences
+15. **Register preferences**: All configurable values should be preferences
 
-13. **Use unit types**: Prefer `units::unit_t` types over raw doubles (see [Units Library](#units-library) section for details)
+16. **Use unit types**: Prefer `units::unit_t` types over raw doubles (see [Units Library](#units-library) section for details)
 
-14. **Follow naming conventions**: See [Naming Conventions](#naming-conventions) section below
+17. **Follow naming conventions**: See [Naming Conventions](#naming-conventions) section below
 
-15. **Log appropriately**: Use `Log()`, `Warn()`, `Error()` for debugging
+18. **Log appropriately**: Use `Log()`, `Warn()`, `Error()` for debugging
 
-16. **Update groups matter**: Register subsystems with appropriate groups
+19. **Update groups matter**: Register subsystems with appropriate groups
 
-17. **Readings are immutable**: Don't modify readings after reading from hardware
+20. **Readings are immutable**: Don't modify readings after reading from hardware
 
-18. **Targets set state**: Commands should set subsystem targets, not directly control hardware
+21. **Targets set state**: Commands should set subsystem targets, not directly control hardware
 
-19. **Preference keys are hierarchical**: Include subsystem name in key if needed
+22. **Preference keys are hierarchical**: Include subsystem name in key if needed
 
-20. **Verify hardware**: Always implement `VerifyHardware()` for troubleshooting
+23. **Verify hardware**: Always implement `VerifyHardware()` for troubleshooting
 
 ### Naming Conventions
 
