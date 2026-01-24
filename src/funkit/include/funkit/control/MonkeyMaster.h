@@ -1,6 +1,7 @@
 #pragma once
 
 #include <map>
+#include <optional>
 #include <queue>
 #include <vector>
 
@@ -10,6 +11,7 @@
 #include "funkit/control/calculators/CurrentTorqueCalculator.h"
 #include "funkit/control/config/genome.h"
 #include "funkit/control/hardware/IntermediateController.h"
+#include "pdcsu_control.h"
 #include "pdcsu_units.h"
 
 #define CONTROLLER_REGISTRY_SIZE 64
@@ -58,7 +60,7 @@ public:
   */
   static size_t ConstructController(funkit::control::base::MotorMonkeyType type,
       funkit::control::config::MotorConstructionParameters params,
-      config::MotorGenome genome);
+      pdcsu::util::BasePlant plant, config::MotorGenome genome);
 
   /*
   EnableStatusFrames()
@@ -137,6 +139,8 @@ private:
 
   static config::MotorGenome genome_registry[CONTROLLER_REGISTRY_SIZE];
   static pdcsu::units::nm_t load_registry[CONTROLLER_REGISTRY_SIZE];
+  static std::optional<pdcsu::util::BasePlant>
+      plant_registry[CONTROLLER_REGISTRY_SIZE];
 
   static pdcsu::units::volt_t battery_voltage;
 
