@@ -26,7 +26,8 @@ public:
   /* Limits duty cycle to implement current limit across all devices. No
    * prioritization is applied. */
   [[nodiscard]] static std::map<size_t, double> Limit(
-      std::vector<PerDeviceInformation> inputs, volt_t v_batt);
+      std::vector<PerDeviceInformation> inputs, volt_t v_batt,
+      size_t num_limitable);
 
 private:
   static volt_t ema_v_batt_;

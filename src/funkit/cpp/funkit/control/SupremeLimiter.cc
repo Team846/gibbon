@@ -18,7 +18,8 @@ static amp_t ema_current_threshold = 50_A_;
 static volt_t tolerable_drop = 4.5_V_;
 
 std::map<size_t, double> SupremeLimiter::Limit(
-    std::vector<PerDeviceInformation> inputs, volt_t v_batt) {
+    std::vector<PerDeviceInformation> inputs, volt_t v_batt,
+    size_t num_limitable) {
   amp_t total_current = 0_A_;
   std::vector<std::pair<size_t, amp_t>> draws_by_index;
   std::map<size_t, double> dcs_by_index;
@@ -50,9 +51,13 @@ std::map<size_t, double> SupremeLimiter::Limit(
                      (1 - current_limit_growth_factor) * new_limit;
   }
 
-  const double scale_factor = current_limit_.value() / total_current.value();
+  const double scale_adjustment = num_limitable / inputs.size();
+  const double original_scale_factor =
+      current_limit_.value() / total_current.value();
 
-  if (scale_factor >= 1.0) return dcs_by_index;
+  if (original_scale_factor >= 1.0) return dcs_by_index;
+  const double scale_factor =
+      original_scale_factor * std::min(0.5, scale_adjustment);
 
   for (const auto& draw : draws_by_index) {
     const PerDeviceInformation info = info_by_index.at(draw.first);
