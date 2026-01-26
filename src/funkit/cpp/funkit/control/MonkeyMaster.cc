@@ -174,12 +174,13 @@ void MonkeyMaster::WriteMessages() {
     }
     if (plant_registry[slot_id].has_value()) {
       per_device_information.push_back({slot_id, *plant_registry[slot_id],
-          radps_t{controller->Read(hardware::ReadType::kReadVelocity)}, DC, is_limitable});
+          radps_t{controller->Read(hardware::ReadType::kReadVelocity)}, DC,
+          is_limitable});
     }
   }
 
-  auto limited_dcs = SupremeLimiter::Limit(
-      per_device_information, battery_voltage);
+  auto limited_dcs =
+      SupremeLimiter::Limit(per_device_information, battery_voltage);
 
   for (const auto& msg : messages_to_process) {
     size_t slot_id = msg.slot_id;

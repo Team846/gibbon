@@ -32,9 +32,7 @@ std::map<size_t, double> SupremeLimiter::Limit(
             input.DC, input.speed, pdcsu::units::volt_t{12.0}, 0_ohm_,
             plant.def_bldc.free_speed, plant.def_bldc.stall_current));
     total_current += draw;
-    if (input.is_limitable) {
-      total_limitable_current += draw;
-    }
+    if (input.is_limitable) { total_limitable_current += draw; }
     draws_by_index.push_back({input.device_id, draw});
     dcs_by_index[input.device_id] = input.DC;
     info_by_index.emplace(input.device_id, input);
@@ -55,7 +53,8 @@ std::map<size_t, double> SupremeLimiter::Limit(
                      (1 - current_limit_growth_factor) * new_limit;
   }
 
-  const double scale_adjustment = total_limitable_current.value() / total_current.value();
+  const double scale_adjustment =
+      total_limitable_current.value() / total_current.value();
   const double original_scale_factor =
       current_limit_.value() / total_current.value();
 
