@@ -134,16 +134,16 @@ void MonkeyMaster::WriteMessages() {
   }
 
   std::vector<PerDeviceInformation> per_device_information;
-  size_t num_limitable = 0;
   for (const auto& msg : messages_to_process) {
     size_t slot_id = msg.slot_id;
     auto* controller = controller_registry[slot_id];
 
     double DC = 0.0;
+    bool is_limitable = false;
 
     if (msg.type == MotorMessage::Type::DC) {
       DC = std::clamp(std::get<double>(msg.value), -1.0, 1.0);
-      num_limitable++;
+      is_limitable = true;
     } else if (msg.type == MotorMessage::Type::Position) {
       bool isCTRE = control::base::MotorMonkeyTypeHelper::is_talon_fx(
           slot_id_to_type_[slot_id]);
@@ -174,12 +174,12 @@ void MonkeyMaster::WriteMessages() {
     }
     if (plant_registry[slot_id].has_value()) {
       per_device_information.push_back({slot_id, *plant_registry[slot_id],
-          radps_t{controller->Read(hardware::ReadType::kReadVelocity)}, DC});
+          radps_t{controller->Read(hardware::ReadType::kReadVelocity)}, DC, is_limitable});
     }
   }
 
   auto limited_dcs = SupremeLimiter::Limit(
-      per_device_information, battery_voltage, num_limitable);
+      per_device_information, battery_voltage);
 
   for (const auto& msg : messages_to_process) {
     size_t slot_id = msg.slot_id;
