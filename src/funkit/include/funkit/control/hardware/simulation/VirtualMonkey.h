@@ -6,17 +6,11 @@
 #include "funkit/control/config/genome.h"
 #include "funkit/control/hardware/IntermediateController.h"
 #include "pdcsu_units.h"
-#include "simulation/simbldc.h"
 #include "util/sysdef.h"
 
 namespace funkit::control::simulation {
 
 class VirtualMonkey : public funkit::control::hardware::IntermediateController {
-private:
-  pdcsu::util::BasePlant ConstructPlant(funkit::control::base::MotorSpecs specs,
-      pdcsu::units::ohm_t circuit_resistance,
-      pdcsu::units::kgm2_t rotational_inertia, double friction);
-
 public:
   VirtualMonkey(funkit::control::base::MotorSpecs specs,
       pdcsu::units::ohm_t circuit_resistance,
@@ -71,12 +65,18 @@ private:
   bool brake_mode_ = false;
   bool inverted = false;
 
-  pdcsu::simulation::SimBLDC sim_bldc_;
-
   base::ControlRequest last_command_ = 0.0;
 
-  std::chrono::steady_clock::time_point last_tick_;
-  pdcsu::units::ms_t last_tick_time_{0};
+  double position_rad_ = 0.0;
+  double velocity_rad_s_ = 0.0;
+
+  double free_speed_rad_s_ = 0.0;
+  double stall_current_A_ = 0.0;
+  double stall_torque_Nm_ = 0.0;
+  double effective_inertia_kgm2_ = 1e-6;
+  double velocity_tau_s_ = 0.05;
+
+  double max_accel_rad_s2_ = 100.0;
 
   bool velocity_packet_enabled = true;
   bool position_packet_enabled = true;

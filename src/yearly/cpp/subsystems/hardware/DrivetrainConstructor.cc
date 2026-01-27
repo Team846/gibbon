@@ -67,7 +67,7 @@ UserSettableValues GetUserSettableValues() {
       .drive_gear_ratio = 6.75,
       .steer_reduction = 150_rot_ / 7_rot_,
       .wheel_contact_radius = inch_t{0.4},
-      .steer_inertia_coeff = 0.285,
+      .steer_inertia_coeff = 0.00285,
       .drive_friction = 0.02,
       .steer_friction = 0.11,
       .wire_configs = {.FR = {inch_t{15}, 0},

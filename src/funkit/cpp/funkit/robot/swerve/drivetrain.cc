@@ -540,14 +540,12 @@ void DrivetrainSubsystem::WriteToHardware(DrivetrainTarget target) {
   for (int i = 0; i < 4; i++)
     modules_[i]->UpdateHardware();
 
-#ifndef _WIN32
   auto pose = GetReadings().estimated_pose;
   units::inch_t pos_x_wpi(pose.position[0].value());
   units::inch_t pos_y_wpi(
       (funkit::math::FieldPoint::field_size_y - pose.position[1]).value());
   units::degree_t bearing_wpi((degree_t{180} - pose.bearing).value());
   MainField_.SetRobotPose(pos_y_wpi, pos_x_wpi, bearing_wpi);
-#endif
 }
 
 void DrivetrainSubsystem::StartPathRecording(const std::string& filename) {

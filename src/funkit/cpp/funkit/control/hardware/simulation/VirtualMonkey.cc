@@ -9,62 +9,57 @@
 
 namespace funkit::control::simulation {
 
-pdcsu::util::BasePlant VirtualMonkey::ConstructPlant(
-    funkit::control::base::MotorSpecs specs,
-    pdcsu::units::ohm_t circuit_resistance,
-    pdcsu::units::kgm2_t rotational_inertia, double friction) {
-  using namespace pdcsu::units;
-  using namespace pdcsu::util;
+namespace {
 
-  DefBLDC def_bldc{specs.stall_current, specs.free_current, specs.stall_torque,
-      specs.free_speed, volt_t{12.0}};
+constexpr double kDtS = 0.01;
+constexpr double kRpmToRadPerS = 2.0 * 3.14159265358979323846 / 60.0;
+constexpr double kMinInertiaKgM2 = 1e-9;
+constexpr double kMinVelocityTauS = 0.04;
+constexpr double kMinFrictionCoeff = 0.02;
 
-  BasePlant plant{def_bldc, rotational_inertia,
-      nm_t{friction * specs.stall_torque.value()},
-      UnitDivision<nm_t, rpm_t>{0.0},
-      [](radian_t, radps_t) -> nm_t { return nm_t{0.0}; }, ms_t{20},
-      circuit_resistance};
-
-  return plant;
-}
+}  // namespace
 
 VirtualMonkey::VirtualMonkey(funkit::control::base::MotorSpecs specs,
     pdcsu::units::ohm_t circuit_resistance,
     pdcsu::units::kgm2_t rotational_inertia, double friction)
-    : sim_bldc_{ConstructPlant(
-          specs, circuit_resistance, rotational_inertia, friction)},
-      last_tick_(std::chrono::steady_clock::now()) {
-  sim_bldc_.SetCurrentLimit(specs.stall_current);
+    : position_rad_{0.0}, velocity_rad_s_{0.0},
+      free_speed_rad_s_{specs.free_speed.value() * kRpmToRadPerS},
+      stall_current_A_{specs.stall_current.value()},
+      stall_torque_Nm_{specs.stall_torque.value()},
+      effective_inertia_kgm2_{std::max(rotational_inertia.value(), kMinInertiaKgM2)},
+      velocity_tau_s_{}, max_accel_rad_s2_{100.0} {
+  double omega = free_speed_rad_s_;
+  double J = effective_inertia_kgm2_;
+  double T = stall_torque_Nm_;
+  double friction_coeff = (friction > 0.0) ? friction : kMinFrictionCoeff;
+  double tau_mech = J * omega / T;
+  double tau_friction = J * omega / (friction_coeff * T);
+  velocity_tau_s_ =
+      std::max({tau_mech, tau_friction, kMinVelocityTauS});
+  (void)circuit_resistance;
 }
 
 void VirtualMonkey::Tick() {
-  auto current_time = std::chrono::steady_clock::now();
-  auto dt_ms = std::chrono::duration_cast<std::chrono::milliseconds>(
-      current_time - last_tick_);
-  last_tick_ = current_time;
-
-  pdcsu::units::ms_t dt{pdcsu::units::ms_t{static_cast<double>(dt_ms.count())}};
-  if (dt.value() > 30.0) { dt = pdcsu::units::ms_t{30.0}; }
-
-  double duty_cycle = 0.0;
+  double target_vel = 0.0;
   if (double* dc = std::get_if<double>(&last_command_)) {
-    duty_cycle = *dc;
+    target_vel = (*dc) * free_speed_rad_s_;
   } else if (pdcsu::units::radps_t* vel =
                  std::get_if<pdcsu::units::radps_t>(&last_command_)) {
-    double error = vel->value() - sim_bldc_.getVelocity().value();
-    duty_cycle = gains_.kP * error + gains_.kI * 0.0 + gains_.kD * 0.0 +
-                 gains_.kF * vel->value();
+    target_vel = vel->value();
   } else if (pdcsu::units::radian_t* pos =
                  std::get_if<pdcsu::units::radian_t>(&last_command_)) {
-    double error = pos->value() - sim_bldc_.getPosition().value();
-    duty_cycle = gains_.kP * error + gains_.kI * 0.0 +
-                 gains_.kD * sim_bldc_.getVelocity().value() +
-                 gains_.kF * sim_bldc_.getCurrent().value();
+    double error = pos->value() - position_rad_;
+    target_vel = gains_.kP * error;
   }
-  duty_cycle = std::clamp(duty_cycle, -1.0, 1.0);
+  target_vel = std::clamp(target_vel, -free_speed_rad_s_, free_speed_rad_s_);
 
-  sim_bldc_.setControlTarget(duty_cycle);
-  sim_bldc_.Tick(dt);
+  double alpha = kDtS / (velocity_tau_s_ + kDtS);
+  double desired_vel = velocity_rad_s_ + alpha * (target_vel - velocity_rad_s_);
+  double max_delta_vel = max_accel_rad_s2_ * kDtS;
+  double delta_vel = desired_vel - velocity_rad_s_;
+  delta_vel = std::clamp(delta_vel, -max_delta_vel, max_delta_vel);
+  velocity_rad_s_ += delta_vel;
+  position_rad_ += velocity_rad_s_ * kDtS;
 }
 
 void VirtualMonkey::SetGenome(config::MotorGenome genome) {
@@ -74,7 +69,12 @@ void VirtualMonkey::SetGenome(config::MotorGenome genome) {
   gains_.kI = genome.gains.kI;
   gains_.kD = genome.gains.kD;
   gains_.kF = genome.gains.kF;
-  sim_bldc_.SetCurrentLimit(genome.motor_current_limit);
+  double I_limit = genome.motor_current_limit.value();
+  if (stall_current_A_ > 0.0 && effective_inertia_kgm2_ > 0.0) {
+    double tau_max =
+        (I_limit / stall_current_A_) * stall_torque_Nm_;
+    max_accel_rad_s2_ = tau_max / effective_inertia_kgm2_;
+  }
 }
 
 void VirtualMonkey::EnableStatusFrames(config::StatusFrameSelections frames,
@@ -92,6 +92,10 @@ void VirtualMonkey::EnableStatusFrames(config::StatusFrameSelections frames,
   }
   if (disable_pos) position_packet_enabled = false;
   if (disable_vel) velocity_packet_enabled = false;
+  (void)faults_ms;
+  (void)velocity_ms;
+  (void)encoder_position_ms;
+  (void)analog_position_ms;
 }
 
 bool VirtualMonkey::IsDuplicateControlMessage(base::ControlRequest cr) {
@@ -119,18 +123,19 @@ bool VirtualMonkey::IsDuplicateControlMessage(base::ControlRequest cr) {
 hardware::ReadResponse VirtualMonkey::Read(hardware::ReadType type) {
   switch (type) {
   case hardware::ReadType::kReadPosition: {
-    pdcsu::units::radian_t pos = sim_bldc_.getPosition();
-    if (inverted) pos = pdcsu::units::radian_t{-pos.value()};
+    double pos = position_rad_;
+    if (inverted) pos = -pos;
     if (!position_packet_enabled) { return 0.0; }
-    return pos.value();
+    return pos;
   }
   case hardware::ReadType::kReadVelocity: {
-    pdcsu::units::radps_t vel = sim_bldc_.getVelocity();
-    if (inverted) vel = pdcsu::units::radps_t{-vel.value()};
+    double vel = velocity_rad_s_;
+    if (inverted) vel = -vel;
     if (!velocity_packet_enabled) { return 0.0; }
-    return vel.value();
+    return vel;
   }
-  case hardware::ReadType::kReadCurrent: return sim_bldc_.getCurrent().value();
+  case hardware::ReadType::kReadCurrent:
+    return std::abs(velocity_rad_s_) * 0.1;
   case hardware::ReadType::kFwdSwitch: return -1.0;
   case hardware::ReadType::kRevSwitch: return -1.0;
   case hardware::ReadType::kAbsPosition: return 0.0;
@@ -157,8 +162,7 @@ void VirtualMonkey::Write(base::ControlRequest cr) {
 }
 
 void VirtualMonkey::SetLoad(pdcsu::units::nm_t load) {
-  if (inverted) load = pdcsu::units::nm_t{-load.value()};
-  sim_bldc_.SetLoad(load);
+  (void)load;
 }
 
 void VirtualMonkey::SetBatteryVoltage(pdcsu::units::volt_t voltage) {
@@ -166,9 +170,9 @@ void VirtualMonkey::SetBatteryVoltage(pdcsu::units::volt_t voltage) {
 }
 
 void VirtualMonkey::ZeroEncoder(pdcsu::units::radian_t position) {
-  if (inverted) { position = pdcsu::units::radian_t{-position.value()}; }
-  // sim_bldc_.SetPosition(position);
-  (void)position;  // TODO: Implement this
+  double pos = position.value();
+  if (inverted) pos = -pos;
+  position_rad_ = pos;
 }
 
 }  // namespace funkit::control::simulation
