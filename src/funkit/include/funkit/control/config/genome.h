@@ -40,6 +40,16 @@ struct Gains {
 };
 
 /*
+FollowerConfig.
+
+For configuring a motor controller as a follower.
+*/
+struct FollowerConfig {
+  int leader_CAN_id{-1};
+  bool inverted{false};
+};
+
+/*
 MotorGenome.
 
 Contains all configuration parameters for a motor controller.
@@ -60,6 +70,8 @@ struct MotorGenome {
   bool brake_mode{true};
 
   Gains gains;
+
+  FollowerConfig follower_config;
 };
 
 /*

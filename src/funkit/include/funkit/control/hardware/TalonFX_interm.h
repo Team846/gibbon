@@ -60,6 +60,7 @@ private:
   pdcsu::units::amp_t last_motor_current_limit_{pdcsu::units::amp_t{0}};
   pdcsu::units::volt_t last_voltage_compensation_{pdcsu::units::volt_t{0}};
   config::Gains last_gains_{};
+  config::FollowerConfig last_follower_config_{-1, false};
 
   ctre::phoenix6::hardware::TalonFX talon_;
 

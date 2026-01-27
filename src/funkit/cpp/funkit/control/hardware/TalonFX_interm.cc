@@ -20,7 +20,15 @@ TalonFX_interm::TalonFX_interm(
 
 void TalonFX_interm::Tick() {
   ctre::phoenix::StatusCode last_status_code = ctre::phoenix::StatusCode::OK;
-  if (double* dc = std::get_if<double>(&last_command_)) {
+  if (last_follower_config_.leader_CAN_id >= 0) {
+    ctre::phoenix6::controls::Follower follower_msg{
+        last_follower_config_.leader_CAN_id,
+        (last_follower_config_.inverted)
+            ? ctre::phoenix6::signals::MotorAlignmentValue::Opposed
+            : ctre::phoenix6::signals::MotorAlignmentValue::Aligned};
+    follower_msg.WithUpdateFreqHz(0_Hz);
+    last_status_code = talon_.SetControl(follower_msg);
+  } else if (double* dc = std::get_if<double>(&last_command_)) {
     ctre::phoenix6::controls::DutyCycleOut dc_msg{*dc};
     dc_msg.WithUpdateFreqHz(0_Hz);
     last_status_code = talon_.SetControl(dc_msg);
@@ -92,6 +100,12 @@ void TalonFX_interm::SetGenome(config::MotorGenome genome) {
     last_error_ = getErrorCode(talon_.GetConfigurator().Apply(slot_configs));
     if (last_error_ != ControllerErrorCodes::kAllOK) return;
     last_gains_ = genome.gains;
+  }
+
+  if (last_follower_config_.leader_CAN_id !=
+          genome.follower_config.leader_CAN_id ||
+      last_follower_config_.inverted != genome.follower_config.inverted) {
+    last_follower_config_ = genome.follower_config;
   }
 }
 
