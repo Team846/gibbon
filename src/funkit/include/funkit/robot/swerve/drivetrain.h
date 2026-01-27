@@ -103,7 +103,8 @@ public:
 
   void SetCANCoderOffsets();
 
-  pdcsu::units::degps_t ApplyBearingPID(pdcsu::units::degree_t target_bearing);
+  pdcsu::units::degps_t ApplyBearingPID(pdcsu::units::degree_t target_bearing,
+      pdcsu::units::radps_t dAE = 0.0_radps_);
 
   /**
    * Start recording the robot's path.

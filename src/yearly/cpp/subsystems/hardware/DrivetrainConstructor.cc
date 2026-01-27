@@ -89,7 +89,9 @@ UserSettableValues GetUserSettableValues() {
       .camera_x_offsets = {inch_t{-6.25}, inch_t{-4.5}},
       .camera_y_offsets = {inch_t{4}, inch_t{-12.5}},
       .num_cameras = 2,
-      .april_locations = {{1, {25.38_in_, 183.58_in_}},
+      .april_locations = {
+          {1, {0_in_, 0_in_}},  // TODO: Tag 1 was previously (correctly) at
+                                // (25.38, 183.58)
           {2, {135.09_in_, 182.11_in_}}, {3, {144.85_in_, 205.87_in_}},
           {4, {158.85_in_, 205.87_in_}}, {5, {182.60_in_, 182.11_in_}},
           {6, {292.32_in_, 183.58_in_}}, {7, {292.32_in_, 180.63_in_}},

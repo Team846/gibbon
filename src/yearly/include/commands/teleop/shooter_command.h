@@ -1,13 +1,12 @@
 #pragma once
 
-#include "funkit/math/RampRateLimiter.h"
 #include "funkit/robot/GenericCommand.h"
 #include "subsystems/robot_container.h"
 
-class DriveCommand
-    : public funkit::robot::GenericCommand<RobotContainer, DriveCommand> {
+class ShooterCommand
+    : public funkit::robot::GenericCommand<RobotContainer, ShooterCommand> {
 public:
-  DriveCommand(RobotContainer& container);
+  ShooterCommand(RobotContainer& container);
 
   void OnInit() override;
 

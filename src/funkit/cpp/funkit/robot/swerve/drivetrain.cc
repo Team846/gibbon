@@ -221,7 +221,7 @@ void DrivetrainSubsystem::SetCANCoderOffsets() {
 }
 
 pdcsu::units::degps_t DrivetrainSubsystem::ApplyBearingPID(
-    pdcsu::units::degree_t target_bearing) {
+    pdcsu::units::degree_t target_bearing, pdcsu::units::radps_t dAE) {
   pdcsu::units::degree_t bearing = GetReadings().pose.bearing;
   pdcsu::units::degps_t yaw_rate = GetReadings().yaw_rate;
 
@@ -237,7 +237,8 @@ pdcsu::units::degps_t DrivetrainSubsystem::ApplyBearingPID(
       .kF = 0.0};
 
   double raw_output = gains.kP * error.value() + gains.kI * 0.0 +
-                      gains.kD * yaw_rate.value() + gains.kF * 0.0;
+                      gains.kD * degps_t(dAE - yaw_rate).value() +
+                      gains.kF * 0.0 + degps_t(dAE).value();
 
   pdcsu::units::degps_t output{
       pdcsu::units::degps_t{1} *

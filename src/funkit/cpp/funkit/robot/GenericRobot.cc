@@ -182,10 +182,11 @@ void GenericRobot::StartCompetition() {
       last_mode_ = mode;
     }
 
-    OnPeriodic();
-
     // Update subsystem readings
     generic_robot_container_->UpdateReadings();
+
+    // Special-case periodic implemented in FunkyRobot
+    OnPeriodic();
 
     // Tick command scheduler
     frc2::CommandScheduler::GetInstance().Run();
