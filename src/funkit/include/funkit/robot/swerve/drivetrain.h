@@ -54,11 +54,10 @@ struct DrivetrainConfigs {
 
   pdcsu::units::fps_t max_speed;
 
-  std::vector<pdcsu::units::inch_t> camera_x_offsets;
-  std::vector<pdcsu::units::inch_t> camera_y_offsets;
-  size_t cams;
+  std::vector<funkit::robot::calculators::AprilTagCameraConfig>
+      april_camera_configs;
 
-  std::map<int, funkit::robot::calculators::AprilTagData> april_locations;
+  std::map<size_t, funkit::robot::calculators::AprilTagData> april_locations;
   pdcsu::units::fps2_t max_accel;
 };
 
@@ -193,8 +192,7 @@ private:
   bool cached_pose_override_ = false;
   double cached_april_variance_coeff_ = 0.0;
   double cached_triangular_variance_coeff_ = 0.0;
-  pdcsu::units::ms_t cached_fudge_latency1_{pdcsu::units::ms_t{0}};
-  pdcsu::units::ms_t cached_fudge_latency2_{pdcsu::units::ms_t{0}};
+  std::map<size_t, pdcsu::units::second_t> cached_fudge_latencies_{};
   pdcsu::units::ms_t cached_april_bearing_latency_{pdcsu::units::ms_t{0}};
 
   frc::Field2d MainField_;

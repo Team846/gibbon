@@ -80,8 +80,11 @@ DrivetrainSubsystem::DrivetrainSubsystem(DrivetrainConfigs configs)
 
   RegisterPreference("april_tags/april_variance_coeff", 0.08);
   RegisterPreference("april_tags/triangular_variance_coeff", 0.000139);
-  RegisterPreference("april_tags/fudge_latency1", pdcsu::units::ms_t{155.0});
-  RegisterPreference("april_tags/fudge_latency2", pdcsu::units::ms_t{70.0});
+  for (const auto& config : configs.april_camera_configs) {
+    RegisterPreference(
+        "april_tags/fudge_latency" + std::to_string(config.camera_id),
+        pdcsu::units::ms_t{75.0});
+  }
 
   RegisterPreference("drive_to_point/kC", 5.0);
   RegisterPreference("drive_to_point/kA", 0.05);
@@ -98,16 +101,14 @@ DrivetrainSubsystem::DrivetrainSubsystem(DrivetrainConfigs configs)
       .wheelbase_forward_dim = configs.wheelbase_forward_dim,
   });
 
-  std::vector<std::shared_ptr<nt::NetworkTable>> april_tables = {};
-  for (size_t i = 0; i < configs.cams; i++) {
-    april_tables.push_back(nt::NetworkTableInstance::GetDefault().GetTable(
-        "AprilTagsCam" + std::to_string(i + 1)));
+  std::vector<funkit::robot::calculators::AprilTagCamera> cameras = {};
+  for (const auto& config : configs.april_camera_configs) {
+    cameras.push_back(
+        {config, nt::NetworkTableInstance::GetDefault().GetTable(
+                     "AprilTagsCam" + std::to_string(config.camera_id))});
   }
-  tag_pos_calculator.setConstants({.tag_locations = configs.april_locations,
-      .camera_x_offsets = configs.camera_x_offsets,
-      .camera_y_offsets = configs.camera_y_offsets,
-      .cams = configs.cams,
-      .april_tables = april_tables});
+  tag_pos_calculator.setConstants(
+      {.tag_locations = configs.april_locations, .cameras = cameras});
 
 #ifndef _WIN32
   for (int i = 0; i < 20; i++) {
@@ -365,18 +366,20 @@ DrivetrainReadings DrivetrainSubsystem::ReadFromHardware() {
       GetPreferenceValue_double("april_tags/april_variance_coeff");
   cached_triangular_variance_coeff_ =
       GetPreferenceValue_double("april_tags/triangular_variance_coeff");
-  cached_fudge_latency1_ = GetPreferenceValue_unit_type<pdcsu::units::ms_t>(
-      "april_tags/fudge_latency1");
-  cached_fudge_latency2_ = GetPreferenceValue_unit_type<pdcsu::units::ms_t>(
-      "april_tags/fudge_latency2");
+
+  for (const auto& config : configs_.april_camera_configs) {
+    cached_fudge_latencies_[config.camera_id] =
+        GetPreferenceValue_unit_type<pdcsu::units::ms_t>(
+            "april_tags/fudge_latency" + std::to_string(config.camera_id));
+  }
+
   cached_april_bearing_latency_ =
       GetPreferenceValue_unit_type<pdcsu::units::ms_t>("april_bearing_latency");
 
   funkit::robot::calculators::ATCalculatorOutput tag_pos =
       tag_pos_calculator.calculate({new_pose, GetReadings().pose, yaw_rate,
           cached_april_variance_coeff_, cached_triangular_variance_coeff_,
-          {cached_fudge_latency1_, cached_fudge_latency2_},
-          cached_april_bearing_latency_});
+          cached_fudge_latencies_, cached_april_bearing_latency_});
 
   if (tag_pos.variance >= 0) {
     pose_estimator.AddVisionMeasurement(
