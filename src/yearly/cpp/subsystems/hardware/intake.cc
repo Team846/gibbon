@@ -30,7 +30,7 @@ void IntakeSubsystem::Setup() {
       motor_specs.stall_torque, motor_specs.free_speed, 12_V_);
 
   DefArmSys intake_plant(
-      def_bldc, 1, 1_rot_ / 1_rot_,
+      def_bldc, 1, 1_u_,
       [&](radian_t x, radps_t v) -> nm_t { return 0.0_Nm_; }, 0.004_kgm2_,
       0.1_Nm_, 0.1_Nm_ / 600_radps_, 20_ms_);
 

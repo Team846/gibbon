@@ -23,7 +23,7 @@ void ShootingCalculator::Calculate(const RobotContainer* container_) {
 
   using Vel2D = uVec<pdcsu::units::fps_t, 2>;
 
-  const Vector2D target{0_in_, 36_in_};  // TODO: verify "36in"
+  const Vector2D target{158.845_in_, 182.11_in_};  // TODO: Blue side flipping
   const inch_t pointblank_distance = 48_in_;
 
   auto drivetrain_readings = container_->drivetrain_.GetReadings();
