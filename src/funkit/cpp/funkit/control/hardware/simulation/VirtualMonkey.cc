@@ -22,20 +22,22 @@ constexpr double kMinFrictionCoeff = 0.02;
 VirtualMonkey::VirtualMonkey(funkit::control::base::MotorSpecs specs,
     pdcsu::units::ohm_t circuit_resistance,
     pdcsu::units::kgm2_t rotational_inertia, double friction)
-    : position_rad_{0.0}, velocity_rad_s_{0.0},
+    : position_rad_{0.0},
+      velocity_rad_s_{0.0},
       free_speed_rad_s_{specs.free_speed.value() * kRpmToRadPerS},
       stall_current_A_{specs.stall_current.value()},
       stall_torque_Nm_{specs.stall_torque.value()},
-      effective_inertia_kgm2_{std::max(rotational_inertia.value(), kMinInertiaKgM2)},
-      velocity_tau_s_{}, max_accel_rad_s2_{100.0} {
+      effective_inertia_kgm2_{
+          std::max(rotational_inertia.value(), kMinInertiaKgM2)},
+      velocity_tau_s_{},
+      max_accel_rad_s2_{100.0} {
   double omega = free_speed_rad_s_;
   double J = effective_inertia_kgm2_;
   double T = stall_torque_Nm_;
   double friction_coeff = (friction > 0.0) ? friction : kMinFrictionCoeff;
   double tau_mech = J * omega / T;
   double tau_friction = J * omega / (friction_coeff * T);
-  velocity_tau_s_ =
-      std::max({tau_mech, tau_friction, kMinVelocityTauS});
+  velocity_tau_s_ = std::max({tau_mech, tau_friction, kMinVelocityTauS});
   (void)circuit_resistance;
 }
 
@@ -71,8 +73,7 @@ void VirtualMonkey::SetGenome(config::MotorGenome genome) {
   gains_.kF = genome.gains.kF;
   double I_limit = genome.motor_current_limit.value();
   if (stall_current_A_ > 0.0 && effective_inertia_kgm2_ > 0.0) {
-    double tau_max =
-        (I_limit / stall_current_A_) * stall_torque_Nm_;
+    double tau_max = (I_limit / stall_current_A_) * stall_torque_Nm_;
     max_accel_rad_s2_ = tau_max / effective_inertia_kgm2_;
   }
 }
@@ -134,8 +135,7 @@ hardware::ReadResponse VirtualMonkey::Read(hardware::ReadType type) {
     if (!velocity_packet_enabled) { return 0.0; }
     return vel;
   }
-  case hardware::ReadType::kReadCurrent:
-    return std::abs(velocity_rad_s_) * 0.1;
+  case hardware::ReadType::kReadCurrent: return std::abs(velocity_rad_s_) * 0.1;
   case hardware::ReadType::kFwdSwitch: return -1.0;
   case hardware::ReadType::kRevSwitch: return -1.0;
   case hardware::ReadType::kAbsPosition: return 0.0;
@@ -161,9 +161,7 @@ void VirtualMonkey::Write(base::ControlRequest cr) {
   }
 }
 
-void VirtualMonkey::SetLoad(pdcsu::units::nm_t load) {
-  (void)load;
-}
+void VirtualMonkey::SetLoad(pdcsu::units::nm_t load) { (void)load; }
 
 void VirtualMonkey::SetBatteryVoltage(pdcsu::units::volt_t voltage) {
   (void)voltage;

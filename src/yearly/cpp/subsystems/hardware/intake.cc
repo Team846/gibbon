@@ -29,12 +29,12 @@ void IntakeSubsystem::Setup() {
   DefBLDC def_bldc(motor_specs.stall_current, motor_specs.free_current,
       motor_specs.stall_torque, motor_specs.free_speed, 12_V_);
 
-  DefArmSys Intake_plant(
-      def_bldc, 1, 2_rot_ / 1_rot_,
-      [&](radian_t x, radps_t v) -> nm_t { return 0.0_Nm_; }, 0.001856_kgm2_,
-      0.05_Nm_, 0.1_Nm_ / 1200_radps_, 20_ms_);
+  DefArmSys intake_plant(
+      def_bldc, 1, 1_rot_ / 1_rot_,
+      [&](radian_t x, radps_t v) -> nm_t { return 0.0_Nm_; }, 0.004_kgm2_,
+      0.1_Nm_, 0.1_Nm_ / 600_radps_, 20_ms_);
 
-  esc_.Setup(genome_backup, Intake_plant);
+  esc_.Setup(genome_backup, intake_plant);
 
   esc_.EnableStatusFrames(
       {StatusFrame::kPositionFrame, StatusFrame::kVelocityFrame}, ms_t{20},
