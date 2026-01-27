@@ -49,9 +49,8 @@ struct UserSettableValues {
     ModulePorts BL;
     ModulePorts BR;
   } module_ports;
-  std::vector<pdcsu::units::inch_t> camera_x_offsets;
-  std::vector<pdcsu::units::inch_t> camera_y_offsets;
-  size_t num_cameras;
+  std::vector<funkit::robot::calculators::AprilTagCameraConfig>
+      april_camera_configs;
   std::map<int, funkit::robot::calculators::AprilTagData> april_locations;
 };
 
@@ -86,9 +85,7 @@ UserSettableValues GetUserSettableValues() {
           .BR = {ports::drivetrain_::kBRCANCoder_CANID,
               ports::drivetrain_::kBRDrive_CANID,
               ports::drivetrain_::kBRSteer_CANID}},
-      .camera_x_offsets = {inch_t{-6.25}, inch_t{-4.5}},
-      .camera_y_offsets = {inch_t{4}, inch_t{-12.5}},
-      .num_cameras = 2,
+      .april_camera_configs = {{4, 4.0_in_, 0_in_}},
       .april_locations = {
           {1, {0_in_, 0_in_}},  // TODO: Tag 1 was previously (correctly) at
                                 // (25.38, 183.58)
@@ -234,9 +231,6 @@ swerve::DrivetrainConfigs DrivetrainConstructor::getDrivetrainConfigs() {
       .steer_plant = steer_plant,
       .bus = ""};
 
-  const std::vector<inch_t>& camera_x_offsets = user_values.camera_x_offsets;
-  const std::vector<inch_t>& camera_y_offsets = user_values.camera_y_offsets;
-
   swerve::DrivetrainConfigs configs{
       .imu_connection = user_values.imu_connection,
       .module_common_config = module_common_config,
@@ -244,9 +238,7 @@ swerve::DrivetrainConfigs DrivetrainConstructor::getDrivetrainConfigs() {
       .wheelbase_horizontal_dim = robot_constants::base::wheelbase_x,
       .wheelbase_forward_dim = robot_constants::base::wheelbase_y,
       .max_speed = fps_t{0.0},
-      .camera_x_offsets = camera_x_offsets,
-      .camera_y_offsets = camera_y_offsets,
-      .cams = user_values.num_cameras,
+      .april_camera_configs = user_values.april_camera_configs,
       .april_locations = user_values.april_locations,
       .max_accel = fps2_t{max_accel_mps2.value() * 3.28084}};
 
