@@ -230,7 +230,7 @@ void SwerveModuleSubsystem::WriteToHardware(SwerveModuleTarget target) {
 
   drive_.WriteDC(drive_duty_cycle);
 
-  if (std::abs(drive_duty_cycle) > 0.002 || last_rezero < 50) {
+  if (std::abs(target.drive.value()) > 0.04 || last_rezero < 50) {
     radian_t steer_dir_rad{steer_dir};
     steer_.WritePositionOnController(steer_dir_rad);
     last_rezero += 1;
