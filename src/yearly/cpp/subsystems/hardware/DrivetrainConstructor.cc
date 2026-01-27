@@ -208,7 +208,7 @@ swerve::DrivetrainConfigs DrivetrainConstructor::getDrivetrainConfigs() {
       motor_specs.stall_torque, motor_specs.free_speed, 12_V_};
 
   UnitDivision<radian_t, meter_t> drive_gear_ratio{
-      (2.0 * M_PI * 3.28084) /
+      (2.0 * 3.14159265358979323846 * 3.28084) /
       drive_reduction_value_for_plant};  // 3.28084 ft/m
   pdcsu::util::DefLinearSys drive_plant{def_bldc, 1, drive_gear_ratio,
       1.0_mps2_, kg_t{0.0}, newton_t{user_values.drive_friction},
