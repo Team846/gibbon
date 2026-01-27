@@ -42,7 +42,7 @@ struct ATCalculatorInput {
 
   double aprilVarianceCoeff;
   double triangularVarianceCoeff;
-  std::map<int, pdcsu::units::second_t> fudge_latency;
+  std::map<size_t, pdcsu::units::second_t> fudge_latency;
   pdcsu::units::second_t bearing_latency;
 };
 
@@ -68,7 +68,7 @@ struct AprilTagCamera {
 };
 
 struct ATCalculatorConstants {
-  std::map<int, AprilTagData> tag_locations;
+  std::map<size_t, AprilTagData> tag_locations;
   std::vector<AprilTagCamera> cameras;
 };
 
