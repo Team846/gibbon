@@ -40,4 +40,8 @@ struct ports {
     static constexpr funkit::control::config::MotorConstructionParameters
         kMotor2Params = {25, "", true};
   };
+  struct intake_ {
+    static constexpr funkit::control::config::MotorConstructionParameters
+        kMotorParams = {21, "", true};
+  };
 };

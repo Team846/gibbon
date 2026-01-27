@@ -15,6 +15,7 @@
 
 struct ShooterReadings {
   fps_t vel;
+  bool is_spun_up;
 };
 
 struct ShooterTarget {

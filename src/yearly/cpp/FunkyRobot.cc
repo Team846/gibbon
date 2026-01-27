@@ -15,6 +15,7 @@
 #include "autos/auton_seqs.h"
 #include "calculators/ShootingCalculator.h"
 #include "commands/teleop/drive_command.h"
+#include "commands/teleop/intake_command.h"
 #include "commands/teleop/shooter_command.h"
 #include "control_triggers.h"
 #include "funkit/wpilib/NTAction.h"
@@ -103,6 +104,7 @@ void FunkyRobot::OnDisable() {
 void FunkyRobot::InitTeleop() {
   container_.drivetrain_.SetDefaultCommand(DriveCommand{container_});
   container_.shooter_.SetDefaultCommand(ShooterCommand{container_});
+  container_.intake_.SetDefaultCommand(IntakeCommand{container_});
 
   ControlTriggerInitializer::InitTeleopTriggers(container_);
 }

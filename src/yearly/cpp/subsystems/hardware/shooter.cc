@@ -9,7 +9,9 @@ using namespace funkit::control::config;
 ShooterSubsystem::ShooterSubsystem()
     : GenericSubsystem("shooter"),
       esc_1_{base::SPARK_MAX_NEO550, ports::shooter_::kMotor1Params},
-      esc_2_{base::SPARK_MAX_NEO550, ports::shooter_::kMotor2Params} {}
+      esc_2_{base::SPARK_MAX_NEO550, ports::shooter_::kMotor2Params} {
+  RegisterPreference("velocity_tolerance", 0.25_fps_);
+}
 
 ShooterSubsystem::~ShooterSubsystem() = default;
 
@@ -30,7 +32,7 @@ void ShooterSubsystem::Setup() {
 
   DefArmSys shooter_plant(
       def_bldc, 2, 2_rot_ / 1_rot_,
-      [&](radian_t x, radps_t v) -> nm_t { return 0.0_Nm_; }, 0.001856_kgm2_,
+      [&](radian_t x, radps_t v) -> nm_t { return 0.0_Nm_; }, 0.001044_kgm2_,
       0.05_Nm_, 0.1_Nm_ / 1200_radps_, 20_ms_);
 
   esc_1_.Setup(genome_backup, shooter_plant);
@@ -60,8 +62,12 @@ bool ShooterSubsystem::VerifyHardware() {
 ShooterReadings ShooterSubsystem::ReadFromHardware() {
   radps_t vel =
       (esc_1_.GetVelocity<radps_t>() + esc_2_.GetVelocity<radps_t>()) / 2.0;
-  fps_t vel_fps = vel * 2.0_in_ / 1_rad_;  // 2.0" wheel radius
-  return ShooterReadings{vel_fps};
+  fps_t vel_fps = vel * 1.5_in_ / 1_rad_;  // 1.5" wheel radius
+
+  bool is_spun_up = pdcsu::units::u_abs(vel_fps - GetTarget().target_vel) <
+                    GetPreferenceValue_unit_type<fps_t>("velocity_tolerance");
+
+  return ShooterReadings{vel_fps, is_spun_up};
 }
 
 void ShooterSubsystem::WriteToHardware(ShooterTarget target) {
@@ -71,7 +77,7 @@ void ShooterSubsystem::WriteToHardware(ShooterTarget target) {
   esc_1_.ModifyGenome(genome);
   esc_2_.ModifyGenome(genome);
 
-  radps_t vel_radps = target.target_vel * 1_rad_ / 2.0_in_;
+  radps_t vel_radps = target.target_vel * 1_rad_ / 1.5_in_;
 
   esc_1_.WriteVelocityOnController(vel_radps);
   esc_2_.WriteVelocityOnController(vel_radps);
