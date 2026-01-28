@@ -11,6 +11,8 @@ ShooterSubsystem::ShooterSubsystem()
       esc_1_{base::SPARK_MAX_NEO550, ports::shooter_::kMotor1Params},
       esc_2_{base::SPARK_MAX_NEO550, ports::shooter_::kMotor2Params} {
   RegisterPreference("velocity_tolerance", 0.25_fps_);
+  RegisterPreference("gkP", 0.0);
+  RegisterPreference("gkF", 0.0);
 }
 
 ShooterSubsystem::~ShooterSubsystem() = default;
@@ -22,7 +24,7 @@ void ShooterSubsystem::Setup() {
       .brake_mode = true,
       .gains = {.kP = 0.0, .kI = 0.0, .kD = 0.0, .kF = 0.0}};
   funkit::control::config::SubsystemGenomeHelper::CreateGenomePreferences(
-      *this, "genome", genome_backup);
+      *this, "genome2", genome_backup);
 
   auto motor_specs =
       base::MotorSpecificationPresets::get(base::SPARK_MAX_NEO550);
@@ -73,12 +75,18 @@ ShooterReadings ShooterSubsystem::ReadFromHardware() {
 void ShooterSubsystem::WriteToHardware(ShooterTarget target) {
   auto genome =
       funkit::control::config::SubsystemGenomeHelper::LoadGenomePreferences(
-          *this, "genome");
+          *this, "genome2");
+          genome.voltage_compensation = 12_V_;
+          genome.smart_current_limit = 30_A_;
+          genome.motor_current_limit = 20_A_;
+          genome.gains.kP = GetPreferenceValue_double("gkP");
+          genome.gains.kF = GetPreferenceValue_double("gkF");
   esc_1_.ModifyGenome(genome);
   esc_2_.ModifyGenome(genome);
 
   radps_t vel_radps = target.target_vel * 1_rad_ / 1.5_in_;
 
+  Graph("error", vel_radps * 1.5_in_ / 1_rad_ - GetReadings().vel);
   esc_1_.WriteVelocityOnController(vel_radps);
-  esc_2_.WriteVelocityOnController(vel_radps);
+  esc_2_.WriteVelocityOnController(-vel_radps);
 }

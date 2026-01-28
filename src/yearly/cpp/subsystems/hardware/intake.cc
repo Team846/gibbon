@@ -58,6 +58,9 @@ void IntakeSubsystem::WriteToHardware(IntakeTarget target) {
   auto genome =
       funkit::control::config::SubsystemGenomeHelper::LoadGenomePreferences(
           *this, "genome");
+          genome.voltage_compensation = 12_V_;
+          genome.smart_current_limit = 50_A_;
+          genome.motor_current_limit = 40_A_;
   esc_.ModifyGenome(genome);
 
   if (target.state == IntakeState::kIdle) {

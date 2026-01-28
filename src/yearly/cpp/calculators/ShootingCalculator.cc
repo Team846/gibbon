@@ -97,6 +97,8 @@ void ShootingCalculator::Calculate(const RobotContainer* container_) {
                      loggable.GetPreferenceValue_double("swim/twistGain"),
           -1.0, 1.0));
 
+  loggable.Graph("swim/twist", twist);
+
   aim_angle += twist;
 
   outputs_.aim_angle = aim_angle + 180_deg_;
@@ -111,5 +113,5 @@ void ShootingCalculator::Calculate(const RobotContainer* container_) {
 
   /* Determine if the shot is valid */
   outputs_.is_valid =
-      delta_mag >= 36_in_ && delta_mag <= 144_in_;  // TODO: verify distances
+      delta_mag >= 36_in_ && delta_mag <= 300_in_;  // TODO: verify distances
 }

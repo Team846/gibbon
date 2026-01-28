@@ -18,7 +18,7 @@ void IntakeCommand::Periodic() {
 
   IntakeTarget target{};
 
-  if (ci_readings_.shoot && container_.shooter_.GetReadings().is_spun_up)
+  if (ci_readings_.shoot)
     target.state = IntakeState::kIntake;
   else
     target.state = IntakeState::kIdle;

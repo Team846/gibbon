@@ -58,6 +58,7 @@ DrivetrainSubsystem::DrivetrainSubsystem(DrivetrainConfigs configs)
   RegisterPreference("bearing_gains/_kP", 9);
   RegisterPreference("bearing_gains/_kI", 0.0);
   RegisterPreference("bearing_gains/_kD", -0.6);
+  RegisterPreference("bearing_gains/_kF", -0.3);
   RegisterPreference("bearing_gains/deadband", pdcsu::units::degps_t{3.0});
 
   RegisterPreference("april_bearing_latency", pdcsu::units::ms_t{0});
@@ -235,11 +236,11 @@ pdcsu::units::degps_t DrivetrainSubsystem::ApplyBearingPID(
       .kP = GetPreferenceValue_double("bearing_gains/_kP"),
       .kI = GetPreferenceValue_double("bearing_gains/_kI"),
       .kD = GetPreferenceValue_double("bearing_gains/_kD"),
-      .kF = 0.0};
+      .kF = GetPreferenceValue_double("bearing_gains/_kF")};
 
   double raw_output = gains.kP * error.value() + gains.kI * 0.0 +
                       gains.kD * degps_t(dAE - yaw_rate).value() +
-                      gains.kF * 0.0 + degps_t(dAE).value();
+                      gains.kF * degps_t(dAE).value();
 
   pdcsu::units::degps_t output{
       pdcsu::units::degps_t{1} *

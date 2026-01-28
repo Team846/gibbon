@@ -58,7 +58,7 @@ ATCalculatorOutput AprilTagCalculator::calculate(ATCalculatorInput input) {
     }
     for (size_t j = 0; j < tags.size(); j++) {
       if (constants_.tag_locations.contains(tags.at(j)) &&
-          distances.at(j).value() < 120.0) {
+          distances.at(j).value() < 300.0) {
         Vector2D cam_to_tag{distances.at(j), tx.at(j) + bearingAtCapture, true};
         Vector2D tag_pos{constants_.tag_locations[tags.at(j)].x_pos,
             constants_.tag_locations[tags.at(j)].y_pos};
@@ -88,7 +88,7 @@ ATCalculatorOutput AprilTagCalculator::calculate(ATCalculatorInput input) {
 
         sight_line.translate(center_to_cam.rotate(bearingAtCapture) * -1.0);
         sight_lines[i].push_back(sight_line);
-        if (distances.at(j).value() < 30.0) {
+        if (distances.at(j).value() < 300.0) {
           output.pos = (getPos(bearingAtCapture, tx.at(j), distances.at(j),
                             tags.at(j), config) +
                         velComp);
