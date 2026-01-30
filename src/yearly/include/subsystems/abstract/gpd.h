@@ -10,7 +10,8 @@
 struct GPDTarget {};
 
 struct GPDReadings {
-  std::vector<funkit::math::Vector2D> gamepieces;
+  funkit::math::Vector2D optimal_pos;
+  bool has_target;
 };
 
 class GPDSubsystem
@@ -38,4 +39,7 @@ private:
   funkit::robot::swerve::DrivetrainSubsystem* drivetrain_;
 
   degree_t gp_spin_;
+
+  funkit::math::Vector2D filtered_pos_{};
+  bool has_prev_pos_ = false;
 };

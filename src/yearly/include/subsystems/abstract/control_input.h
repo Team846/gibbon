@@ -14,6 +14,8 @@ struct ControlInputReadings {
 
   bool zero_bearing;
 
+  bool gpd_drive_button;
+
   // ICTest controls
   bool ictest_x_button;
   bool ictest_y_button;

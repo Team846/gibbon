@@ -64,6 +64,8 @@ ControlInputReadings ControlInputSubsystem::UpdateWithInput() {
 
   ci_readings_.rotation = dr_readings.right_stick_x;
 
+  ci_readings_.gpd_drive_button = dr_readings.right_bumper;
+
   ci_readings_.ictest_x_button = dr_readings.x_button;
   ci_readings_.ictest_y_button = dr_readings.y_button;
 
