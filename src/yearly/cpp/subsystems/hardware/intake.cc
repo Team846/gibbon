@@ -8,7 +8,8 @@ using namespace funkit::control::config;
 
 IntakeSubsystem::IntakeSubsystem()
     : GenericSubsystem("intake"),
-      esc_{base::SPARK_MAX_NEO, ports::intake_::kMotorParams} {
+      esc_{base::SPARK_MAX_NEO, ports::intake_::kMotorParams},
+      intesc_{base::SPARK_MAX_NEO, ports::intake_::kMotorParams2} {
   RegisterPreference("idle_dc", 0.0);
   RegisterPreference("intake_dc", 0.8);
 }
@@ -30,9 +31,8 @@ void IntakeSubsystem::Setup() {
       motor_specs.stall_torque, motor_specs.free_speed, 12_V_);
 
   DefArmSys intake_plant(
-      def_bldc, 1, 1_u_,
-      [&](radian_t x, radps_t v) -> nm_t { return 0.0_Nm_; }, 0.004_kgm2_,
-      0.1_Nm_, 0.1_Nm_ / 600_radps_, 20_ms_);
+      def_bldc, 1, 1_u_, [&](radian_t x, radps_t v) -> nm_t { return 0.0_Nm_; },
+      0.004_kgm2_, 0.1_Nm_, 0.1_Nm_ / 600_radps_, 20_ms_);
 
   esc_.Setup(genome_backup, intake_plant);
 
@@ -40,6 +40,13 @@ void IntakeSubsystem::Setup() {
       {StatusFrame::kPositionFrame, StatusFrame::kVelocityFrame}, ms_t{20},
       ms_t{5}, ms_t{5}, ms_t{20});
   esc_.SetPosition(radian_t{0});
+
+  intesc_.Setup(genome_backup, intake_plant);
+
+  intesc_.EnableStatusFrames(
+      {StatusFrame::kPositionFrame, StatusFrame::kVelocityFrame}, ms_t{20},
+      ms_t{5}, ms_t{5}, ms_t{20});
+  intesc_.SetPosition(radian_t{0});
 }
 
 IntakeTarget IntakeSubsystem::ZeroTarget() const {
@@ -58,6 +65,9 @@ void IntakeSubsystem::WriteToHardware(IntakeTarget target) {
   auto genome =
       funkit::control::config::SubsystemGenomeHelper::LoadGenomePreferences(
           *this, "genome");
+  genome.voltage_compensation = 12_V_;
+  genome.smart_current_limit = 50_A_;
+  genome.motor_current_limit = 40_A_;
   esc_.ModifyGenome(genome);
 
   if (target.state == IntakeState::kIdle) {
@@ -65,4 +75,6 @@ void IntakeSubsystem::WriteToHardware(IntakeTarget target) {
   } else if (target.state == IntakeState::kIntake) {
     esc_.WriteDC(GetPreferenceValue_double("intake_dc"));
   }
+
+  intesc_.WriteDC(target.realintake);
 }

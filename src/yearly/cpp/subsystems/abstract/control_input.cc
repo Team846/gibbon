@@ -65,7 +65,13 @@ ControlInputReadings ControlInputSubsystem::UpdateWithInput() {
   ci_readings_.rotation = dr_readings.right_stick_x;
 
   ci_readings_.prepare_shot = dr_readings.right_trigger;
-  ci_readings_.shoot = dr_readings.right_bumper;
+  ci_readings_.shoot = dr_readings.left_trigger;
+
+  if (dr_readings.right_bumper) {
+    ci_readings_.intake = 1.0;
+  } else if (dr_readings.left_bumper) {
+    ci_readings_.intake = -0.25;
+  }
 
   previous_driver_ = dr_readings;
   previous_operator_ = op_readings;

@@ -263,17 +263,18 @@ size_t MonkeyMaster::ConstructController(
   } else if (funkit::control::base::MotorMonkeyTypeHelper::is_talon_fx(type)) {
     this_controller = controller_registry[slot_id] =
         new funkit::control::hardware::TalonFX_interm{params.can_id, params.bus,
-            pdcsu::units::ms_t{params.max_wait_time.value()}};
+            pdcsu::units::ms_t{params.max_wait_time.value()}, params.inverted};
 
   } else if (funkit::control::base::MotorMonkeyTypeHelper::is_spark_max(type)) {
     this_controller = controller_registry[slot_id] =
         new funkit::control::hardware::SparkMAX_interm{params.can_id,
-            pdcsu::units::ms_t{params.max_wait_time.value()}, type};
+            pdcsu::units::ms_t{params.max_wait_time.value()}, type,
+            params.inverted};
   } else if (funkit::control::base::MotorMonkeyTypeHelper::is_spark_flex(
                  type)) {
     this_controller = controller_registry[slot_id] =
-        new funkit::control::hardware::SparkFLEX_interm{
-            params.can_id, pdcsu::units::ms_t{params.max_wait_time.value()}};
+        new funkit::control::hardware::SparkFLEX_interm{params.can_id,
+            pdcsu::units::ms_t{params.max_wait_time.value()}, params.inverted};
   } else {
     throw std::runtime_error("Invalid MotorMonkeyType [" +
                              std::to_string((int)type) +

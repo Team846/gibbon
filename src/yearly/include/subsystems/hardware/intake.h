@@ -19,6 +19,7 @@ struct IntakeReadings {};
 
 struct IntakeTarget {
   IntakeState state;
+  double realintake;
 };
 
 class IntakeSubsystem
@@ -39,4 +40,5 @@ private:
   void WriteToHardware(IntakeTarget target) override;
 
   funkit::control::HigherMotorController esc_;
+  funkit::control::HigherMotorController intesc_;
 };

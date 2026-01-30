@@ -13,10 +13,14 @@ namespace funkit::control::hardware {
 
 bool TalonFX_interm::VerifyConnected() { return talon_.IsAlive(); }
 
-TalonFX_interm::TalonFX_interm(
-    int can_id, std::string_view bus, pdcsu::units::ms_t max_wait_time)
+TalonFX_interm::TalonFX_interm(int can_id, std::string_view bus,
+    pdcsu::units::ms_t max_wait_time, bool inverted)
     : talon_(can_id, ctre::phoenix6::CANBus{bus}),
-      max_wait_time_(units::millisecond_t{max_wait_time.value()}) {}
+      max_wait_time_(units::millisecond_t{max_wait_time.value()}),
+      inverted_{inverted} {
+  talon_.GetConfigurator().Apply(
+      ctre::phoenix6::configs::MotorOutputConfigs{}.WithInverted(inverted));
+}
 
 void TalonFX_interm::Tick() {
   ctre::phoenix::StatusCode last_status_code = ctre::phoenix::StatusCode::OK;

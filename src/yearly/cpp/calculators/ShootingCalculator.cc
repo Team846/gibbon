@@ -11,6 +11,7 @@ void ShootingCalculator::Setup() {
   loggable_opt->RegisterPreference("2ptvel/kAdditive", 0.0);
   loggable_opt->RegisterPreference("swim/twistGain", 0.0);
   loggable_opt->RegisterPreference("swim/projectGain", 0.0);
+  loggable_opt->RegisterPreference("swim/twistVelCompensation", 0.416);
 }
 
 void ShootingCalculator::Calculate(const RobotContainer* container_) {
@@ -24,7 +25,7 @@ void ShootingCalculator::Calculate(const RobotContainer* container_) {
   using Vel2D = uVec<pdcsu::units::fps_t, 2>;
 
   const Vector2D target{158.845_in_, 182.11_in_};  // TODO: Blue side flipping
-  const inch_t pointblank_distance = 48_in_;
+  const inch_t pointblank_distance = 60_in_;
 
   auto drivetrain_readings = container_->drivetrain_.GetReadings();
 
@@ -81,7 +82,7 @@ void ShootingCalculator::Calculate(const RobotContainer* container_) {
                             0.01 * kAdditive * kAdditive * fwdErrorMag *
                                 fwdErrorMag / 1.0_s_ / 1.0_ft_;
 
-  outputs_.shooter_vel = shooter_vel;
+  //   outputs_.shooter_vel = shooter_vel;
 
   /*
   Calculate drivetrain angles
@@ -97,7 +98,15 @@ void ShootingCalculator::Calculate(const RobotContainer* container_) {
                      loggable.GetPreferenceValue_double("swim/twistGain"),
           -1.0, 1.0));
 
+  loggable.Graph("swim/twist", twist);
+
   aim_angle += twist;
+
+  outputs_.shooter_vel =
+      shooter_vel * 1.0 /
+      u_cos(u_min(u_abs(twist * loggable.GetPreferenceValue_double(
+                                    "swim/twistVelCompensation")),
+          3.1415_rad_ / 2.0));
 
   outputs_.aim_angle = aim_angle + 180_deg_;
 
@@ -111,5 +120,5 @@ void ShootingCalculator::Calculate(const RobotContainer* container_) {
 
   /* Determine if the shot is valid */
   outputs_.is_valid =
-      delta_mag >= 36_in_ && delta_mag <= 144_in_;  // TODO: verify distances
+      delta_mag >= 36_in_ && delta_mag <= 400_in_;  // TODO: verify distances
 }

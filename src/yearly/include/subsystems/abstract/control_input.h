@@ -17,6 +17,7 @@ struct ControlInputReadings {
   // Shooting controls
   bool prepare_shot;
   bool shoot;
+  double intake;
 };
 
 struct ControlInputTarget {

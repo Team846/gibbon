@@ -203,7 +203,6 @@ To undo the going back:
 
 ## CppCheck Warnings
 ```
-src/yearly/cpp/subsystems/hardware/intake.cc:33:27: warning: Same expression on both sides of '/'. [duplicateExpression]
 src/funkit/cpp/funkit/math/collection.cc:27:0: warning: The function 'VerticalDeadband' is never used. [unusedFunction]
 src/funkit/cpp/funkit/math/collection.cc:55:0: warning: The function 'CoterminalSum' is never used. [unusedFunction]
 src/funkit/cpp/funkit/math/collection.cc:69:0: warning: The function 'modulo' is never used. [unusedFunction]
