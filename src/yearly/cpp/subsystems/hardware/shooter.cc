@@ -11,8 +11,6 @@ ShooterSubsystem::ShooterSubsystem()
       esc_1_{base::SPARK_MAX_NEO550, ports::shooter_::kMotor1Params},
       esc_2_{base::SPARK_MAX_NEO550, ports::shooter_::kMotor2Params} {
   RegisterPreference("velocity_tolerance", 0.25_fps_);
-  RegisterPreference("gkP", 0.0);
-  RegisterPreference("gkF", 0.0);
 }
 
 ShooterSubsystem::~ShooterSubsystem() = default;
@@ -64,6 +62,7 @@ bool ShooterSubsystem::VerifyHardware() {
 ShooterReadings ShooterSubsystem::ReadFromHardware() {
   radps_t vel =
       (esc_1_.GetVelocity<radps_t>() + esc_2_.GetVelocity<radps_t>()) / 2.0;
+  Graph("velnormal", vel);
   fps_t vel_fps = vel * 1.5_in_ / 1_rad_;  // 1.5" wheel radius
 
   bool is_spun_up = pdcsu::units::u_abs(vel_fps - GetTarget().target_vel) <
@@ -76,17 +75,13 @@ void ShooterSubsystem::WriteToHardware(ShooterTarget target) {
   auto genome =
       funkit::control::config::SubsystemGenomeHelper::LoadGenomePreferences(
           *this, "genome2");
-          genome.voltage_compensation = 12_V_;
-          genome.smart_current_limit = 30_A_;
-          genome.motor_current_limit = 20_A_;
-          genome.gains.kP = GetPreferenceValue_double("gkP");
-          genome.gains.kF = GetPreferenceValue_double("gkF");
   esc_1_.ModifyGenome(genome);
   esc_2_.ModifyGenome(genome);
 
   radps_t vel_radps = target.target_vel * 1_rad_ / 1.5_in_;
 
   Graph("error", vel_radps * 1.5_in_ / 1_rad_ - GetReadings().vel);
+  Graph("vel", GetReadings().vel);
   esc_1_.WriteVelocityOnController(vel_radps);
-  esc_2_.WriteVelocityOnController(-vel_radps);
+  esc_2_.WriteVelocityOnController(vel_radps);
 }

@@ -180,6 +180,7 @@ void FunkyRobot::OnPeriodic() {
 void FunkyRobot::InitTest() {
   container_.drivetrain_.SetDefaultCommand(DriveCommand{container_});
   container_.shooter_.SetDefaultCommand(ShooterCommand{container_});
+  container_.intake_.SetDefaultCommand(IntakeCommand{container_});
 }
 
 #ifndef RUNNING_FRC_TESTS

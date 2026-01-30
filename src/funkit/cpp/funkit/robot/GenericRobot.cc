@@ -236,8 +236,8 @@ void GenericRobot::StartCompetition() {
 
     // Check loop time
     if (loop_time > 2.5 * kPeriod) {
-      Warn("Loop overrun: {} ms (loop period: {} ms)",
-          loop_time.value() * 1000.0, kPeriod.value() * 1000.0);
+      Warn("Loop overrun: {} ms (loop period: {} ms)", loop_time.value(),
+          kPeriod.value() * 1000.0);
 
       next_loop_time_ += loop_time;
     }

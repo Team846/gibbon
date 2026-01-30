@@ -58,7 +58,8 @@ void DriveCommand::Periodic() {
         ShootingCalculator::GetOutputs();
     if (shooting_outputs.is_valid) {
       target.angular_velocity = container_.drivetrain_.ApplyBearingPID(
-          shooting_outputs.aim_angle, shooting_outputs.vel_aim_compensation);
+          shooting_outputs.aim_angle + 4_deg_,
+          shooting_outputs.vel_aim_compensation);
     }
   }
 

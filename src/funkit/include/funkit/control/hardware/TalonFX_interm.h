@@ -17,7 +17,8 @@ TalonFX hardware.
 class TalonFX_interm : public IntermediateController {
 public:
   TalonFX_interm(int can_id, std::string_view bus = "",
-      pdcsu::units::ms_t max_wait_time = pdcsu::units::ms_t{20});
+      pdcsu::units::ms_t max_wait_time = pdcsu::units::ms_t{20},
+      bool inverted = false);
 
   void Tick() override;
 
@@ -67,6 +68,8 @@ private:
 
   units::millisecond_t
       max_wait_time_;  // Stored as WPILib for Phoenix API compatibility
+
+  bool inverted_{false};
 };
 
 }  // namespace funkit::control::hardware

@@ -21,7 +21,8 @@ SparkMAX or SparkFLEX hardware.
 class SparkMXFX_interm : public IntermediateController {
 public:
   SparkMXFX_interm(int can_id, pdcsu::units::ms_t max_wait_time,
-      bool is_controller_spark_flex, base::MotorMonkeyType mmtype);
+      bool is_controller_spark_flex, base::MotorMonkeyType mmtype,
+      bool inverted = false);
 
   void Tick() override;
 
@@ -54,6 +55,8 @@ public:
   void ZeroEncoder(pdcsu::units::radian_t position) override;
 
 private:
+  bool inverted_{false};
+
   funkit::control::hardware::ControllerErrorCodes getErrorCode(
       rev::REVLibError code);
 
@@ -87,7 +90,7 @@ SparkMAX hardware. Derives from SparkMXFX_interm.
 class SparkMAX_interm : public SparkMXFX_interm {
 public:
   SparkMAX_interm(int can_id, pdcsu::units::ms_t max_wait_time,
-      base::MotorMonkeyType mmtype);
+      base::MotorMonkeyType mmtype, bool inverted);
 };
 
 /*
@@ -98,7 +101,7 @@ SparkFLEX hardware. Derives from SparkMXFX_interm.
 */
 class SparkFLEX_interm : public SparkMXFX_interm {
 public:
-  SparkFLEX_interm(int can_id, pdcsu::units::ms_t max_wait_time);
+  SparkFLEX_interm(int can_id, pdcsu::units::ms_t max_wait_time, bool inverted);
 };
 
 }  // namespace funkit::control::hardware

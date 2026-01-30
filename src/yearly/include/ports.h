@@ -36,12 +36,14 @@ struct ports {
 
   struct shooter_ {
     static constexpr funkit::control::config::MotorConstructionParameters
-        kMotor1Params = {24, "", true};
+        kMotor1Params = {24, "", false};
     static constexpr funkit::control::config::MotorConstructionParameters
-        kMotor2Params = {25, "", false};
+        kMotor2Params = {25, "", true};
   };
   struct intake_ {
     static constexpr funkit::control::config::MotorConstructionParameters
-        kMotorParams = {21, "", true};
+        kMotorParams = {21, "", false};
+    static constexpr funkit::control::config::MotorConstructionParameters
+        kMotorParams2 = {20, "", true};
   };
 };

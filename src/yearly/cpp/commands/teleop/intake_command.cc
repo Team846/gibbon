@@ -16,13 +16,12 @@ void IntakeCommand::OnInit() {}
 void IntakeCommand::Periodic() {
   ControlInputReadings ci_readings_{container_.control_input_.GetReadings()};
 
-  IntakeTarget target{};
+  IntakeTarget target{IntakeState::kIdle};
 
-  if (ci_readings_.shoot)
+  if (ci_readings_.shoot && container_.shooter_.GetReadings().is_spun_up)
     target.state = IntakeState::kIntake;
-  else
-    target.state = IntakeState::kIdle;
 
+  target.realintake = ci_readings_.intake;
   container_.intake_.SetTarget(target);
 }
 

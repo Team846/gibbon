@@ -12,19 +12,21 @@ amp_t Cooked::Record(amp_t current, radps_t speed, double measured_temp) {
 
   scalar_t delta_temp{0.0};
   second_t new_time = funkit::wpilib::CurrentFPGATime();
-  second_t delta_time = new_time - time_;
+  second_t delta_time = u_min(15_ms_, new_time - time_);
   time_ = new_time;
-  for (int i = 0; i < 3; i++) {  // Iteratively solve for delta_temp
-    watt_t power = current * (speed / config_.free_speed_) * 12_V_;
-    delta_temp = power /
-                 UnitDivision<joule_t, scalar_t>(config_.thermal_mass_) *
-                 delta_time;
 
-    second_t time_to_cook =
-        (cook_temp - temp_) / power *
-        UnitDivision<joule_t, scalar_t>(config_.thermal_mass_);
-    if (time_to_cook > min_cook_time) current *= min_cook_time / time_to_cook;
-  }
+  watt_t power = current * (speed / config_.free_speed_) * 12_V_;
+
+  second_t time_to_cook =
+      (cook_temp - temp_) / power *
+      UnitDivision<joule_t, scalar_t>(config_.thermal_mass_);
+  if (min_cook_time > time_to_cook) current *= time_to_cook / min_cook_time;
+
+  delta_temp =
+      current * (speed / config_.free_speed_) * 12_V_ /
+      UnitDivision<joule_t, scalar_t>(
+          config_.thermal_mass_) *  // Resolve for delta_temp with new current
+      delta_time;
 
   temp_ += delta_temp.value();
   double time_exp = std::pow(config_.growth_rate_, delta_time.value());
@@ -38,6 +40,7 @@ amp_t Cooked::Record(amp_t current, radps_t speed, double measured_temp) {
 
 double Cooked::Record(double dc, radps_t speed, double measured_temp) {
   double speed_pct = (speed / config_.free_speed_).value();
+  if (std::abs(dc) < std::abs(speed_pct) || std::abs(dc) < 0.05) return dc;
   amp_t draw = config_.stall_current_ * (dc - speed_pct);
   amp_t newdraw = Record(draw, speed, measured_temp);
   return (u_copysign(newdraw, draw) / config_.stall_current_).value() +
