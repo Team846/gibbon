@@ -77,6 +77,26 @@ void DriveCommand::Periodic() {
 
   if (isBlue) target.velocity = target.velocity.rotate(degree_t{180});
 
+  GPDReadings gpd_readings = container_.GPD_.GetReadings();
+  if (gpd_readings.has_target && ci_readings_.gpd_drive_button) {
+    radian_t x_off =
+        target.velocity.angleBetween(gpd_readings.optimal_pos, true);
+    fps_t x_off_comp =
+        target.velocity.magnitude() * std::tanh(x_off.value() * 5);
+
+    Graph("x_off_comp", x_off_comp);
+    degree_t dir_xoff = target.velocity.angle(true) + 90_deg_;
+    ema_comp_gpd_ = 0.06 * x_off_comp + 0.94 * ema_comp_gpd_;
+    target.velocity = target.velocity + pdcsu::util::math::uVec<fps_t, 2>{
+                                            ema_comp_gpd_, dir_xoff};
+  } else if (gpd_readings.has_target) {
+    ema_comp_gpd_ = 0.95 * ema_comp_gpd_;
+  } else {
+    ema_comp_gpd_ = 0.0_fps_;
+  }
+
+  
+
   container_.drivetrain_.SetTarget({target});
 }
 
