@@ -41,9 +41,9 @@ GPDReadings GPDSubsystem::ReadFromHardware() {
   //   Graph("latency", latency);
 
   if (optimal_point.size() == 0U) {
-    return {{0_in_, 0_in_}, false};
     drivetrain_->SetFieldObjectPose(
         "optimal_gp", {5000_in_, 5000_in_}, gp_spin_);
+    return {{0_in_, 0_in_}, false};
   }
 
   double distance = std::abs(optimal_point[0]);
