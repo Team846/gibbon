@@ -23,16 +23,17 @@ using WAIT = frc2::WaitCommand;
 
 using FPT = funkit::math::FieldPoint;
 
-#define MAX_ACCEL_3PC 25_fps2_
-#define MAX_DECEL_3PC 20_fps2_
-#define MAX_VEL_3PC 15_fps_
+#define MAX_ACCEL_CS2_NORM 25_fps2_
+#define MAX_DECEL_CS2_NORM 20_fps2_
+#define MAX_VEL_CS2_NORM 15_fps_
 
-#define MAX_ACCEL_1PC 24_fps2_
-#define MAX_DECEL_1PC 24_fps2_
-#define MAX_VEL_1PC 13_fps_
-#define MAX_ACCEL_1PCS 11_fps2_
-#define MAX_DECEL_1PCS 11_fps2_
-#define MAX_VEL_1PCS 9_fps_
+#define MAX_ACCEL_CS2_CURVE 25_fps2_
+#define MAX_DECEL_CS2_CURVE 20_fps2_
+#define MAX_VEL_CS2_CURVE 15_fps_
+
+#define MAX_ACCEL_CS2_BUMP 10_fps2_
+#define MAX_DECEL_CS2_BUMP 10_fps2_
+#define MAX_VEL_CS2_BUMP 5_fps_
 
 #define MAX_ACCEL_LEAVE 10_fps2_
 #define MAX_DECEL_LEAVE 10_fps2_
@@ -84,12 +85,25 @@ using FPT = funkit::math::FieldPoint;
         MAX_VEL_##auto_name, MAX_ACCEL_##auto_name, MAX_DECEL_##auto_name \
   }
 
-#define SOURCELOC_PRE MKPT(34.203_in_, 69.432_in_, 53.5_deg_, 0_fps_)
-#define SOURCELOC MKPT(18_in_, 49.5_in_, 53.5_deg_, 0_fps_)
-#define SOURCELOC_in_WARDS MKPT(-7.08_in_, 32.69_in_, 53.5_deg_, 0_fps_)
+#define DRIVE_PT(auto_name, pt, pt_name)                                                            \
+  funkit::robot::swerve::DriveToPointCommand {                                                      \
+    &(container.drivetrain_), pt,                                                                   \
+        MAX_VEL_##auto_name##_##pt_name, MAX_ACCEL_##auto_name##_##pt_name, MAX_DECEL_##auto_name##_##pt_name \
+  }
+
+#define DRIVE_UNTIL_FULL(auto_name, x, y, bearing, final_velocity)         \
+  funkit::robot::swerve::DriveToPointCommand {                             \
+    &(container.drivetrain_), MKPT(x, y, bearing, final_velocity),         \
+        MAX_VEL_##auto_name, MAX_ACCEL_##auto_name, MAX_DECEL_##auto_name, \
+        funkit::robot::swerve::kNoTimeout                                  \
+  }
+
+#define FUEL_FAR_PT MKPT(50.4_in_, 361.56_in_, 90_deg_, 0_fps_)
+#define END_BUMP_PT MKPT(90_in_, 223.61_in_, 0_deg_, 0_fps_)
+#define START_BUMP_PT MKPT(90_in_, 135.61_in_, 0_deg_, 0_fps_)
 
 #define FPC_EXPECTED_START_UF \
-  FPT { {50.5_in_, 271.3_in_}, 140_deg_, 0_fps_ }
+  FPT { {88.5_in_, 158.61_in_}, 180_deg_, 0_fps_ }
 #define SIM_EXP_START_UF \
   FPT { {20_in_, 20_in_}, 0_deg_, 0_fps_ }
 
@@ -140,6 +154,20 @@ __AUTO__(LeaveAuto, "LEAVE")
 SEQUENCE {
   START2(158.5_in_, START_Y, 180_deg_), WAIT{0.25_s},
       DRIVE(LEAVE, 158.5_in_, START_Y - 3_ft_, 180_deg_, 0_fps_),
+}
+}
+{}
+
+__AUTO__(CS2Auto, "CS2")
+SEQUENCE {
+  START2(92.5_in_, 158.61_in_, 180_deg_),
+      DRIVE_PT(CS2, END_BUMP_PT, BUMP),
+      DRIVE_PT(CS2, FUEL_FAR_PT, NORM),
+      DRIVE_PT(CS2, START_BUMP_PT, BUMP),
+      // DRIVE(CS2, 50.4_in_, 361.56_in_, 90_deg_, 0_fps_),
+      // DRIVE_UNTIL_FULL(CS2, 160.4_in_, 361.56_in_, 90_deg_, 0_fps_),
+      // DRIVE(CS2, 50.4_in_, 361.56_in_, 90_deg_, 0_fps_),
+      // DRIVE(CS2, 90.5_in_, 140.61_in_, 45_deg_, 0_fps_),
 }
 }
 {}

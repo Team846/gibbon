@@ -19,6 +19,12 @@ public:
   LeaveAuto(RobotContainer& container, bool is_blue_side, bool is_left_side);
 };
 
+class CS2Auto : public funkit::robot::GenericCommandGroup<RobotContainer,
+                    CS2Auto, frc2::SequentialCommandGroup> {
+public:
+  CS2Auto(RobotContainer& container, bool is_blue_side, bool is_left_side);
+};
+
 class SimTestAuto : public funkit::robot::GenericCommandGroup<RobotContainer,
                         SimTestAuto, frc2::SequentialCommandGroup> {
 public:

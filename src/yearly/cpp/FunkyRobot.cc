@@ -35,6 +35,8 @@ FunkyRobot::FunkyRobot() : GenericRobot{&container_} {
 void FunkyRobot::OnInitialize() {
   ShootingCalculator::Setup();
 
+  ADD_AUTO_VARIANTS(CS2Auto, "CS2");
+
   // Add dashboard buttons
   frc::SmartDashboard::PutData("set_cancoder_offsets",
       new funkit::wpilib::NTAction(
@@ -76,19 +78,21 @@ void FunkyRobot::OnInitialize() {
 
 void FunkyRobot::OnEnable() {
   // Start path recording
+  if (container_.drivetrain_.IsPathRecording()) {
+    auto now = std::chrono::system_clock::now();
+    auto time_t_now = std::chrono::system_clock::to_time_t(now);
 
-  auto now = std::chrono::system_clock::now();
-  auto time_t_now = std::chrono::system_clock::to_time_t(now);
+    // Format time as month-day-year-hour-minute-second
+    std::tm* tm_now = std::localtime(&time_t_now);
 
-  // Format time as month-day-year-hour-minute-second
-  std::tm* tm_now = std::localtime(&time_t_now);
+    char time_buffer[64];
+    std::strftime(
+        time_buffer, sizeof(time_buffer), "%m-%d-%Y_%H-%M-%S", tm_now);
+    std::string filename = "pathlogs_" + std::string(time_buffer);
 
-  char time_buffer[64];
-  std::strftime(time_buffer, sizeof(time_buffer), "%m-%d-%Y_%H-%M-%S", tm_now);
-  std::string filename = "pathlogs_" + std::string(time_buffer);
-
-  container_.drivetrain_.StartPathRecording(filename);
-  Log("Started recording auto path data to {}.csv", filename);
+    container_.drivetrain_.StartPathRecording(filename);
+    Log("Started recording auto path data to {}.csv", filename);
+  }
 }
 
 void FunkyRobot::OnDisable() {
