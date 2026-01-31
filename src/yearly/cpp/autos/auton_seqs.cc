@@ -85,10 +85,10 @@ using FPT = funkit::math::FieldPoint;
         MAX_VEL_##auto_name, MAX_ACCEL_##auto_name, MAX_DECEL_##auto_name \
   }
 
-#define DRIVE_PT(auto_name, pt, pt_name)                                                            \
-  funkit::robot::swerve::DriveToPointCommand {                                                      \
-    &(container.drivetrain_), pt,                                                                   \
-        MAX_VEL_##auto_name##_##pt_name, MAX_ACCEL_##auto_name##_##pt_name, MAX_DECEL_##auto_name##_##pt_name \
+#define DRIVE_PT(auto_name, pt, pt_name)                                     \
+  funkit::robot::swerve::DriveToPointCommand {                               \
+    &(container.drivetrain_), pt, MAX_VEL_##auto_name##_##pt_name,           \
+        MAX_ACCEL_##auto_name##_##pt_name, MAX_DECEL_##auto_name##_##pt_name \
   }
 
 #define DRIVE_UNTIL_FULL(auto_name, x, y, bearing, final_velocity)         \
@@ -98,12 +98,19 @@ using FPT = funkit::math::FieldPoint;
         funkit::robot::swerve::kNoTimeout                                  \
   }
 
-#define FUEL_FAR_PT MKPT(50.4_in_, 361.56_in_, 90_deg_, 0_fps_)
-#define END_BUMP_PT MKPT(90_in_, 223.61_in_, 0_deg_, 0_fps_)
-#define START_BUMP_PT MKPT(90_in_, 135.61_in_, 0_deg_, 0_fps_)
+#define END_BUMP_PT MKPT(90_in_, 223.61_in_, 180_deg_, 0_fps_)
+#define START_BUMP_PT MKPT(90_in_, 136.61_in_, 180_deg_, 0_fps_)
+
+#define P1C1_INTAKE_PT MKPT(84.5_in_, 314.35_in_, 180_deg_, 0_fps_)
+#define P2C1_INTAKE_PT MKPT(92.8_in_, 334.6_in_, 224_deg_, 0_fps_)
+#define P3C1_INTAKE_PT MKPT(111.25_in_, 340.2_in_, 270_deg_, 0_fps_)
+
+#define P1C2_INTAKE_PT MKPT(85.45_in_, 287.5_in_, 180_deg_, 0_fps_)
+#define P2C2_INTAKE_PT MKPT(96.35_in_, 302.42_in_, 224_deg_, 0_fps_)
+#define P3C2_INTAKE_PT MKPT(108.5_in_, 305.35_in_, 270_deg_, 0_fps_)
 
 #define FPC_EXPECTED_START_UF \
-  FPT { {88.5_in_, 158.61_in_}, 180_deg_, 0_fps_ }
+  FPT { {92.5_in_, 144.54_in_}, 180_deg_, 0_fps_ }
 #define SIM_EXP_START_UF \
   FPT { {20_in_, 20_in_}, 0_deg_, 0_fps_ }
 
@@ -160,14 +167,16 @@ SEQUENCE {
 
 __AUTO__(CS2Auto, "CS2")
 SEQUENCE {
-  START2(92.5_in_, 158.61_in_, 180_deg_),
-      DRIVE_PT(CS2, END_BUMP_PT, BUMP),
-      DRIVE_PT(CS2, FUEL_FAR_PT, NORM),
-      DRIVE_PT(CS2, START_BUMP_PT, BUMP),
-      // DRIVE(CS2, 50.4_in_, 361.56_in_, 90_deg_, 0_fps_),
-      // DRIVE_UNTIL_FULL(CS2, 160.4_in_, 361.56_in_, 90_deg_, 0_fps_),
-      // DRIVE(CS2, 50.4_in_, 361.56_in_, 90_deg_, 0_fps_),
-      // DRIVE(CS2, 90.5_in_, 140.61_in_, 45_deg_, 0_fps_),
+  START2(92.5_in_, 144.54_in_, 180_deg_), DRIVE_PT(CS2, END_BUMP_PT, BUMP),
+      DRIVE_PT(CS2, P1C1_INTAKE_PT, NORM), DRIVE_PT(CS2, P2C1_INTAKE_PT, NORM),
+      DRIVE_PT(CS2, P3C1_INTAKE_PT, NORM),
+      // driveuntilfull
+      DRIVE_PT(CS2, END_BUMP_PT, NORM), DRIVE_PT(CS2, START_BUMP_PT, BUMP),
+      DRIVE_PT(CS2, END_BUMP_PT, NORM), DRIVE_PT(CS2, P1C2_INTAKE_PT, NORM),
+      DRIVE_PT(CS2, P2C2_INTAKE_PT, NORM), DRIVE_PT(CS2, P3C2_INTAKE_PT, NORM),
+      // driveuntilfull
+      DRIVE_PT(CS2, END_BUMP_PT, NORM), DRIVE_PT(CS2, START_BUMP_PT, BUMP),
+      DRIVE_PT(CS2, END_BUMP_PT, NORM),
 }
 }
 {}
