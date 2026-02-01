@@ -173,6 +173,8 @@ void DrivetrainSubsystem::ZeroBearing() {
           pigeon_->IsConnected() && pigeon_->GetYaw().GetStatus().IsOK();
       if (connected) {
         pigeon_->SetYaw(0_deg);
+        zero_pitch = degree_t{pigeon_->GetPitch().GetValueAsDouble()};
+        zero_roll = degree_t{pigeon_->GetRoll().GetValueAsDouble()};
         Log("Zeroed bearing (Pigeon)");
         return;
       }
@@ -193,6 +195,8 @@ void DrivetrainSubsystem::ZeroBearing() {
 
   if (pigeon_.has_value()) {
     pigeon_->SetYaw(0_deg);
+    zero_pitch = degree_t{pigeon_->GetPitch().GetValueAsDouble()};
+    zero_roll = degree_t{pigeon_->GetRoll().GetValueAsDouble()};
   } else if (navX_.has_value()) {
     navX_->ZeroYaw();
   }
@@ -272,7 +276,8 @@ pdcsu::units::degree_t DrivetrainSubsystem::GetBearing() {
 
 pdcsu::units::degree_t DrivetrainSubsystem::GetPitch() {
   if (pigeon_.has_value()) {
-    return pdcsu::units::degree_t{pigeon_->GetPitch().GetValue().to<double>()};
+    return pdcsu::units::degree_t{pigeon_->GetPitch().GetValueAsDouble()} -
+           zero_pitch;
   }
   if (navX_.has_value()) { return pdcsu::units::degree_t{navX_->GetPitch()}; }
   return pdcsu::units::degree_t{0};
@@ -280,7 +285,8 @@ pdcsu::units::degree_t DrivetrainSubsystem::GetPitch() {
 
 pdcsu::units::degree_t DrivetrainSubsystem::GetRoll() {
   if (pigeon_.has_value()) {
-    return pdcsu::units::degree_t{pigeon_->GetRoll().GetValue().to<double>()};
+    return pdcsu::units::degree_t{pigeon_->GetRoll().GetValueAsDouble()} -
+           zero_roll;
   }
   if (navX_.has_value()) { return pdcsu::units::degree_t{navX_->GetRoll()}; }
   return pdcsu::units::degree_t{0};
@@ -376,6 +382,8 @@ DrivetrainReadings DrivetrainSubsystem::ReadFromHardware() {
                           roll * pdcsu::units::u_sin(bearing);
   degree_t tilt_field_y = pitch * pdcsu::units::u_sin(bearing) +
                           roll * pdcsu::units::u_cos(bearing);
+  Graph("tilt_x", tilt_field_x);
+  Graph("tilt_y", tilt_field_y);
   Vector2D compensated_delta{delta_pos[0] * pdcsu::units::u_cos(tilt_field_x),
       delta_pos[1] * pdcsu::units::u_cos(tilt_field_y)};
 

@@ -49,9 +49,7 @@ ATCalculatorOutput AprilTagCalculator::calculate(ATCalculatorInput input) {
     std::vector<double> tags = cam_table->GetNumberArray("tags", {});
     pdcsu::units::degree_t bearingAtCapture =
         input.pose.bearing -
-        pdcsu::units::degree_t{input.angular_velocity.value() *
-                               (tl + input.bearing_latency).value() * 180.0 /
-                               3.14159265358979323846};
+        input.angular_velocity * (tl - input.bearing_latency);
 
     if (!(tags.size() == distances.size() && tags.size() == tx.size())) {
       continue;

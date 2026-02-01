@@ -99,23 +99,23 @@ using FPT = funkit::math::FieldPoint;
   }
 
 #define END_BUMPC1_PT MKPT(90_in_, 223.61_in_, 35_deg_, 0_fps_)
-#define START_BUMPC1_PT MKPT(90_in_, 136.61_in_, 35_deg_, 0_fps_)
+#define START_BUMPC1_PT MKPT(90_in_, 110.61_in_, 35_deg_, 0_fps_)
 // 8_fps
 #define END_BUMPC23_PT MKPT(102_in_, 223.61_in_, 35_deg_, 0_fps_)
-#define START_BUMPC23_PT MKPT(102_in_, 136.61_in_, 35_deg_, 0_fps_)
+#define START_BUMPC23_PT MKPT(102_in_, 110.61_in_, 35_deg_, 0_fps_)
 
 #define P1C1_INTAKE_PT MKPT(76.5_in_, 287.35_in_, 0_deg_, 11_fps_)
 #define P2C1_INTAKE_PT MKPT(87.25_in_, 312.6_in_, 7_deg_, 7_fps_)
-#define P3C1_INTAKE_PT MKPT(93.75_in_, 320.2_in_, 15_deg_, 0_fps_)
+#define P3C1_INTAKE_PT MKPT(93.75_in_, 324.2_in_, 15_deg_, 0_fps_)
 
-#define P1C2_INTAKE_PT MKPT(101.1_in_, 254.5_in_, 0_deg_, 11_fps_)
-#define P2C2_INTAKE_PT MKPT(108.35_in_, 289.42_in_, 7_deg_, 7_fps_)
-#define P3C2_INTAKE_PT MKPT(114.85_in_, 316.35_in_, 15_deg_, 0_fps_)
+#define P1C2_INTAKE_PT MKPT(121.1_in_, 260.5_in_, 0_deg_, 11_fps_)
+#define P2C2_INTAKE_PT MKPT(129.35_in_, 300.42_in_, 7_deg_, 7_fps_)
+#define P3C2_INTAKE_PT MKPT(134.85_in_, 324.35_in_, 15_deg_, 0_fps_)
 
 #define P1C3_INTAKE_PT MKPT(111.1_in_, 254.5_in_, 20_deg_, 11_fps_)
 #define P2C3_INTAKE_PT MKPT(118.35_in_, 280.42_in_, 40_deg_, 11_fps_)
 #define P3C3_INTAKE_PT MKPT(124.85_in_, 290.65_in_, 60_deg_, 7_fps_)
-#define P4C3_INTAKE_PT MKPT(140.85_in_, 295.35_in_, 90_deg_, 0_fps_)
+#define P4C3_INTAKE_PT MKPT(146.85_in_, 295.35_in_, 90_deg_, 0_fps_)
 
 #define FPC_EXPECTED_START_UF \
   FPT { {92.5_in_, 144.54_in_}, 0_deg_, 0_fps_ }

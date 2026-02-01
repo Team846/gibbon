@@ -198,6 +198,9 @@ private:
   pdcsu::units::ms_t cached_april_bearing_latency_{pdcsu::units::ms_t{0}};
 
   frc::Field2d MainField_;
+
+  degree_t zero_pitch;
+  degree_t zero_roll;
 };
 
 }  // namespace funkit::robot::swerve

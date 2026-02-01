@@ -130,7 +130,7 @@
   {
     "name": "/Preferences/SwerveDrivetrain/steer_genome/motor_current_limit (A)",
     "type": "double",
-    "value": 70.0,
+    "value": 120.0,
     "properties": {
       "persistent": true
     }
@@ -154,7 +154,7 @@
   {
     "name": "/Preferences/SwerveDrivetrain/steer_genome/brake_mode",
     "type": "boolean",
-    "value": true,
+    "value": false,
     "properties": {
       "persistent": true
     }
@@ -226,7 +226,7 @@
   {
     "name": "/Preferences/SwerveDrivetrain/april_bearing_latency (ms)",
     "type": "double",
-    "value": -60.0,
+    "value": 0.0,
     "properties": {
       "persistent": true
     }
@@ -330,7 +330,7 @@
   {
     "name": "/Preferences/SwerveDrivetrain/april_tags/april_variance_coeff",
     "type": "double",
-    "value": 0.0005,
+    "value": 0.01,
     "properties": {
       "persistent": true
     }
@@ -690,7 +690,7 @@
   {
     "name": "/Preferences/SwerveDrivetrain/steer_genome/voltage_compensation (m^2 kg s^-3 A^-1)",
     "type": "double",
-    "value": 7.5,
+    "value": 10.0,
     "properties": {
       "persistent": true
     }

@@ -226,7 +226,7 @@
   {
     "name": "/Preferences/SwerveDrivetrain/april_bearing_latency (ms)",
     "type": "double",
-    "value": -60.0,
+    "value": 0.0,
     "properties": {
       "persistent": true
     }
@@ -330,7 +330,7 @@
   {
     "name": "/Preferences/SwerveDrivetrain/april_tags/april_variance_coeff",
     "type": "double",
-    "value": 0.0005,
+    "value": 0.005,
     "properties": {
       "persistent": true
     }
