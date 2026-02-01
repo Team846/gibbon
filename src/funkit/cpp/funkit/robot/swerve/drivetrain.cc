@@ -21,6 +21,8 @@ DrivetrainSubsystem::DrivetrainSubsystem(DrivetrainConfigs configs)
     pigeon_.emplace(pigeon_conn.canID, ctre::phoenix6::CANBus{""});
     pigeon_->OptimizeBusUtilization();
     pigeon_->GetYaw().SetUpdateFrequency(100_Hz);
+    pigeon_->GetPitch().SetUpdateFrequency(100_Hz);
+    pigeon_->GetRoll().SetUpdateFrequency(100_Hz);
     pigeon_->GetAngularVelocityZWorld().SetUpdateFrequency(100_Hz);
     pigeon_->GetAccelerationX().SetUpdateFrequency(100_Hz);
     pigeon_->GetAccelerationY().SetUpdateFrequency(100_Hz);
@@ -268,6 +270,22 @@ pdcsu::units::degree_t DrivetrainSubsystem::GetBearing() {
   throw std::runtime_error("Neither Pigeon nor navX IMU is available");
 }
 
+pdcsu::units::degree_t DrivetrainSubsystem::GetPitch() {
+  if (pigeon_.has_value()) {
+    return pdcsu::units::degree_t{pigeon_->GetPitch().GetValue().to<double>()};
+  }
+  if (navX_.has_value()) { return pdcsu::units::degree_t{navX_->GetPitch()}; }
+  return pdcsu::units::degree_t{0};
+}
+
+pdcsu::units::degree_t DrivetrainSubsystem::GetRoll() {
+  if (pigeon_.has_value()) {
+    return pdcsu::units::degree_t{pigeon_->GetRoll().GetValue().to<double>()};
+  }
+  if (navX_.has_value()) { return pdcsu::units::degree_t{navX_->GetRoll()}; }
+  return pdcsu::units::degree_t{0};
+}
+
 pdcsu::units::degps_t DrivetrainSubsystem::GetYawRate() {
   if (pigeon_.has_value()) {
     return -1 *
@@ -350,18 +368,28 @@ DrivetrainReadings DrivetrainSubsystem::ReadFromHardware() {
       odometry_.calculate({bearing, steer_positions, drive_positions,
           cached_odom_fudge_factor_});
 
+  Vector2D delta_pos = odom_output.position - GetReadings().pose.position;
+
+  pdcsu::units::degree_t pitch = GetPitch();
+  pdcsu::units::degree_t roll = GetRoll();
+  degree_t tilt_field_x = pitch * pdcsu::units::u_cos(bearing) -
+                          roll * pdcsu::units::u_sin(bearing);
+  degree_t tilt_field_y = pitch * pdcsu::units::u_sin(bearing) +
+                          roll * pdcsu::units::u_cos(bearing);
+  Vector2D compensated_delta{delta_pos[0] * pdcsu::units::u_cos(tilt_field_x),
+      delta_pos[1] * pdcsu::units::u_cos(tilt_field_y)};
+
   funkit::robot::swerve::odometry::SwervePose new_pose{
-      .position = odom_output.position,
+      .position = GetReadings().pose.position + compensated_delta,
       .bearing = bearing,
       .velocity = velocity,
   };
 
-  Vector2D delta_pos = new_pose.position - GetReadings().pose.position;
-
-  if (delta_pos.magnitude().value() < 10.0) {
+  if (compensated_delta.magnitude().value() < 10.0) {
     cached_odom_variance_ = GetPreferenceValue_double("odom_variance");
     pose_estimator.AddOdometryMeasurement(
-        {delta_pos[0].value(), delta_pos[1].value()}, cached_odom_variance_);
+        {compensated_delta[0].value(), compensated_delta[1].value()},
+        cached_odom_variance_);
   }
 
   cached_april_variance_coeff_ =

@@ -125,7 +125,7 @@ bool DriveToPointCommand::IsFinished() {
 
   if (flags_ & kRequireBearing) {
     auto bearing_error = funkit::math::CoterminalDifference(
-        drivetrain_readings.estimated_pose.bearing, target_.bearing);
+        drivetrain_readings.pose.bearing, target_.bearing);
     auto bearing_threshold =
         drivetrain_->GetPreferenceValue_unit_type<pdcsu::units::degree_t>(
             "drive_to_point/bearing_threshold");

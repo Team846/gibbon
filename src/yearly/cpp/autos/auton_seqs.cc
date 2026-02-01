@@ -113,9 +113,9 @@ using FPT = funkit::math::FieldPoint;
 #define P3C2_INTAKE_PT MKPT(114.85_in_, 316.35_in_, 15_deg_, 0_fps_)
 
 #define P1C3_INTAKE_PT MKPT(111.1_in_, 254.5_in_, 20_deg_, 11_fps_)
-#define P2C3_INTAKE_PT MKPT(118.35_in_, 283.42_in_, 40_deg_, 11_fps_)
-#define P3C3_INTAKE_PT MKPT(124.85_in_, 300.65_in_, 60_deg_, 7_fps_)
-#define P4C3_INTAKE_PT MKPT(140.85_in_, 310.35_in_, 90_deg_, 0_fps_)
+#define P2C3_INTAKE_PT MKPT(118.35_in_, 280.42_in_, 40_deg_, 11_fps_)
+#define P3C3_INTAKE_PT MKPT(124.85_in_, 290.65_in_, 60_deg_, 7_fps_)
+#define P4C3_INTAKE_PT MKPT(140.85_in_, 295.35_in_, 90_deg_, 0_fps_)
 
 #define FPC_EXPECTED_START_UF \
   FPT { {92.5_in_, 144.54_in_}, 0_deg_, 0_fps_ }

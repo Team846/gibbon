@@ -154,6 +154,8 @@ private:
   void WriteToHardware(DrivetrainTarget target) override;
 
   pdcsu::units::degree_t GetBearing();
+  pdcsu::units::degree_t GetPitch();
+  pdcsu::units::degree_t GetRoll();
   pdcsu::units::degps_t GetYawRate();
   pdcsu::util::math::uVec<pdcsu::units::fps2_t, 2> GetAcceleration();
 

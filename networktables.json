@@ -138,7 +138,7 @@
   {
     "name": "/Preferences/SwerveDrivetrain/bearing_gains/_kP",
     "type": "int",
-    "value": 9,
+    "value": 2,
     "properties": {
       "persistent": true
     }
@@ -154,7 +154,7 @@
   {
     "name": "/Preferences/SwerveDrivetrain/bearing_gains/_kD",
     "type": "double",
-    "value": -0.6,
+    "value": -0.15,
     "properties": {
       "persistent": true
     }
@@ -2018,7 +2018,7 @@
   {
     "name": "/Preferences/SwerveDrivetrain/drive_to_point/kC",
     "type": "double",
-    "value": 3.5,
+    "value": 2.0,
     "properties": {
       "persistent": true
     }
@@ -2482,7 +2482,7 @@
   {
     "name": "/Preferences/SwerveDrivetrain/drive_to_point/bearing_threshold (deg)",
     "type": "double",
-    "value": 5.0,
+    "value": 500.0,
     "properties": {
       "persistent": true
     }
@@ -3115,6 +3115,22 @@
     "name": "/Preferences/shooter/genome2/gains/kF",
     "type": "double",
     "value": 0.0,
+    "properties": {
+      "persistent": true
+    }
+  },
+  {
+    "name": "/Preferences/SwerveDrivetrain/april_tags/fudge_latency3 (ms)",
+    "type": "double",
+    "value": 75.0,
+    "properties": {
+      "persistent": true
+    }
+  },
+  {
+    "name": "/Preferences/ShootingCalculator/swim/twistVelCompensation",
+    "type": "double",
+    "value": 0.416,
     "properties": {
       "persistent": true
     }
