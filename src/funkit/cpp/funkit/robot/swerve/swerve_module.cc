@@ -255,9 +255,11 @@ std::pair<degree_t, bool> SwerveModuleSubsystem::calculateSteerPosition(
   return {target, invert};
 }
 
-void SwerveModuleSubsystem::ModifySteerGenome(
-    funkit::control::config::MotorGenome genome) {
-  steer_.ModifyGenome(genome);
+void SwerveModuleSubsystem::ModifySwerveGenome(
+    funkit::control::config::MotorGenome drive_genome,
+    funkit::control::config::MotorGenome steer_genome) {
+  steer_.ModifyGenome(steer_genome);
+  drive_.ModifyGenome(drive_genome);
 }
 
 }  // namespace funkit::robot::swerve

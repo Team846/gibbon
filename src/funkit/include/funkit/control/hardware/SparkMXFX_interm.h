@@ -4,6 +4,7 @@
 #include <rev/SparkFlex.h>
 #include <rev/SparkMax.h>
 
+#include <optional>
 #include <variant>
 
 #include "IntermediateController.h"
@@ -65,10 +66,10 @@ private:
   base::ControlRequest last_command_;
   config::Gains gains_;
 
-  bool last_brake_mode_{true};
-  pdcsu::units::amp_t last_motor_current_limit_{pdcsu::units::amp_t{0}};
-  pdcsu::units::volt_t last_voltage_compensation_{pdcsu::units::volt_t{0}};
-  config::Gains last_gains_{};
+  std::optional<bool> last_brake_mode_{std::nullopt};
+  std::optional<pdcsu::units::amp_t> last_motor_current_limit_{std::nullopt};
+  std::optional<pdcsu::units::volt_t> last_voltage_compensation_{std::nullopt};
+  std::optional<config::Gains> last_gains_{std::nullopt};
 
   rev::spark::SparkBase* esc_;
   rev::spark::SparkRelativeEncoder* encoder_;

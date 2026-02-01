@@ -50,7 +50,7 @@ DrivetrainSubsystem::DrivetrainSubsystem(DrivetrainConfigs configs)
       .motor_current_limit = pdcsu::units::amp_t{120.0},
       .smart_current_limit = pdcsu::units::amp_t{80.0},
       .voltage_compensation = pdcsu::units::volt_t{10.0},
-      .brake_mode = false,
+      .brake_mode = true,
       .gains = {.kP = 15.0, .kI = 0.0, .kD = 0.0, .kF = 0.0}};
   funkit::control::config::SubsystemGenomeHelper::CreateGenomePreferences(
       *this, "steer_genome", steer_genome_backup);
@@ -259,8 +259,8 @@ pdcsu::units::degps_t DrivetrainSubsystem::ApplyBearingPID(
 pdcsu::units::degree_t DrivetrainSubsystem::GetBearing() {
   if (pigeon_.has_value()) {
     auto bearing_wpi =
-        ctre::phoenix6::BaseStatusSignal::GetLatencyCompensatedValue(
-            pigeon_->GetYaw(), pigeon_->GetAngularVelocityZWorld());
+        -1 * ctre::phoenix6::BaseStatusSignal::GetLatencyCompensatedValue(
+                 pigeon_->GetYaw(), pigeon_->GetAngularVelocityZWorld());
     return pdcsu::units::degree_t{bearing_wpi.to<double>()};
   } else if (navX_.has_value()) {
     return pdcsu::units::degree_t{navX_->GetAngle()};
@@ -270,8 +270,9 @@ pdcsu::units::degree_t DrivetrainSubsystem::GetBearing() {
 
 pdcsu::units::degps_t DrivetrainSubsystem::GetYawRate() {
   if (pigeon_.has_value()) {
-    return pdcsu::units::degps_t{
-        pigeon_->GetAngularVelocityZWorld().GetValue().to<double>()};
+    return -1 *
+           pdcsu::units::degps_t{
+               pigeon_->GetAngularVelocityZWorld().GetValue().to<double>()};
   } else if (navX_.has_value()) {
     return pdcsu::units::degps_t{navX_->GetRate()};
   }
@@ -523,9 +524,11 @@ void DrivetrainSubsystem::WriteToHardware(DrivetrainTarget target) {
   using namespace funkit::control::config;
   auto steer_genome =
       SubsystemGenomeHelper::LoadGenomePreferences(*this, "steer_genome");
+  auto drive_genome =
+      SubsystemGenomeHelper::LoadGenomePreferences(*this, "drive_genome");
 
   for (int i = 0; i < 4; i++) {
-    modules_[i]->ModifySteerGenome(steer_genome);
+    modules_[i]->ModifySwerveGenome(drive_genome, steer_genome);
   }
 
   cached_max_omega_cut_ =

@@ -89,7 +89,8 @@ void SparkMXFX_interm::SetSoftLimits(pdcsu::units::radian_t forward_limit,
 void SparkMXFX_interm::SetGenome(config::MotorGenome genome) {
   bool config_changed = false;
 
-  if (last_brake_mode_ != genome.brake_mode) {
+  if (!last_brake_mode_.has_value() ||
+      last_brake_mode_.value() != genome.brake_mode) {
     configs.SetIdleMode(genome.brake_mode
                             ? rev::spark::SparkBaseConfig::IdleMode::kBrake
                             : rev::spark::SparkBaseConfig::IdleMode::kCoast);
@@ -97,7 +98,8 @@ void SparkMXFX_interm::SetGenome(config::MotorGenome genome) {
     config_changed = true;
   }
 
-  if (!funkit::math::DEquals(last_motor_current_limit_.value(),
+  if (!last_motor_current_limit_.has_value() ||
+      !funkit::math::DEquals(last_motor_current_limit_.value().value(),
           genome.motor_current_limit.value())) {
     configs.SmartCurrentLimit(
         static_cast<int>(genome.motor_current_limit.value()));
@@ -105,17 +107,19 @@ void SparkMXFX_interm::SetGenome(config::MotorGenome genome) {
     config_changed = true;
   }
 
-  if (!funkit::math::DEquals(last_voltage_compensation_.value(),
+  if (!last_voltage_compensation_.has_value() ||
+      !funkit::math::DEquals(last_voltage_compensation_.value().value(),
           genome.voltage_compensation.value())) {
     configs.VoltageCompensation(genome.voltage_compensation.value());
     last_voltage_compensation_ = genome.voltage_compensation;
     config_changed = true;
   }
 
-  if (!funkit::math::DEquals(last_gains_.kP, genome.gains.kP) ||
-      !funkit::math::DEquals(last_gains_.kI, genome.gains.kI) ||
-      !funkit::math::DEquals(last_gains_.kD, genome.gains.kD) ||
-      !funkit::math::DEquals(last_gains_.kF, genome.gains.kF)) {
+  if (!last_gains_.has_value() ||
+      !funkit::math::DEquals(last_gains_.value().kP, genome.gains.kP) ||
+      !funkit::math::DEquals(last_gains_.value().kI, genome.gains.kI) ||
+      !funkit::math::DEquals(last_gains_.value().kD, genome.gains.kD) ||
+      !funkit::math::DEquals(last_gains_.value().kF, genome.gains.kF)) {
     gains_ = genome.gains;
     configs.closedLoop.Pid(gains_.kP, gains_.kI, std::abs(gains_.kD));
     configs.closedLoop.feedForward.kV(std::abs(gains_.kF));

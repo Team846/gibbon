@@ -44,11 +44,11 @@ public:
     RegisterSubsystemGroupAB({{&drivetrain_, drivetrain_init}});
     RegisterSubsystemGroupAB({{&GPD_, gpd_init}});
 
-    bool shooter_init = (GetPreferenceValue_bool("init_shooter"));
-    bool intake_init = (GetPreferenceValue_bool("init_intake"));
+    // bool shooter_init = (GetPreferenceValue_bool("init_shooter"));
+    // bool intake_init = (GetPreferenceValue_bool("init_intake"));
 
-    RegisterSubsystemGroupAB({{&shooter_, shooter_init}});
-    RegisterSubsystemGroupAB({{&intake_, intake_init}});
+    // RegisterSubsystemGroupAB({{&shooter_, shooter_init}});
+    // RegisterSubsystemGroupAB({{&intake_, intake_init}});
 
     // RegisterSubsystemGroupAB({{&turr_test, true}});
   }

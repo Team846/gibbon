@@ -60,8 +60,7 @@ struct UserSettableValues {
 UserSettableValues GetUserSettableValues() {
   return UserSettableValues{
       .imu_connection =
-          swerve::NavXConnection{
-              funkit::robot::swerve::NavXConnectionType::kUSB},
+          swerve::PigeonConnection{ports::drivetrain_::kPIGEON_CANID},
       .wheel_diameter = inch_t{4},
       .drive_gear_ratio = 6.75,
       .steer_reduction = 150_rot_ / 7_rot_,
@@ -85,11 +84,12 @@ UserSettableValues GetUserSettableValues() {
           .BR = {ports::drivetrain_::kBRCANCoder_CANID,
               ports::drivetrain_::kBRDrive_CANID,
               ports::drivetrain_::kBRSteer_CANID}},
-      .april_camera_configs = {{4U, 4.0_in_, 0_in_}},
+      .april_camera_configs = {{1U, -11.0_in_, 4.0_in_},
+          {3U, 3.0_in_, 5.0_in_}},
       .april_locations = {{1U, {25.38_in_, 183.58_in_}},
           {2U, {135.09_in_, 182.11_in_}}, {3U, {144.85_in_, 205.87_in_}},
-          {4U, {158.85_in_, 205.87_in_}}, {5U, {182.60_in_, 182.11_in_}},
-          {6U, {292.32_in_, 183.58_in_}}, {7U, {292.32_in_, 180.63_in_}},
+          {4U, {158.85_in_, 205.87_in_}}, {5U, {135.34_in_, 182.11_in_}},
+          {6U, {25.37_in_, 183.58_in_}}, {7U, {292.32_in_, 180.63_in_}},
           {8U, {182.60_in_, 168.11_in_}}, {9U, {144.85_in_, 158.34_in_}},
           {10U, {158.85_in_, 158.34_in_}}, {11U, {135.09_in_, 168.11_in_}},
           {12U, {25.38_in_, 180.63_in_}}, {13U, {26.22_in_, 0.30_in_}},
