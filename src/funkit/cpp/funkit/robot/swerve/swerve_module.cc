@@ -255,7 +255,8 @@ std::pair<degree_t, bool> SwerveModuleSubsystem::calculateSteerPosition(
 }
 
 void SwerveModuleSubsystem::ModifyGenomes(
-    funkit::control::config::MotorGenome genome_steer, funkit::control::config::MotorGenome genome_drive) {
+    funkit::control::config::MotorGenome genome_steer,
+    funkit::control::config::MotorGenome genome_drive) {
   steer_.ModifyGenome(genome_steer);
   drive_.ModifyGenome(genome_drive);
 }

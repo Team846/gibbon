@@ -203,7 +203,6 @@ To undo the going back:
 
 ## CppCheck Warnings
 ```
-src/yearly/cpp/subsystems/abstract/gpd.cc:45:5: warning: Statements following 'return' will never be executed. [unreachableCode]
 src/funkit/cpp/funkit/math/collection.cc:27:0: warning: The function 'VerticalDeadband' is never used. [unusedFunction]
 src/funkit/cpp/funkit/math/collection.cc:55:0: warning: The function 'CoterminalSum' is never used. [unusedFunction]
 src/funkit/cpp/funkit/math/collection.cc:69:0: warning: The function 'modulo' is never used. [unusedFunction]

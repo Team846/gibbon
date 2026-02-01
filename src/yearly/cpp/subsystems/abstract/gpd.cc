@@ -15,6 +15,8 @@ GPDSubsystem::GPDSubsystem(
   RegisterPreference("intake_to_cam_x", inch_t{-13});
   RegisterPreference("cam_h_angle", degree_t{0});
   RegisterPreference("kS", 0.005);
+  RegisterPreference("ema_alpha", 0.02);
+  RegisterPreference("ema_decay", 0.95);
 }
 
 GPDTarget GPDSubsystem::ZeroTarget() const { return GPDTarget{}; }
@@ -25,6 +27,8 @@ void GPDSubsystem::Setup() {}
 
 GPDReadings GPDSubsystem::ReadFromHardware() {
   GPDReadings readings{};
+
+  readings.locked_target = locked_target_;
 
   funkit::robot::swerve::DrivetrainReadings drivetrain_readings =
       drivetrain_->GetReadings();
@@ -43,7 +47,7 @@ GPDReadings GPDSubsystem::ReadFromHardware() {
   if (optimal_point.size() == 0U) {
     drivetrain_->SetFieldObjectPose(
         "optimal_gp", {5000_in_, 5000_in_}, gp_spin_);
-    return {0_deg_, false};
+    return {0_deg_, false, locked_target_};
   }
 
   double distance = std::abs(optimal_point[0]);
@@ -76,11 +80,12 @@ GPDReadings GPDSubsystem::ReadFromHardware() {
   readings.optimal_pos = bearing_angle;
   readings.has_target = true;
 
-//   Graph("target_x", readings.optimal_pos[0]);
-//   Graph("target_y", readings.optimal_pos[1]);
+  //   Graph("target_x", readings.optimal_pos[0]);
+  //   Graph("target_y", readings.optimal_pos[1]);
 
-//   gp_spin_ += degree_t{5};
-//   drivetrain_->SetFieldObjectPose("optimal_gp", readings.optimal_pos, gp_spin_);
+  //   gp_spin_ += degree_t{5};
+  //   drivetrain_->SetFieldObjectPose("optimal_gp", readings.optimal_pos,
+  //   gp_spin_);
 
   return readings;
 }

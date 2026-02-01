@@ -12,6 +12,7 @@ struct GPDTarget {};
 struct GPDReadings {
   degree_t optimal_pos;
   bool has_target;
+  bool locked_target;
 };
 
 class GPDSubsystem
@@ -42,4 +43,6 @@ private:
 
   funkit::math::Vector2D filtered_pos_{};
   bool has_prev_pos_ = false;
+
+  bool locked_target_ = false;
 };
