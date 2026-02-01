@@ -10,7 +10,7 @@
 struct GPDTarget {};
 
 struct GPDReadings {
-  funkit::math::Vector2D optimal_pos;
+  degree_t optimal_pos;
   bool has_target;
 };
 

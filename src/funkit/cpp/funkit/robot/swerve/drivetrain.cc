@@ -518,9 +518,11 @@ void DrivetrainSubsystem::WriteToHardware(DrivetrainTarget target) {
   using namespace funkit::control::config;
   auto steer_genome =
       SubsystemGenomeHelper::LoadGenomePreferences(*this, "steer_genome");
+  auto drive_genome =
+      SubsystemGenomeHelper::LoadGenomePreferences(*this, "drive_genome");
 
   for (int i = 0; i < 4; i++) {
-    modules_[i]->ModifySteerGenome(steer_genome);
+    modules_[i]->ModifyGenomes(steer_genome, drive_genome);
   }
 
   cached_max_omega_cut_ =

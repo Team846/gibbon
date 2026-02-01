@@ -79,22 +79,21 @@ void DriveCommand::Periodic() {
 
   GPDReadings gpd_readings = container_.GPD_.GetReadings();
   if (ci_readings_.gpd_drive_button && target.velocity.magnitude() > 1.0_fps_) {
-    radian_t x_off = target.velocity.angleBetween(
-        pdcsu::util::math::Vector2D{0.0_in_, 50_in_} -
-            container_.drivetrain_.GetReadings().pose.position,
-        true);
+    radian_t x_off = gpd_readings.optimal_pos - target.velocity.angle(true);
     fps_t x_off_comp = target.velocity.magnitude() / 2.0 *
                        std::tanh(x_off.value() * u_abs(x_off).value() * 400.0);
     degree_t dir_xoff = target.velocity.angle(true) + 90_deg_;
+    ema_comp_gpd_ = 0.02 * x_off_comp + 0.98 * ema_comp_gpd_;
     Graph("x_off_comp", x_off_comp);
-    if (u_abs(x_off_comp) > 0.5_fps_) {
-      ema_comp_gpd_ = 0.06 * x_off_comp + 0.94 * ema_comp_gpd_;
+    if (u_abs(x_off_comp) > 1_fps_) {
+      target.velocity = target.velocity + pdcsu::util::math::uVec<fps_t, 2>{
+        ema_comp_gpd_, dir_xoff, true};
     } else {
-      ema_comp_gpd_ *= 0.75;
+        target.velocity = target.velocity + pdcsu::util::math::uVec<fps_t, 2>{
+            ema_comp_gpd_ * u_abs(ema_comp_gpd_) / 1_fps_, dir_xoff, true};
     }
-    target.velocity = target.velocity + pdcsu::util::math::uVec<fps_t, 2>{
-                                            ema_comp_gpd_, dir_xoff, true};
-  } else if (gpd_readings.has_target) {
+    Graph("ema_comp_gpd", ema_comp_gpd_);
+  } else if (ci_readings_.gpd_drive_button ) {
     ema_comp_gpd_ = 0.95 * ema_comp_gpd_;
   } else {
     ema_comp_gpd_ = 0.0_fps_;

@@ -103,12 +103,13 @@ public:
   void SetSteerGenome(funkit::control::config::MotorGenome genome);
 
   /*
-  ModifySteerGenome()
+  ModifyGenomes()
 
-  Modifies the genome for the steer motor controller. Should be called after
-  SwerveModuleSubsystem Setup, in DrivetrainSubsystem Setup.
+  Modifies the genome for the steer and drive motor controllers. Should be
+  called after SwerveModuleSubsystem Setup, in DrivetrainSubsystem Setup.
   */
-  void ModifySteerGenome(funkit::control::config::MotorGenome genome);
+  void ModifyGenomes(funkit::control::config::MotorGenome genome_steer,
+      funkit::control::config::MotorGenome genome_drive);
 
 private:
   int last_rezero = 101;

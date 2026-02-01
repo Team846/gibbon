@@ -43,7 +43,7 @@ GPDReadings GPDSubsystem::ReadFromHardware() {
   if (optimal_point.size() == 0U) {
     drivetrain_->SetFieldObjectPose(
         "optimal_gp", {5000_in_, 5000_in_}, gp_spin_);
-    return {{0_in_, 0_in_}, false};
+    return {0_deg_, false};
   }
 
   double distance = std::abs(optimal_point[0]);
@@ -73,14 +73,14 @@ GPDReadings GPDSubsystem::ReadFromHardware() {
       drivetrain_readings.estimated_pose.position +
       cam_offset.rotate(drivetrain_readings.estimated_pose.bearing, true);
 
-  readings.optimal_pos = raw_pos;
+  readings.optimal_pos = bearing_angle;
   readings.has_target = true;
 
-  Graph("target_x", readings.optimal_pos[0]);
-  Graph("target_y", readings.optimal_pos[1]);
+//   Graph("target_x", readings.optimal_pos[0]);
+//   Graph("target_y", readings.optimal_pos[1]);
 
-  gp_spin_ += degree_t{5};
-  drivetrain_->SetFieldObjectPose("optimal_gp", readings.optimal_pos, gp_spin_);
+//   gp_spin_ += degree_t{5};
+//   drivetrain_->SetFieldObjectPose("optimal_gp", readings.optimal_pos, gp_spin_);
 
   return readings;
 }
