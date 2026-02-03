@@ -220,6 +220,7 @@ ReadResponse TalonFX_interm::Read(ReadType type) {
   case ReadType::kAbsPosition:
     throw std::runtime_error(
         "ReadType absolute error not implemented for TalonFX");
+  case ReadType::kRestFault: return talon_.HasResetOccurred();
   default: return 0.0;
   }
 }

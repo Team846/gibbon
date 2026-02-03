@@ -30,7 +30,8 @@ enum ReadType {
   kFwdSwitch,
   kRevSwitch,
   kAbsPosition,
-  kTemperature
+  kTemperature,
+  kRestFault,
 };
 using ReadResponse = double;
 

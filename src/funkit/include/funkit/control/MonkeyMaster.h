@@ -126,6 +126,8 @@ public:
   static bool VerifyConnected();
   static bool VerifyConnected(size_t slot_id);
 
+  static void CheckForResets();
+
 private:
   static funkit::base::Loggable loggable_;
 

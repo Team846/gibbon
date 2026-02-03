@@ -157,6 +157,8 @@ void SparkMXFX_interm::EnableStatusFrames(config::StatusFrameSelections frames,
     // configs.signals.MotorTemperatureAlwaysOn(true);
     configs.signals.MotorTemperaturePeriodMs(
         1000);  // Temperature required less often
+    configs.signals.WarningsPeriodMs(
+        3000);  // Warning/Reset frame required less often
   } else {
     configs.signals.PrimaryEncoderVelocityPeriodMs(32767);
     configs.signals.PrimaryEncoderVelocityAlwaysOn(false);
@@ -252,6 +254,14 @@ ReadResponse SparkMXFX_interm::Read(ReadType type) {
     return turn_wpi.to<double>();
   }
   case ReadType::kTemperature: return esc_->GetMotorTemperature();
+  case ReadType::kRestFault: {
+    if (esc_->GetStickyWarnings().hasReset) {
+      esc_->ClearFaults();
+      return 1.0;
+    } else {
+      return 0.0;
+    }
+  }
   default: return 0.0;
   }
 }
