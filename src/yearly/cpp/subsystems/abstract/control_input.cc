@@ -63,7 +63,7 @@ ControlInputReadings ControlInputSubsystem::UpdateWithInput() {
   Graph("translate_y", ci_readings_.translate_y);
 
   ci_readings_.rotation = dr_readings.right_stick_x;
-  
+
   // GPD Assist
   // ci_readings_.gpd_drive_button = dr_readings.right_bumper;
 
