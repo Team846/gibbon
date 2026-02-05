@@ -21,6 +21,8 @@ DrivetrainSubsystem::DrivetrainSubsystem(DrivetrainConfigs configs)
     pigeon_.emplace(pigeon_conn.canID, ctre::phoenix6::CANBus{""});
     pigeon_->OptimizeBusUtilization();
     pigeon_->GetYaw().SetUpdateFrequency(100_Hz);
+    pigeon_->GetPitch().SetUpdateFrequency(100_Hz);
+    pigeon_->GetRoll().SetUpdateFrequency(100_Hz);
     pigeon_->GetAngularVelocityZWorld().SetUpdateFrequency(100_Hz);
     pigeon_->GetAccelerationX().SetUpdateFrequency(100_Hz);
     pigeon_->GetAccelerationY().SetUpdateFrequency(100_Hz);
@@ -50,7 +52,7 @@ DrivetrainSubsystem::DrivetrainSubsystem(DrivetrainConfigs configs)
       .motor_current_limit = pdcsu::units::amp_t{120.0},
       .smart_current_limit = pdcsu::units::amp_t{80.0},
       .voltage_compensation = pdcsu::units::volt_t{10.0},
-      .brake_mode = false,
+      .brake_mode = true,
       .gains = {.kP = 15.0, .kI = 0.0, .kD = 0.0, .kF = 0.0}};
   funkit::control::config::SubsystemGenomeHelper::CreateGenomePreferences(
       *this, "steer_genome", steer_genome_backup);
@@ -58,6 +60,7 @@ DrivetrainSubsystem::DrivetrainSubsystem(DrivetrainConfigs configs)
   RegisterPreference("bearing_gains/_kP", 9);
   RegisterPreference("bearing_gains/_kI", 0.0);
   RegisterPreference("bearing_gains/_kD", -0.6);
+  RegisterPreference("bearing_gains/_kF", -0.3);
   RegisterPreference("bearing_gains/deadband", pdcsu::units::degps_t{3.0});
 
   RegisterPreference("april_bearing_latency", pdcsu::units::ms_t{0});
@@ -80,8 +83,11 @@ DrivetrainSubsystem::DrivetrainSubsystem(DrivetrainConfigs configs)
 
   RegisterPreference("april_tags/april_variance_coeff", 0.08);
   RegisterPreference("april_tags/triangular_variance_coeff", 0.000139);
-  RegisterPreference("april_tags/fudge_latency1", pdcsu::units::ms_t{155.0});
-  RegisterPreference("april_tags/fudge_latency2", pdcsu::units::ms_t{70.0});
+  for (const auto& config : configs.april_camera_configs) {
+    RegisterPreference(
+        "april_tags/fudge_latency" + std::to_string(config.camera_id),
+        pdcsu::units::ms_t{75.0});
+  }
 
   RegisterPreference("drive_to_point/kC", 5.0);
   RegisterPreference("drive_to_point/kA", 0.05);
@@ -98,16 +104,14 @@ DrivetrainSubsystem::DrivetrainSubsystem(DrivetrainConfigs configs)
       .wheelbase_forward_dim = configs.wheelbase_forward_dim,
   });
 
-  std::vector<std::shared_ptr<nt::NetworkTable>> april_tables = {};
-  for (size_t i = 0; i < configs.cams; i++) {
-    april_tables.push_back(nt::NetworkTableInstance::GetDefault().GetTable(
-        "AprilTagsCam" + std::to_string(i + 1)));
+  std::vector<funkit::robot::calculators::AprilTagCamera> cameras = {};
+  for (const auto& config : configs.april_camera_configs) {
+    cameras.push_back(
+        {config, nt::NetworkTableInstance::GetDefault().GetTable(
+                     "AprilTagsCam" + std::to_string(config.camera_id))});
   }
-  tag_pos_calculator.setConstants({.tag_locations = configs.april_locations,
-      .camera_x_offsets = configs.camera_x_offsets,
-      .camera_y_offsets = configs.camera_y_offsets,
-      .cams = configs.cams,
-      .april_tables = april_tables});
+  tag_pos_calculator.setConstants(
+      {.tag_locations = configs.april_locations, .cameras = cameras});
 
 #ifndef _WIN32
   for (int i = 0; i < 20; i++) {
@@ -169,6 +173,8 @@ void DrivetrainSubsystem::ZeroBearing() {
           pigeon_->IsConnected() && pigeon_->GetYaw().GetStatus().IsOK();
       if (connected) {
         pigeon_->SetYaw(0_deg);
+        zero_pitch = degree_t{pigeon_->GetPitch().GetValueAsDouble()};
+        zero_roll = degree_t{pigeon_->GetRoll().GetValueAsDouble()};
         Log("Zeroed bearing (Pigeon)");
         return;
       }
@@ -189,6 +195,8 @@ void DrivetrainSubsystem::ZeroBearing() {
 
   if (pigeon_.has_value()) {
     pigeon_->SetYaw(0_deg);
+    zero_pitch = degree_t{pigeon_->GetPitch().GetValueAsDouble()};
+    zero_roll = degree_t{pigeon_->GetRoll().GetValueAsDouble()};
   } else if (navX_.has_value()) {
     navX_->ZeroYaw();
   }
@@ -221,7 +229,7 @@ void DrivetrainSubsystem::SetCANCoderOffsets() {
 }
 
 pdcsu::units::degps_t DrivetrainSubsystem::ApplyBearingPID(
-    pdcsu::units::degree_t target_bearing) {
+    pdcsu::units::degree_t target_bearing, pdcsu::units::radps_t dAE) {
   pdcsu::units::degree_t bearing = GetReadings().pose.bearing;
   pdcsu::units::degps_t yaw_rate = GetReadings().yaw_rate;
 
@@ -234,10 +242,11 @@ pdcsu::units::degps_t DrivetrainSubsystem::ApplyBearingPID(
       .kP = GetPreferenceValue_double("bearing_gains/_kP"),
       .kI = GetPreferenceValue_double("bearing_gains/_kI"),
       .kD = GetPreferenceValue_double("bearing_gains/_kD"),
-      .kF = 0.0};
+      .kF = GetPreferenceValue_double("bearing_gains/_kF")};
 
   double raw_output = gains.kP * error.value() + gains.kI * 0.0 +
-                      gains.kD * yaw_rate.value() + gains.kF * 0.0;
+                      gains.kD * degps_t(dAE - yaw_rate).value() +
+                      gains.kF * degps_t(dAE).value();
 
   pdcsu::units::degps_t output{
       pdcsu::units::degps_t{1} *
@@ -256,8 +265,8 @@ pdcsu::units::degps_t DrivetrainSubsystem::ApplyBearingPID(
 pdcsu::units::degree_t DrivetrainSubsystem::GetBearing() {
   if (pigeon_.has_value()) {
     auto bearing_wpi =
-        ctre::phoenix6::BaseStatusSignal::GetLatencyCompensatedValue(
-            pigeon_->GetYaw(), pigeon_->GetAngularVelocityZWorld());
+        -1 * ctre::phoenix6::BaseStatusSignal::GetLatencyCompensatedValue(
+                 pigeon_->GetYaw(), pigeon_->GetAngularVelocityZWorld());
     return pdcsu::units::degree_t{bearing_wpi.to<double>()};
   } else if (navX_.has_value()) {
     return pdcsu::units::degree_t{navX_->GetAngle()};
@@ -265,10 +274,29 @@ pdcsu::units::degree_t DrivetrainSubsystem::GetBearing() {
   throw std::runtime_error("Neither Pigeon nor navX IMU is available");
 }
 
+pdcsu::units::degree_t DrivetrainSubsystem::GetPitch() {
+  if (pigeon_.has_value()) {
+    return pdcsu::units::degree_t{pigeon_->GetPitch().GetValueAsDouble()} -
+           zero_pitch;
+  }
+  if (navX_.has_value()) { return pdcsu::units::degree_t{navX_->GetPitch()}; }
+  return pdcsu::units::degree_t{0};
+}
+
+pdcsu::units::degree_t DrivetrainSubsystem::GetRoll() {
+  if (pigeon_.has_value()) {
+    return pdcsu::units::degree_t{pigeon_->GetRoll().GetValueAsDouble()} -
+           zero_roll;
+  }
+  if (navX_.has_value()) { return pdcsu::units::degree_t{navX_->GetRoll()}; }
+  return pdcsu::units::degree_t{0};
+}
+
 pdcsu::units::degps_t DrivetrainSubsystem::GetYawRate() {
   if (pigeon_.has_value()) {
-    return pdcsu::units::degps_t{
-        pigeon_->GetAngularVelocityZWorld().GetValue().to<double>()};
+    return -1 *
+           pdcsu::units::degps_t{
+               pigeon_->GetAngularVelocityZWorld().GetValue().to<double>()};
   } else if (navX_.has_value()) {
     return pdcsu::units::degps_t{navX_->GetRate()};
   }
@@ -346,36 +374,50 @@ DrivetrainReadings DrivetrainSubsystem::ReadFromHardware() {
       odometry_.calculate({bearing, steer_positions, drive_positions,
           cached_odom_fudge_factor_});
 
+  Vector2D delta_pos = odom_output.position - GetReadings().pose.position;
+
+  pdcsu::units::degree_t pitch = GetPitch();
+  pdcsu::units::degree_t roll = GetRoll();
+  degree_t tilt_field_x = pitch * pdcsu::units::u_cos(bearing) -
+                          roll * pdcsu::units::u_sin(bearing);
+  degree_t tilt_field_y = pitch * pdcsu::units::u_sin(bearing) +
+                          roll * pdcsu::units::u_cos(bearing);
+  Graph("tilt_x", tilt_field_x);
+  Graph("tilt_y", tilt_field_y);
+  Vector2D compensated_delta{delta_pos[0] * pdcsu::units::u_cos(tilt_field_x),
+      delta_pos[1] * pdcsu::units::u_cos(tilt_field_y)};
+
   funkit::robot::swerve::odometry::SwervePose new_pose{
-      .position = odom_output.position,
+      .position = GetReadings().pose.position + compensated_delta,
       .bearing = bearing,
       .velocity = velocity,
   };
 
-  Vector2D delta_pos = new_pose.position - GetReadings().pose.position;
-
-  if (delta_pos.magnitude().value() < 10.0) {
+  if (compensated_delta.magnitude().value() < 10.0) {
     cached_odom_variance_ = GetPreferenceValue_double("odom_variance");
     pose_estimator.AddOdometryMeasurement(
-        {delta_pos[0].value(), delta_pos[1].value()}, cached_odom_variance_);
+        {compensated_delta[0].value(), compensated_delta[1].value()},
+        cached_odom_variance_);
   }
 
   cached_april_variance_coeff_ =
       GetPreferenceValue_double("april_tags/april_variance_coeff");
   cached_triangular_variance_coeff_ =
       GetPreferenceValue_double("april_tags/triangular_variance_coeff");
-  cached_fudge_latency1_ = GetPreferenceValue_unit_type<pdcsu::units::ms_t>(
-      "april_tags/fudge_latency1");
-  cached_fudge_latency2_ = GetPreferenceValue_unit_type<pdcsu::units::ms_t>(
-      "april_tags/fudge_latency2");
+
+  for (const auto& config : configs_.april_camera_configs) {
+    cached_fudge_latencies_[config.camera_id] =
+        GetPreferenceValue_unit_type<pdcsu::units::ms_t>(
+            "april_tags/fudge_latency" + std::to_string(config.camera_id));
+  }
+
   cached_april_bearing_latency_ =
       GetPreferenceValue_unit_type<pdcsu::units::ms_t>("april_bearing_latency");
 
   funkit::robot::calculators::ATCalculatorOutput tag_pos =
       tag_pos_calculator.calculate({new_pose, GetReadings().pose, yaw_rate,
           cached_april_variance_coeff_, cached_triangular_variance_coeff_,
-          {cached_fudge_latency1_, cached_fudge_latency2_},
-          cached_april_bearing_latency_});
+          cached_fudge_latencies_, cached_april_bearing_latency_});
 
   if (tag_pos.variance >= 0) {
     pose_estimator.AddVisionMeasurement(
@@ -541,14 +583,12 @@ void DrivetrainSubsystem::WriteToHardware(DrivetrainTarget target) {
   for (int i = 0; i < 4; i++)
     modules_[i]->UpdateHardware();
 
-#ifndef _WIN32
   auto pose = GetReadings().estimated_pose;
   units::inch_t pos_x_wpi(pose.position[0].value());
   units::inch_t pos_y_wpi(
       (funkit::math::FieldPoint::field_size_y - pose.position[1]).value());
   units::degree_t bearing_wpi((degree_t{180} - pose.bearing).value());
   MainField_.SetRobotPose(pos_y_wpi, pos_x_wpi, bearing_wpi);
-#endif
 }
 
 void DrivetrainSubsystem::StartPathRecording(const std::string& filename) {

@@ -123,14 +123,15 @@ bool DriveToPointCommand::IsFinished() {
   auto drivetrain_readings = drivetrain_->GetReadings();
   auto current_point = drivetrain_readings.estimated_pose.position;
 
+  bool bearing_flag = true;
   if (flags_ & kRequireBearing) {
     auto bearing_error = funkit::math::CoterminalDifference(
-        drivetrain_readings.estimated_pose.bearing, target_.bearing);
+        drivetrain_readings.pose.bearing, target_.bearing);
     auto bearing_threshold =
         drivetrain_->GetPreferenceValue_unit_type<pdcsu::units::degree_t>(
             "drive_to_point/bearing_threshold");
     if (pdcsu::units::u_abs(bearing_error) > bearing_threshold) {
-      return false;
+      bearing_flag = false;
     }
   }
 
@@ -147,7 +148,7 @@ bool DriveToPointCommand::IsFinished() {
 
   bool has_reached_target = overshot || within_threshold;
 
-  if (flags_ & kNoTimeout) { return has_reached_target; }
+  if (flags_ & kNoTimeout) { return has_reached_target && bearing_flag; }
 
   auto current_time = funkit::wpilib::CurrentFPGATime();
   auto elapsed_time = current_time - start_time_;
@@ -162,7 +163,7 @@ bool DriveToPointCommand::IsFinished() {
         elapsed_time.value(), estimated_time_.value(), timeout.value());
   }
 
-  return has_reached_target || timed_out;
+  return (has_reached_target && bearing_flag) || timed_out;
 }
 
 pdcsu::units::second_t DriveToPointCommand::EstimateCompletionTime(

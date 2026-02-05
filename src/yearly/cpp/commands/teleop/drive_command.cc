@@ -2,7 +2,7 @@
 
 #include <utility>
 
-#include "calculators/AntiTippingCalculator.h"
+#include "calculators/ShootingCalculator.h"
 #include "funkit/math/fieldpoints.h"
 
 DriveCommand::DriveCommand(RobotContainer &container)
@@ -50,27 +50,20 @@ void DriveCommand::Periodic() {
   Graph("target_velocity_x", target.velocity[0]);
   Graph("target_velocity_y", target.velocity[1]);
 
-  //   auto delta_dir =
-  //       (target.velocity -
-  //       container_.drivetrain_.GetReadings().pose.velocity);
-
-  //   Graph("delta_dir_x", delta_dir[0]);
-  //   Graph("delta_dir_y", delta_dir[1]);
-
-  // auto accel_limited = AntiTippingCalculator::LimitAcceleration(
-  //     delta_dir, container_.drivetrain_.GetReadings().pose.bearing);
-
-  // Graph("limited_accel_x", accel_limited[0]);
-  // Graph("limited_accel_y", accel_limited[1]);
-
-  // target.velocity[0] =
-  //     1_fps * rampRateLimiter_x_.limit(target.velocity[0].to<double>(),
-  //                 accel_limited[0].to<double>());
-  // target.velocity[1] =
-  //     1_fps * rampRateLimiter_y_.limit(target.velocity[1].to<double>(),
-  //                 accel_limited[1].to<double>());
-
   target.angular_velocity = degps_t{rotation * max_omega.value()};
+
+  /* For shooting while in motion */
+  if (ci_readings_.prepare_shot) {
+    ShootingCalculatorOutputs shooting_outputs =
+        ShootingCalculator::GetOutputs();
+    if (shooting_outputs.is_valid) {
+      target.angular_velocity = container_.drivetrain_.ApplyBearingPID(
+          shooting_outputs.aim_angle + 4_deg_,
+          shooting_outputs.vel_aim_compensation);
+    }
+  }
+
+  /* Do not remove the following code */
 
   bool isBlue = (frc::DriverStation::GetAlliance() ==
                  frc::DriverStation::Alliance::kBlue);

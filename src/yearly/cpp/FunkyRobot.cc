@@ -13,8 +13,10 @@
 #include <networktables/NetworkTableInstance.h>
 
 #include "autos/auton_seqs.h"
-// #include "calculators/AntiTippingCalculator.h"
+#include "calculators/ShootingCalculator.h"
 #include "commands/teleop/drive_command.h"
+#include "commands/teleop/intake_command.h"
+#include "commands/teleop/shooter_command.h"
 #include "control_triggers.h"
 #include "funkit/wpilib/NTAction.h"
 #include "rsighandler.h"
@@ -31,6 +33,10 @@ FunkyRobot::FunkyRobot() : GenericRobot{&container_} {
 }
 
 void FunkyRobot::OnInitialize() {
+  ShootingCalculator::Setup();
+
+  ADD_AUTO_VARIANTS(CS2Auto, "CS2");
+
   // Add dashboard buttons
   frc::SmartDashboard::PutData("set_cancoder_offsets",
       new funkit::wpilib::NTAction(
@@ -72,19 +78,21 @@ void FunkyRobot::OnInitialize() {
 
 void FunkyRobot::OnEnable() {
   // Start path recording
+  if (container_.drivetrain_.IsPathRecording()) {
+    auto now = std::chrono::system_clock::now();
+    auto time_t_now = std::chrono::system_clock::to_time_t(now);
 
-  auto now = std::chrono::system_clock::now();
-  auto time_t_now = std::chrono::system_clock::to_time_t(now);
+    // Format time as month-day-year-hour-minute-second
+    std::tm* tm_now = std::localtime(&time_t_now);
 
-  // Format time as month-day-year-hour-minute-second
-  std::tm* tm_now = std::localtime(&time_t_now);
+    char time_buffer[64];
+    std::strftime(
+        time_buffer, sizeof(time_buffer), "%m-%d-%Y_%H-%M-%S", tm_now);
+    std::string filename = "pathlogs_" + std::string(time_buffer);
 
-  char time_buffer[64];
-  std::strftime(time_buffer, sizeof(time_buffer), "%m-%d-%Y_%H-%M-%S", tm_now);
-  std::string filename = "pathlogs_" + std::string(time_buffer);
-
-  container_.drivetrain_.StartPathRecording(filename);
-  Log("Started recording auto path data to {}.csv", filename);
+    container_.drivetrain_.StartPathRecording(filename);
+    Log("Started recording auto path data to {}.csv", filename);
+  }
 }
 
 void FunkyRobot::OnDisable() {
@@ -99,11 +107,15 @@ void FunkyRobot::OnDisable() {
 
 void FunkyRobot::InitTeleop() {
   container_.drivetrain_.SetDefaultCommand(DriveCommand{container_});
+  container_.shooter_.SetDefaultCommand(ShooterCommand{container_});
+  container_.intake_.SetDefaultCommand(IntakeCommand{container_});
 
   ControlTriggerInitializer::InitTeleopTriggers(container_);
 }
 
 void FunkyRobot::OnPeriodic() {
+  ShootingCalculator::Calculate(&container_);
+
   if (frc::RobotBase::IsSimulation()) {
     auto instance = nt::NetworkTableInstance::GetDefault();
     auto funkyFMSTable = instance.GetTable("FunkyFMS");
@@ -138,8 +150,6 @@ void FunkyRobot::OnPeriodic() {
     }
   }
 
-  Graph("test_value", 42.0);
-
   if (!gyro_switch_.Get() && !IsEnabled()) {
     container_.drivetrain_.SetBearing(degree_t{0});
     homing_count_gyro = GetPreferenceValue_int("homing_flash_loops");
@@ -169,21 +179,12 @@ void FunkyRobot::OnPeriodic() {
         (1.0 * coast_count_) / GetPreferenceValue_int("num_coasting_loops"));
   else
     LEDsLogic::UpdateLEDs(&container_);
-
-  // AntiTippingCalculator::SetTelescopeHeight(
-  //     container_.coral_ss_.telescope.GetReadings().position);
-  // AntiTippingCalculator::SetElevatorHeight(
-  //     (container_.algal_ss_.elevator.GetReadings().position - 29_in) * 1.5 +
-  //     29_in);
-
-  // auto cg = AntiTippingCalculator::CalculateRobotCG();
-  // Graph("robot_cg_x", cg[0]);
-  // Graph("robot_cg_y", cg[1]);
-  // Graph("robot_cg_z", cg[2]);
 }
 
 void FunkyRobot::InitTest() {
   container_.drivetrain_.SetDefaultCommand(DriveCommand{container_});
+  container_.shooter_.SetDefaultCommand(ShooterCommand{container_});
+  container_.intake_.SetDefaultCommand(IntakeCommand{container_});
 }
 
 #ifndef RUNNING_FRC_TESTS

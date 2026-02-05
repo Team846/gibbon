@@ -4,8 +4,9 @@
 #include "subsystems/abstract/control_input.h"
 #include "subsystems/abstract/gpd.h"
 #include "subsystems/hardware/DrivetrainConstructor.h"
-#include "subsystems/hardware/ictest.h"
+#include "subsystems/hardware/intake.h"
 #include "subsystems/hardware/leds.h"
+#include "subsystems/hardware/shooter.h"
 #include "subsystems/hardware/testcrt.h"
 
 class RobotContainer : public funkit::robot::GenericRobotContainer {
@@ -22,18 +23,20 @@ public:
 
   TurretTestSubsystem turr_test{};
 
-  ICTestSubsystem ictest_{};
+  ShooterSubsystem shooter_{};
+
+  IntakeSubsystem intake_{};
 
   RobotContainer() {
     RegisterPreference("init_drivetrain", true);
     RegisterPreference("init_leds", true);
     RegisterPreference("init_gpd", true);
-    // RegisterPreference("init_ictest", true);
+    RegisterPreference("init_shooter", true);
+    RegisterPreference("init_intake", true);
 
     bool drivetrain_init = (GetPreferenceValue_bool("init_drivetrain"));
     bool leds_init = (GetPreferenceValue_bool("init_leds"));
     bool gpd_init = (GetPreferenceValue_bool("init_gpd"));
-    // bool ictest_init = (GetPreferenceValue_bool("init_ictest"));
 
     RegisterSubsystemGroupAB({{&control_input_, true}});
     RegisterSubsystemGroupA({{&leds_, leds_init}});
@@ -41,8 +44,12 @@ public:
     RegisterSubsystemGroupAB({{&drivetrain_, drivetrain_init}});
     RegisterSubsystemGroupAB({{&GPD_, gpd_init}});
 
-    // RegisterSubsystemGroupAB({{&turr_test, true}});
+    // bool shooter_init = (GetPreferenceValue_bool("init_shooter"));
+    // bool intake_init = (GetPreferenceValue_bool("init_intake"));
 
-    // RegisterSubsystemGroupA({{&ictest_, ictest_init}});
+    // RegisterSubsystemGroupAB({{&shooter_, shooter_init}});
+    // RegisterSubsystemGroupAB({{&intake_, intake_init}});
+
+    // RegisterSubsystemGroupAB({{&turr_test, true}});
   }
 };

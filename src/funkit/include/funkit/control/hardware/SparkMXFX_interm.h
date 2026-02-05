@@ -4,6 +4,7 @@
 #include <rev/SparkFlex.h>
 #include <rev/SparkMax.h>
 
+#include <optional>
 #include <variant>
 
 #include "IntermediateController.h"
@@ -21,7 +22,8 @@ SparkMAX or SparkFLEX hardware.
 class SparkMXFX_interm : public IntermediateController {
 public:
   SparkMXFX_interm(int can_id, pdcsu::units::ms_t max_wait_time,
-      bool is_controller_spark_flex, base::MotorMonkeyType mmtype);
+      bool is_controller_spark_flex, base::MotorMonkeyType mmtype,
+      bool inverted = false);
 
   void Tick() override;
 
@@ -54,6 +56,8 @@ public:
   void ZeroEncoder(pdcsu::units::radian_t position) override;
 
 private:
+  bool inverted_{false};
+
   funkit::control::hardware::ControllerErrorCodes getErrorCode(
       rev::REVLibError code);
 
@@ -62,10 +66,10 @@ private:
   base::ControlRequest last_command_;
   config::Gains gains_;
 
-  bool last_brake_mode_{true};
-  pdcsu::units::amp_t last_motor_current_limit_{pdcsu::units::amp_t{0}};
-  pdcsu::units::volt_t last_voltage_compensation_{pdcsu::units::volt_t{0}};
-  config::Gains last_gains_{};
+  std::optional<bool> last_brake_mode_{std::nullopt};
+  std::optional<pdcsu::units::amp_t> last_motor_current_limit_{std::nullopt};
+  std::optional<pdcsu::units::volt_t> last_voltage_compensation_{std::nullopt};
+  std::optional<config::Gains> last_gains_{std::nullopt};
 
   rev::spark::SparkBase* esc_;
   rev::spark::SparkRelativeEncoder* encoder_;
@@ -87,7 +91,7 @@ SparkMAX hardware. Derives from SparkMXFX_interm.
 class SparkMAX_interm : public SparkMXFX_interm {
 public:
   SparkMAX_interm(int can_id, pdcsu::units::ms_t max_wait_time,
-      base::MotorMonkeyType mmtype);
+      base::MotorMonkeyType mmtype, bool inverted);
 };
 
 /*
@@ -98,7 +102,7 @@ SparkFLEX hardware. Derives from SparkMXFX_interm.
 */
 class SparkFLEX_interm : public SparkMXFX_interm {
 public:
-  SparkFLEX_interm(int can_id, pdcsu::units::ms_t max_wait_time);
+  SparkFLEX_interm(int can_id, pdcsu::units::ms_t max_wait_time, bool inverted);
 };
 
 }  // namespace funkit::control::hardware

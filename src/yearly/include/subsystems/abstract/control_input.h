@@ -19,6 +19,10 @@ struct ControlInputReadings {
   // ICTest controls
   bool ictest_x_button;
   bool ictest_y_button;
+  // Shooting controls
+  bool prepare_shot;
+  bool shoot;
+  double intake;
 };
 
 struct ControlInputTarget {

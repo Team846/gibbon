@@ -43,15 +43,18 @@
   "NetworkTables": {
     "persistent": {
       "Preferences": {
-        "Robot": {
-          "open": true
-        },
         "SwerveDrivetrain": {
           "BR": {
             "open": true
           },
           "open": true,
           "steer_gains": {
+            "open": true
+          },
+          "steer_genome": {
+            "gains": {
+              "open": true
+            },
             "open": true
           }
         },
@@ -69,9 +72,16 @@
         "open": true
       },
       "SmartDashboard": {
+        "Robot": {
+          "open": true
+        },
         "SwerveDrivetrain": {
+          "BL": {
+            "target": {
+              "open": true
+            }
+          },
           "FL": {
-            "open": true,
             "readings": {
               "open": true
             },
@@ -80,20 +90,12 @@
             }
           },
           "FR": {
-            "open": true,
             "readings": {
               "open": true
             }
           },
-          "open": true,
-          "readings": {
-            "open": true
-          },
-          "target": {
-            "open": true
-          }
+          "open": true
         },
-        "open": true,
         "verify_hardware": {
           "open": true
         },
@@ -124,9 +126,6 @@
     },
     "Server": {
       "Publishers": {
-        "open": true
-      },
-      "Subscribers": {
         "open": true
       },
       "open": true

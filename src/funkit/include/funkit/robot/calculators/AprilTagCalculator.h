@@ -42,7 +42,7 @@ struct ATCalculatorInput {
 
   double aprilVarianceCoeff;
   double triangularVarianceCoeff;
-  std::vector<pdcsu::units::second_t> fudge_latency;
+  std::map<size_t, pdcsu::units::second_t> fudge_latency;
   pdcsu::units::second_t bearing_latency;
 };
 
@@ -56,15 +56,20 @@ struct AprilTagData {
   pdcsu::units::inch_t y_pos;
 };
 
+struct AprilTagCameraConfig {
+  size_t camera_id;
+  pdcsu::units::inch_t x_offset;
+  pdcsu::units::inch_t y_offset;
+};
+
+struct AprilTagCamera {
+  AprilTagCameraConfig config;
+  std::shared_ptr<nt::NetworkTable> table;
+};
+
 struct ATCalculatorConstants {
-  std::map<int, AprilTagData> tag_locations;
-
-  std::vector<pdcsu::units::inch_t> camera_x_offsets;
-  std::vector<pdcsu::units::inch_t> camera_y_offsets;
-
-  size_t cams;
-
-  std::vector<std::shared_ptr<nt::NetworkTable>> april_tables;
+  std::map<size_t, AprilTagData> tag_locations;
+  std::vector<AprilTagCamera> cameras;
 };
 
 class AprilTagCalculator : public funkit::math::Calculator<ATCalculatorInput,
@@ -77,6 +82,7 @@ public:
 private:
   Vector2D correction;
   Vector2D getPos(pdcsu::units::degree_t bearing, pdcsu::units::degree_t theta,
-      pdcsu::units::inch_t distance, int tag, int camera);
+      pdcsu::units::inch_t distance, int tag,
+      const AprilTagCameraConfig& config);
 };
 }

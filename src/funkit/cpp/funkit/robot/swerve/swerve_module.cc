@@ -195,7 +195,8 @@ void SwerveModuleSubsystem::WriteToHardware(SwerveModuleTarget target) {
 
   Graph("target/steer_dir", steer_dir);
 
-  degree_t steer_diff = target.steer - GetReadings().steer_pos;
+  degree_t steer_diff =
+      funkit::math::CoterminalDifference(target.steer, GetReadings().steer_pos);
   Graph("steer_error", steer_diff);
   double cosine_comp = std::cos(radian_t{steer_diff}.value());
 
@@ -254,11 +255,11 @@ std::pair<degree_t, bool> SwerveModuleSubsystem::calculateSteerPosition(
   return {target, invert};
 }
 
-void SwerveModuleSubsystem::ModifyGenomes(
-    funkit::control::config::MotorGenome genome_steer,
-    funkit::control::config::MotorGenome genome_drive) {
-  steer_.ModifyGenome(genome_steer);
-  drive_.ModifyGenome(genome_drive);
+void SwerveModuleSubsystem::ModifySwerveGenome(
+    funkit::control::config::MotorGenome drive_genome,
+    funkit::control::config::MotorGenome steer_genome) {
+  steer_.ModifyGenome(steer_genome);
+  drive_.ModifyGenome(drive_genome);
 }
 
 }  // namespace funkit::robot::swerve

@@ -49,10 +49,9 @@ struct UserSettableValues {
     ModulePorts BL;
     ModulePorts BR;
   } module_ports;
-  std::vector<pdcsu::units::inch_t> camera_x_offsets;
-  std::vector<pdcsu::units::inch_t> camera_y_offsets;
-  size_t num_cameras;
-  std::map<int, funkit::robot::calculators::AprilTagData> april_locations;
+  std::vector<funkit::robot::calculators::AprilTagCameraConfig>
+      april_camera_configs;
+  std::map<size_t, funkit::robot::calculators::AprilTagData> april_locations;
 };
 
 //--------------------------------------------------------
@@ -61,13 +60,12 @@ struct UserSettableValues {
 UserSettableValues GetUserSettableValues() {
   return UserSettableValues{
       .imu_connection =
-          swerve::NavXConnection{
-              funkit::robot::swerve::NavXConnectionType::kUSB},
+          swerve::PigeonConnection{ports::drivetrain_::kPIGEON_CANID},
       .wheel_diameter = inch_t{4},
       .drive_gear_ratio = 6.75,
       .steer_reduction = 150_rot_ / 7_rot_,
       .wheel_contact_radius = inch_t{0.4},
-      .steer_inertia_coeff = 0.285,
+      .steer_inertia_coeff = 0.00285,
       .drive_friction = 0.02,
       .steer_friction = 0.11,
       .wire_configs = {.FR = {inch_t{15}, 0},
@@ -86,26 +84,25 @@ UserSettableValues GetUserSettableValues() {
           .BR = {ports::drivetrain_::kBRCANCoder_CANID,
               ports::drivetrain_::kBRDrive_CANID,
               ports::drivetrain_::kBRSteer_CANID}},
-      .camera_x_offsets = {inch_t{-6.25}, inch_t{-4.5}},
-      .camera_y_offsets = {inch_t{4}, inch_t{-12.5}},
-      .num_cameras = 2,
-      .april_locations = {{1, {25.38_in_, 183.58_in_}},
-          {2, {135.09_in_, 182.11_in_}}, {3, {144.85_in_, 205.87_in_}},
-          {4, {158.85_in_, 205.87_in_}}, {5, {182.60_in_, 182.11_in_}},
-          {6, {292.32_in_, 183.58_in_}}, {7, {292.32_in_, 180.63_in_}},
-          {8, {182.60_in_, 168.11_in_}}, {9, {172.85_in_, 492.88_in_}},
-          {10, {158.85_in_, 158.34_in_}}, {11, {135.09_in_, 168.11_in_}},
-          {12, {25.38_in_, 180.63_in_}}, {13, {26.22_in_, 0.30_in_}},
-          {14, {43.22_in_, 0.30_in_}}, {15, {147.47_in_, 0.32_in_}},
-          {16, {164.47_in_, 0.32_in_}}, {17, {292.32_in_, 467.63_in_}},
-          {18, {182.60_in_, 469.11_in_}}, {19, {172.85_in_, 445.35_in_}},
-          {20, {158.85_in_, 445.35_in_}}, {21, {135.09_in_, 469.11_in_}},
-          {22, {25.38_in_, 467.63_in_}}, {23, {25.38_in_, 470.58_in_}},
-          {24, {135.09_in_, 483.11_in_}}, {25, {144.85_in_, 492.88_in_}},
-          {26, {158.85_in_, 492.88_in_}}, {27, {182.60_in_, 483.11_in_}},
-          {28, {292.32_in_, 470.58_in_}}, {29, {291.47_in_, 650.92_in_}},
-          {30, {274.47_in_, 650.92_in_}}, {31, {170.22_in_, 650.90_in_}},
-          {32, {153.22_in_, 650.90_in_}}}};  // TODO: Double check locations
+      .april_camera_configs = {{1U, 4.0_in_, -11.0_in_},
+          {3U, 5.0_in_, -3.0_in_}},
+      .april_locations = {{1U, {25.38_in_, 183.58_in_}},
+          {2U, {135.09_in_, 182.11_in_}}, {3U, {144.85_in_, 205.87_in_}},
+          {4U, {158.85_in_, 205.87_in_}}, {5U, {135.34_in_, 182.11_in_}},
+          {6U, {25.37_in_, 183.58_in_}}, {7U, {292.32_in_, 180.63_in_}},
+          {8U, {182.60_in_, 168.11_in_}}, {9U, {144.85_in_, 158.34_in_}},
+          {10U, {158.85_in_, 158.34_in_}}, {11U, {135.09_in_, 168.11_in_}},
+          {12U, {25.38_in_, 180.63_in_}}, {13U, {26.22_in_, 0.30_in_}},
+          {14U, {43.22_in_, 0.30_in_}}, {15U, {147.47_in_, 0.32_in_}},
+          {16U, {164.47_in_, 0.32_in_}}, {17U, {292.32_in_, 467.63_in_}},
+          {18U, {182.60_in_, 469.11_in_}}, {19U, {172.85_in_, 445.35_in_}},
+          {20U, {158.85_in_, 445.35_in_}}, {21U, {135.09_in_, 469.11_in_}},
+          {22U, {25.38_in_, 467.63_in_}}, {23U, {25.38_in_, 470.58_in_}},
+          {24U, {135.09_in_, 483.11_in_}}, {25U, {144.85_in_, 492.88_in_}},
+          {26U, {158.85_in_, 492.88_in_}}, {27U, {182.60_in_, 483.11_in_}},
+          {28U, {292.32_in_, 470.58_in_}}, {29U, {291.47_in_, 650.92_in_}},
+          {30U, {274.47_in_, 650.92_in_}}, {31U, {170.22_in_, 650.90_in_}},
+          {32U, {153.22_in_, 650.90_in_}}}};  // TODO: Double check locations
 }
 
 //--------------------------------------------------------
@@ -206,7 +203,7 @@ swerve::DrivetrainConfigs DrivetrainConstructor::getDrivetrainConfigs() {
       motor_specs.stall_torque, motor_specs.free_speed, 12_V_};
 
   UnitDivision<radian_t, meter_t> drive_gear_ratio{
-      (2.0 * M_PI * 3.28084) /
+      (2.0 * 3.14159265358979323846 * 3.28084) /
       drive_reduction_value_for_plant};  // 3.28084 ft/m
   pdcsu::util::DefLinearSys drive_plant{def_bldc, 1, drive_gear_ratio,
       1.0_mps2_, kg_t{0.0}, newton_t{user_values.drive_friction},
@@ -232,9 +229,6 @@ swerve::DrivetrainConfigs DrivetrainConstructor::getDrivetrainConfigs() {
       .steer_plant = steer_plant,
       .bus = ""};
 
-  const std::vector<inch_t>& camera_x_offsets = user_values.camera_x_offsets;
-  const std::vector<inch_t>& camera_y_offsets = user_values.camera_y_offsets;
-
   swerve::DrivetrainConfigs configs{
       .imu_connection = user_values.imu_connection,
       .module_common_config = module_common_config,
@@ -242,9 +236,7 @@ swerve::DrivetrainConfigs DrivetrainConstructor::getDrivetrainConfigs() {
       .wheelbase_horizontal_dim = robot_constants::base::wheelbase_x,
       .wheelbase_forward_dim = robot_constants::base::wheelbase_y,
       .max_speed = fps_t{0.0},
-      .camera_x_offsets = camera_x_offsets,
-      .camera_y_offsets = camera_y_offsets,
-      .cams = user_values.num_cameras,
+      .april_camera_configs = user_values.april_camera_configs,
       .april_locations = user_values.april_locations,
       .max_accel = fps2_t{max_accel_mps2.value() * 3.28084}};
 

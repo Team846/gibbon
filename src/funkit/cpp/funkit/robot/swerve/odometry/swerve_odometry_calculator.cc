@@ -23,36 +23,33 @@ SwerveOdometryOutput SwerveOdometryCalculator::calculate(
   previous_module_positions_ = inputs.drive_pos;
 
   std::array<Vec2D, 4> wheel_vecs;
-
   for (int i = 0; i < 4; i++) {
     wheel_vecs[i] = Vec2D{module_diffs[i], inputs.steer_pos[i], true};
   }
 
-  pdcsu::units::inch_t sum_dx{0};
-  pdcsu::units::inch_t sum_dy{0};
-  double sum_dtheta_x = 0.0;
-  double sum_dtheta_y = 0.0;
-  double sum_rr = 0.0;
-
-  for (int i = 0; i < 4; i++) {
-    double md_x = wheel_vecs[i][0].value();
-    double md_y = wheel_vecs[i][1].value();
-    double r_x = wheel_positions[i][0].value();
-    double r_y = wheel_positions[i][1].value();
-
-    sum_dx += pdcsu::units::inch_t{md_x};
-    sum_dy += pdcsu::units::inch_t{md_y};
-
-    sum_dtheta_x += md_x * r_y;
-    sum_dtheta_y -= md_y * r_x;
-
-    sum_rr += r_x * r_x + r_y * r_y;
+  int min_idx = 0;
+  pdcsu::units::inch_t min_mag = wheel_vecs[0].magnitude();
+  for (int i = 1; i < 4; i++) {
+    pdcsu::units::inch_t mag = wheel_vecs[i].magnitude();
+    if (mag < min_mag) {
+      min_mag = mag;
+      min_idx = i;
+    }
   }
 
-  pdcsu::units::inch_t dx = sum_dx / 4.0;
-  pdcsu::units::inch_t dy = sum_dy / 4.0;
+  Vec2D min_trans_vec = wheel_vecs[min_idx];
+  Vec2D min_wheel_pos = wheel_positions[min_idx];
 
-  pdcsu::units::radian_t dtheta{(sum_dtheta_x + sum_dtheta_y) / sum_rr};
+  pdcsu::units::inch_t dx = min_trans_vec[0];
+  pdcsu::units::inch_t dy = min_trans_vec[1];
+
+  double md_x = min_trans_vec[0].value();
+  double md_y = min_trans_vec[1].value();
+  double r_x = min_wheel_pos[0].value();
+  double r_y = min_wheel_pos[1].value();
+  double rr = r_x * r_x + r_y * r_y;
+
+  pdcsu::units::radian_t dtheta{(md_x * r_y - md_y * r_x) / rr};
 
   Vec2D displacement;
 

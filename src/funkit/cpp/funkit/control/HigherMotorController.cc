@@ -1,5 +1,8 @@
 #include "funkit/control/HigherMotorController.h"
 
+#include <memory>
+#include <variant>
+
 #include "funkit/control/MonkeyMaster.h"
 #include "funkit/control/calculators/CurrentTorqueCalculator.h"
 #include "pdcsu_units.h"
@@ -22,8 +25,14 @@ void HigherMotorController::Setup(config::MotorGenome genome,
   genome_ = genome;
   plant_ = plant;
 
-  slot_id_ =
-      MonkeyMaster::ConstructController(mmtype_, constr_params_, genome_);
+  auto base_ptr = std::visit(
+      [](auto&& arg) -> pdcsu::util::BasePlant* {
+        return dynamic_cast<pdcsu::util::BasePlant*>(&arg);
+      },
+      plant);
+
+  slot_id_ = MonkeyMaster::ConstructController(
+      mmtype_, constr_params_, *base_ptr, genome_);
 
   MonkeyMaster::SetLoad(slot_id_, nm_t{0.0});
 
