@@ -64,7 +64,7 @@ void VirtualMonkey::Tick() {
   position_rad_ += velocity_rad_s_ * kDtS;
 }
 
-void VirtualMonkey::SetGenome(config::MotorGenome genome) {
+void VirtualMonkey::SetGenome(config::MotorGenome genome, bool force_set) {
   inverted = false;
   brake_mode_ = genome.brake_mode;
   gains_.kP = genome.gains.kP;

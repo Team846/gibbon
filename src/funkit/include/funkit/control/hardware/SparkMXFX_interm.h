@@ -30,7 +30,7 @@ public:
   void SetSoftLimits(pdcsu::units::radian_t forward_limit,
       pdcsu::units::radian_t reverse_limit) override;
 
-  void SetGenome(config::MotorGenome genome) override;
+  void SetGenome(config::MotorGenome genome, bool force_set = false) override;
 
   void EnableStatusFrames(config::StatusFrameSelections frames,
       pdcsu::units::ms_t faults_ms = pdcsu::units::ms_t{20},

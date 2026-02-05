@@ -41,7 +41,7 @@ void HigherMotorController::Setup(config::MotorGenome genome,
 
 void HigherMotorController::ModifyGenome(config::MotorGenome genome) {
   genome_ = genome;
-  MonkeyMaster::SetGenome(slot_id_, genome_);
+  MonkeyMaster::SetGenome(slot_id_, genome_, false);
 }
 
 void HigherMotorController::WriteDC(double duty_cycle) {
