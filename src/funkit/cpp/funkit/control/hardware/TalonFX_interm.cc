@@ -54,7 +54,7 @@ void TalonFX_interm::SetSoftLimits(pdcsu::units::radian_t forward_limit,
   last_error_ = getErrorCode(talon_.GetConfigurator().Apply(configs));
 }
 
-void TalonFX_interm::SetGenome(config::MotorGenome genome) {
+void TalonFX_interm::SetGenome(config::MotorGenome genome, bool force_set) {
   if (!last_brake_mode_.has_value() ||
       last_brake_mode_.value() != genome.brake_mode) {
     talon_.SetNeutralMode(

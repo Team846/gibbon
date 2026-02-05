@@ -86,10 +86,10 @@ void SparkMXFX_interm::SetSoftLimits(pdcsu::units::radian_t forward_limit,
   APPLY_CONFIG_NO_RESET();
 }
 
-void SparkMXFX_interm::SetGenome(config::MotorGenome genome) {
+void SparkMXFX_interm::SetGenome(config::MotorGenome genome, bool force_set) {
   bool config_changed = false;
 
-  if (!last_brake_mode_.has_value() ||
+  if (!last_brake_mode_.has_value() || force_set ||
       last_brake_mode_.value() != genome.brake_mode) {
     configs.SetIdleMode(genome.brake_mode
                             ? rev::spark::SparkBaseConfig::IdleMode::kBrake
@@ -98,7 +98,7 @@ void SparkMXFX_interm::SetGenome(config::MotorGenome genome) {
     config_changed = true;
   }
 
-  if (!last_motor_current_limit_.has_value() ||
+  if (!last_motor_current_limit_.has_value() || force_set ||
       !funkit::math::DEquals(last_motor_current_limit_.value().value(),
           genome.motor_current_limit.value())) {
     configs.SmartCurrentLimit(
@@ -107,7 +107,7 @@ void SparkMXFX_interm::SetGenome(config::MotorGenome genome) {
     config_changed = true;
   }
 
-  if (!last_voltage_compensation_.has_value() ||
+  if (!last_voltage_compensation_.has_value() || force_set ||
       !funkit::math::DEquals(last_voltage_compensation_.value().value(),
           genome.voltage_compensation.value())) {
     configs.VoltageCompensation(genome.voltage_compensation.value());
@@ -115,7 +115,7 @@ void SparkMXFX_interm::SetGenome(config::MotorGenome genome) {
     config_changed = true;
   }
 
-  if (!last_gains_.has_value() ||
+  if (!last_gains_.has_value() || force_set ||
       !funkit::math::DEquals(last_gains_.value().kP, genome.gains.kP) ||
       !funkit::math::DEquals(last_gains_.value().kI, genome.gains.kI) ||
       !funkit::math::DEquals(last_gains_.value().kD, genome.gains.kD) ||

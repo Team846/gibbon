@@ -47,7 +47,7 @@ public:
   virtual void SetSoftLimits(pdcsu::units::radian_t forward_limit,
       pdcsu::units::radian_t reverse_limit) = 0;
 
-  virtual void SetGenome(config::MotorGenome gains) = 0;
+  virtual void SetGenome(config::MotorGenome gains, bool force_set = false) = 0;
 
   virtual void EnableStatusFrames(config::StatusFrameSelections frames,
       pdcsu::units::ms_t faults_ms = pdcsu::units::ms_t{20},
