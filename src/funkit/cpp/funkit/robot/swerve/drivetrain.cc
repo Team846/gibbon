@@ -564,7 +564,7 @@ void DrivetrainSubsystem::WriteToHardware(DrivetrainTarget target) {
       SubsystemGenomeHelper::LoadGenomePreferences(*this, "drive_genome");
 
   for (int i = 0; i < 4; i++) {
-    modules_[i]->ModifySwerveGenome(drive_genome, steer_genome);
+    modules_[i]->ModifySwerveGenome(steer_genome, drive_genome);
   }
 
   cached_max_omega_cut_ =
