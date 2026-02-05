@@ -13,10 +13,14 @@ namespace funkit::control::hardware {
 
 bool TalonFX_interm::VerifyConnected() { return talon_.IsAlive(); }
 
-TalonFX_interm::TalonFX_interm(
-    int can_id, std::string_view bus, pdcsu::units::ms_t max_wait_time)
+TalonFX_interm::TalonFX_interm(int can_id, std::string_view bus,
+    pdcsu::units::ms_t max_wait_time, bool inverted)
     : talon_(can_id, ctre::phoenix6::CANBus{bus}),
-      max_wait_time_(units::millisecond_t{max_wait_time.value()}) {}
+      max_wait_time_(units::millisecond_t{max_wait_time.value()}),
+      inverted_{inverted} {
+  talon_.GetConfigurator().Apply(
+      ctre::phoenix6::configs::MotorOutputConfigs{}.WithInverted(inverted));
+}
 
 void TalonFX_interm::Tick() {
   ctre::phoenix::StatusCode last_status_code = ctre::phoenix::StatusCode::OK;
@@ -58,15 +62,17 @@ void TalonFX_interm::SetSoftLimits(pdcsu::units::radian_t forward_limit,
   last_error_ = getErrorCode(talon_.GetConfigurator().Apply(configs));
 }
 
-void TalonFX_interm::SetGenome(config::MotorGenome genome) {
-  if (last_brake_mode_ != genome.brake_mode) {
+void TalonFX_interm::SetGenome(config::MotorGenome genome, bool force_set) {
+  if (!last_brake_mode_.has_value() ||
+      last_brake_mode_.value() != genome.brake_mode) {
     talon_.SetNeutralMode(
         genome.brake_mode ? ctre::phoenix6::signals::NeutralModeValue::Brake
                           : ctre::phoenix6::signals::NeutralModeValue::Coast);
     last_brake_mode_ = genome.brake_mode;
   }
 
-  if (!funkit::math::DEquals(last_motor_current_limit_.value(),
+  if (!last_motor_current_limit_.has_value() ||
+      !funkit::math::DEquals(last_motor_current_limit_.value().value(),
           genome.motor_current_limit.value())) {
     ctre::phoenix6::configs::CurrentLimitsConfigs current_configs{};
     current_configs.WithSupplyCurrentLimitEnable(false);
@@ -78,7 +84,8 @@ void TalonFX_interm::SetGenome(config::MotorGenome genome) {
     last_motor_current_limit_ = genome.motor_current_limit;
   }
 
-  if (!funkit::math::DEquals(last_voltage_compensation_.value(),
+  if (!last_voltage_compensation_.has_value() ||
+      !funkit::math::DEquals(last_voltage_compensation_.value().value(),
           genome.voltage_compensation.value())) {
     ctre::phoenix6::configs::VoltageConfigs voltage_configs{};
     units::volt_t voltage_wpi{genome.voltage_compensation.value()};
@@ -89,10 +96,11 @@ void TalonFX_interm::SetGenome(config::MotorGenome genome) {
     last_voltage_compensation_ = genome.voltage_compensation;
   }
 
-  if (!funkit::math::DEquals(last_gains_.kP, genome.gains.kP) ||
-      !funkit::math::DEquals(last_gains_.kI, genome.gains.kI) ||
-      !funkit::math::DEquals(last_gains_.kD, genome.gains.kD) ||
-      !funkit::math::DEquals(last_gains_.kF, genome.gains.kF)) {
+  if (!last_gains_.has_value() ||
+      !funkit::math::DEquals(last_gains_.value().kP, genome.gains.kP) ||
+      !funkit::math::DEquals(last_gains_.value().kI, genome.gains.kI) ||
+      !funkit::math::DEquals(last_gains_.value().kD, genome.gains.kD) ||
+      !funkit::math::DEquals(last_gains_.value().kF, genome.gains.kF)) {
     gains_ = genome.gains;
     ctre::phoenix6::configs::Slot0Configs slot_configs{};
     slot_configs.WithKP(gains_.kP).WithKI(gains_.kI).WithKD(gains_.kD).WithKV(
@@ -202,12 +210,12 @@ ReadResponse TalonFX_interm::Read(ReadType type) {
   case ReadType::kReadPosition: {
     auto pos_wpi = ctre::phoenix6::BaseStatusSignal::GetLatencyCompensatedValue(
         talon_.GetPosition(), talon_.GetVelocity());
-    return pos_wpi.to<double>() * 2.0 * M_PI;
+    return pos_wpi.to<double>() * 2.0 * 3.14159265358979323846;
   }
   case ReadType::kReadVelocity: {
     auto vel_wpi = ctre::phoenix6::BaseStatusSignal::GetLatencyCompensatedValue(
         talon_.GetVelocity(), talon_.GetAcceleration());
-    return vel_wpi.to<double>() * 2.0 * M_PI;
+    return vel_wpi.to<double>() * 2.0 * 3.14159265358979323846;
   }
   case ReadType::kReadCurrent:
     return talon_.GetSupplyCurrent().GetValue().to<double>();
@@ -226,6 +234,7 @@ ReadResponse TalonFX_interm::Read(ReadType type) {
   case ReadType::kAbsPosition:
     throw std::runtime_error(
         "ReadType absolute error not implemented for TalonFX");
+  case ReadType::kRestFault: return talon_.HasResetOccurred();
   default: return 0.0;
   }
 }

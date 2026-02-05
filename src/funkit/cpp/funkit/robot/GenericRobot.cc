@@ -182,10 +182,11 @@ void GenericRobot::StartCompetition() {
       last_mode_ = mode;
     }
 
-    OnPeriodic();
-
     // Update subsystem readings
     generic_robot_container_->UpdateReadings();
+
+    // Special-case periodic implemented in FunkyRobot
+    OnPeriodic();
 
     // Tick command scheduler
     frc2::CommandScheduler::GetInstance().Run();
@@ -195,6 +196,10 @@ void GenericRobot::StartCompetition() {
 
     // Tick MonkeyMaster
     funkit::control::MonkeyMaster::Tick(mode == Mode::kDisabled);
+
+    if (update_tick_counter_ % 300 == 0) {
+      funkit::control::MonkeyMaster::CheckForResets();
+    }
 
     // Update dashboards
     update_tick_counter_ += 1;
@@ -235,8 +240,8 @@ void GenericRobot::StartCompetition() {
 
     // Check loop time
     if (loop_time > 2.5 * kPeriod) {
-      Warn("Loop overrun: {} ms (loop period: {} ms)",
-          loop_time.value() * 1000.0, kPeriod.value() * 1000.0);
+      Warn("Loop overrun: {} ms (loop period: {} ms)", loop_time.value(),
+          kPeriod.value() * 1000.0);
 
       next_loop_time_ += loop_time;
     }

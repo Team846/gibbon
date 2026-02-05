@@ -81,63 +81,62 @@ Helper class for loading and saving genome preferences for subsystems.
 */
 struct SubsystemGenomeHelper {
   static void CreateGainsPreferences(funkit::base::Loggable& sub,
-      const std::string& gains_name, const Gains& backup) {
-    sub.RegisterPreference(fmt::format("{}/{}", gains_name, "kP"), backup.kP);
-    sub.RegisterPreference(fmt::format("{}/{}", gains_name, "kI"), backup.kI);
-    sub.RegisterPreference(fmt::format("{}/{}", gains_name, "kD"), backup.kD);
-    sub.RegisterPreference(fmt::format("{}/{}", gains_name, "kF"), backup.kF);
+      const Gains& backup, const std::string& genome_name) {
+    sub.RegisterPreference(
+        fmt::format("{}/{}", genome_name, "gains/kP"), backup.kP);
+    sub.RegisterPreference(
+        fmt::format("{}/{}", genome_name, "gains/kI"), backup.kI);
+    sub.RegisterPreference(
+        fmt::format("{}/{}", genome_name, "gains/kD"), backup.kD);
+    sub.RegisterPreference(
+        fmt::format("{}/{}", genome_name, "gains/kF"), backup.kF);
   }
 
   static Gains LoadGainsPreferences(
-      funkit::base::Loggable& sub, const std::string& gains_name) {
+      funkit::base::Loggable& sub, const std::string& genome_name) {
     Gains gains;
 
-    gains.kP =
-        sub.GetPreferenceValue_double(fmt::format("{}/{}", gains_name, "kP"));
-    gains.kI =
-        sub.GetPreferenceValue_double(fmt::format("{}/{}", gains_name, "kI"));
-    gains.kD =
-        sub.GetPreferenceValue_double(fmt::format("{}/{}", gains_name, "kD"));
-    gains.kF =
-        sub.GetPreferenceValue_double(fmt::format("{}/{}", gains_name, "kF"));
+    gains.kP = sub.GetPreferenceValue_double(
+        fmt::format("{}/{}", genome_name, "gains/kP"));
+    gains.kI = sub.GetPreferenceValue_double(
+        fmt::format("{}/{}", genome_name, "gains/kI"));
+    gains.kD = sub.GetPreferenceValue_double(
+        fmt::format("{}/{}", genome_name, "gains/kD"));
+    gains.kF = sub.GetPreferenceValue_double(
+        fmt::format("{}/{}", genome_name, "gains/kF"));
 
     return gains;
   }
 
   static void CreateGenomePreferences(funkit::base::Loggable& sub,
       const std::string& genome_name, const MotorGenome& backup) {
-    sub.RegisterPreference(
+    sub.RegisterPreference<amp_t>(
         fmt::format("{}/{}", genome_name, "motor_current_limit"),
         backup.motor_current_limit);
-    sub.RegisterPreference(
+    sub.RegisterPreference<amp_t>(
         fmt::format("{}/{}", genome_name, "smart_current_limit"),
         backup.smart_current_limit);
-    sub.RegisterPreference(fmt::format("{}/{}/{}", sub.name(), genome_name,
-                               "voltage_compensation"),
+    sub.RegisterPreference<volt_t>(
+        fmt::format("{}/{}", genome_name, "voltage_compensation"),
         backup.voltage_compensation);
     sub.RegisterPreference(
         fmt::format("{}/{}", genome_name, "brake_mode"), backup.brake_mode);
-    CreateGainsPreferences(
-        sub, fmt::format("{}/gains", genome_name), backup.gains);
+    CreateGainsPreferences(sub, backup.gains, genome_name);
   }
 
   static MotorGenome LoadGenomePreferences(
       funkit::base::Loggable& sub, const std::string& genome_name) {
     MotorGenome genome;
 
-    genome.motor_current_limit =
-        sub.GetPreferenceValue_unit_type<pdcsu::units::amp_t>(
-            fmt::format("{}/{}", genome_name, "motor_current_limit"));
-    genome.smart_current_limit =
-        sub.GetPreferenceValue_unit_type<pdcsu::units::amp_t>(
-            fmt::format("{}/{}", genome_name, "smart_current_limit"));
-    genome.voltage_compensation =
-        sub.GetPreferenceValue_unit_type<pdcsu::units::volt_t>(
-            fmt::format("{}/{}", genome_name, "voltage_compensation"));
+    genome.motor_current_limit = sub.GetPreferenceValue_unit_type<amp_t>(
+        fmt::format("{}/{}", genome_name, "motor_current_limit"));
+    genome.smart_current_limit = sub.GetPreferenceValue_unit_type<amp_t>(
+        fmt::format("{}/{}", genome_name, "smart_current_limit"));
+    genome.voltage_compensation = sub.GetPreferenceValue_unit_type<volt_t>(
+        fmt::format("{}/{}", genome_name, "voltage_compensation"));
     genome.brake_mode = sub.GetPreferenceValue_bool(
         fmt::format("{}/{}", genome_name, "brake_mode"));
-    genome.gains =
-        LoadGainsPreferences(sub, fmt::format("{}/gains", genome_name));
+    genome.gains = LoadGainsPreferences(sub, genome_name);
 
     return genome;
   }

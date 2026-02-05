@@ -91,7 +91,8 @@ public:
   */
   static void SetLoad(size_t slot_id, pdcsu::units::nm_t load);
 
-  static void SetGenome(size_t slot_id, config::MotorGenome genome);
+  static void SetGenome(
+      size_t slot_id, config::MotorGenome genome, bool force_set = false);
 
   static void WriteDC(size_t slot_id, double duty_cycle);
   /*
@@ -125,6 +126,8 @@ public:
 
   static bool VerifyConnected();
   static bool VerifyConnected(size_t slot_id);
+
+  static void CheckForResets();
 
 private:
   static funkit::base::Loggable loggable_;

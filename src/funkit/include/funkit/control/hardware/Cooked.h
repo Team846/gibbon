@@ -6,23 +6,23 @@
 namespace funkit::control::hardware {
 
 struct CookedConfig {
-  double thermal_mass_ = 0.001;  // kg m^2 s^-2 K^-1 (J K^-1)
-  double growth_rate_ = 0.99;    // s^-1
+  double thermal_mass_ = 100;  // kg m^2 s^-2 K^-1 (J K^-1)
+  double growth_rate_ = 0.9;   // s^-1
   radps_t free_speed_ = 628_radps_;
   amp_t stall_current_ = 250_A_;
   CookedConfig(funkit::control::base::MotorMonkeyType mmtype) {
     switch (mmtype) {
     case funkit::control::base::MotorMonkeyType::SPARK_MAX_NEO550:
-      thermal_mass_ = 0.01428;
+      thermal_mass_ = 50;
       break;
     case funkit::control::base::MotorMonkeyType::SPARK_MAX_NEO:
-      thermal_mass_ = 0.05714;
+      thermal_mass_ = 200;
       break;
     case funkit::control::base::MotorMonkeyType::SPARK_FLEX_VORTEX:
-      thermal_mass_ = 0.08571;
+      thermal_mass_ = 300;
       break;
     case funkit::control::base::MotorMonkeyType::SPARK_MAX_VORTEX:
-      thermal_mass_ = 0.08571;
+      thermal_mass_ = 300;
       break;
     default:
       throw std::runtime_error(
@@ -60,9 +60,9 @@ private:
   second_t time_;
 
   static constexpr double cook_temp{100.0};
-  static constexpr second_t min_cook_time{15};
+  static constexpr second_t min_cook_time{3};
 
-  static constexpr double thresh_meas_temp{60.0};
+  static constexpr double thresh_meas_temp{90.0};
   static constexpr double meas_temp_cut_scale{0.6};
 
   static constexpr double temp_relocalize_ema_growth{0.933};

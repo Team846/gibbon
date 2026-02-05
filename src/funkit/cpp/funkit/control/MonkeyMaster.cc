@@ -134,16 +134,16 @@ void MonkeyMaster::WriteMessages() {
   }
 
   std::vector<PerDeviceInformation> per_device_information;
-  size_t num_limitable = 0;
   for (const auto& msg : messages_to_process) {
     size_t slot_id = msg.slot_id;
     auto* controller = controller_registry[slot_id];
 
     double DC = 0.0;
+    bool is_limitable = false;
 
     if (msg.type == MotorMessage::Type::DC) {
       DC = std::clamp(std::get<double>(msg.value), -1.0, 1.0);
-      num_limitable++;
+      is_limitable = true;
     } else if (msg.type == MotorMessage::Type::Position) {
       bool isCTRE = control::base::MotorMonkeyTypeHelper::is_talon_fx(
           slot_id_to_type_[slot_id]);
@@ -174,12 +174,13 @@ void MonkeyMaster::WriteMessages() {
     }
     if (plant_registry[slot_id].has_value()) {
       per_device_information.push_back({slot_id, *plant_registry[slot_id],
-          radps_t{controller->Read(hardware::ReadType::kReadVelocity)}, DC});
+          radps_t{controller->Read(hardware::ReadType::kReadVelocity)}, DC,
+          is_limitable});
     }
   }
 
-  auto limited_dcs = SupremeLimiter::Limit(
-      per_device_information, battery_voltage, num_limitable);
+  auto limited_dcs =
+      SupremeLimiter::Limit(per_device_information, battery_voltage);
 
   for (const auto& msg : messages_to_process) {
     size_t slot_id = msg.slot_id;
@@ -262,17 +263,18 @@ size_t MonkeyMaster::ConstructController(
   } else if (funkit::control::base::MotorMonkeyTypeHelper::is_talon_fx(type)) {
     this_controller = controller_registry[slot_id] =
         new funkit::control::hardware::TalonFX_interm{params.can_id, params.bus,
-            pdcsu::units::ms_t{params.max_wait_time.value()}};
+            pdcsu::units::ms_t{params.max_wait_time.value()}, params.inverted};
 
   } else if (funkit::control::base::MotorMonkeyTypeHelper::is_spark_max(type)) {
     this_controller = controller_registry[slot_id] =
         new funkit::control::hardware::SparkMAX_interm{params.can_id,
-            pdcsu::units::ms_t{params.max_wait_time.value()}, type};
+            pdcsu::units::ms_t{params.max_wait_time.value()}, type,
+            params.inverted};
   } else if (funkit::control::base::MotorMonkeyTypeHelper::is_spark_flex(
                  type)) {
     this_controller = controller_registry[slot_id] =
-        new funkit::control::hardware::SparkFLEX_interm{
-            params.can_id, pdcsu::units::ms_t{params.max_wait_time.value()}};
+        new funkit::control::hardware::SparkFLEX_interm{params.can_id,
+            pdcsu::units::ms_t{params.max_wait_time.value()}, params.inverted};
   } else {
     throw std::runtime_error("Invalid MotorMonkeyType [" +
                              std::to_string((int)type) +
@@ -323,12 +325,14 @@ void MonkeyMaster::SetLoad(size_t slot_id, pdcsu::units::nm_t load) {
   load_registry[slot_id] = load;
 }
 
-void MonkeyMaster::SetGenome(size_t slot_id, config::MotorGenome genome) {
+void MonkeyMaster::SetGenome(
+    size_t slot_id, config::MotorGenome genome, bool force_set) {
   CHECK_SLOT_ID();
 
   genome_registry[slot_id] = genome;
 
-  SMART_RETRY(controller_registry[slot_id]->SetGenome(genome), "SetGenome");
+  SMART_RETRY(
+      controller_registry[slot_id]->SetGenome(genome, force_set), "SetGenome");
   LOG_IF_ERROR("SetGenome");
 }
 
@@ -415,6 +419,19 @@ std::string_view MonkeyMaster::parseError(
   case funkit::control::hardware::ControllerErrorCodes::kError:
     return "Unknown Error";
   default: return "Unknown";
+  }
+}
+
+void MonkeyMaster::CheckForResets() {
+  for (size_t i = 1; i <= slot_counter_; i++) {
+    if (controller_registry[i] != nullptr) {
+      if (controller_registry[i]->Read(hardware::ReadType::kRestFault) > 0.5) {
+        loggable_.Warn(
+            "Reset detected on Motor Controller Slot ID {}. Reconfiguring...",
+            i);
+        SetGenome(i, genome_registry[i], true);
+      }
+    }
   }
 }
 

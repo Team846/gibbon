@@ -15,15 +15,16 @@ size_t SupremeLimiter::current_samples_ = 0;
 amp_t SupremeLimiter::current_limit_ = 250_A_;
 
 static amp_t ema_current_threshold = 50_A_;
-static volt_t tolerable_drop = 4.5_V_;
+static volt_t tolerable_drop = 4.0_V_;
 
 std::map<size_t, double> SupremeLimiter::Limit(
-    std::vector<PerDeviceInformation> inputs, volt_t v_batt,
-    size_t num_limitable) {
+    std::vector<PerDeviceInformation> inputs, volt_t v_batt) {
   amp_t total_current = 0_A_;
   std::vector<std::pair<size_t, amp_t>> draws_by_index;
   std::map<size_t, double> dcs_by_index;
   std::map<size_t, PerDeviceInformation> info_by_index;
+
+  amp_t total_limitable_current = 0_A_;
   for (PerDeviceInformation input : inputs) {
     pdcsu::util::BasePlant plant = input.plant;
     const pdcsu::units::amp_t draw =
@@ -31,6 +32,7 @@ std::map<size_t, double> SupremeLimiter::Limit(
             input.DC, input.speed, pdcsu::units::volt_t{12.0}, 0_ohm_,
             plant.def_bldc.free_speed, plant.def_bldc.stall_current));
     total_current += draw;
+    if (input.is_limitable) { total_limitable_current += draw; }
     draws_by_index.push_back({input.device_id, draw});
     dcs_by_index[input.device_id] = input.DC;
     info_by_index.emplace(input.device_id, input);
@@ -51,13 +53,14 @@ std::map<size_t, double> SupremeLimiter::Limit(
                      (1 - current_limit_growth_factor) * new_limit;
   }
 
-  const double scale_adjustment = num_limitable / inputs.size();
+  const double scale_adjustment =
+      total_limitable_current.value() / total_current.value();
   const double original_scale_factor =
       current_limit_.value() / total_current.value();
 
   if (original_scale_factor >= 1.0) return dcs_by_index;
   const double scale_factor =
-      original_scale_factor * std::min(0.5, scale_adjustment);
+      original_scale_factor * std::max(0.5, scale_adjustment);
 
   for (const auto& draw : draws_by_index) {
     const PerDeviceInformation info = info_by_index.at(draw.first);

@@ -1,5 +1,7 @@
 #pragma once
 
+#include "funkit/control/config/genome.h"
+
 struct ports {
   struct driver_ {
     static constexpr int kXbox_DSPort = 0;
@@ -32,8 +34,16 @@ struct ports {
     static constexpr int kLEDStrip1 = 6;
   };
 
-  struct ictest_ {
-    static constexpr int kMotor1_CANID = 31;
-    static constexpr int kMotor2_CANID = 32;
+  struct shooter_ {
+    static constexpr funkit::control::config::MotorConstructionParameters
+        kMotor1Params = {24, "", false};
+    static constexpr funkit::control::config::MotorConstructionParameters
+        kMotor2Params = {25, "", true};
+  };
+  struct intake_ {
+    static constexpr funkit::control::config::MotorConstructionParameters
+        kMotorParams = {21, "", false};
+    static constexpr funkit::control::config::MotorConstructionParameters
+        kMotorParams2 = {20, "", true};
   };
 };
