@@ -57,13 +57,12 @@ private:
 
   base::ControlRequest last_command_;
   config::Gains gains_;
-  
+
   std::optional<bool> last_brake_mode_{std::nullopt};
   std::optional<pdcsu::units::amp_t> last_motor_current_limit_{std::nullopt};
   std::optional<pdcsu::units::volt_t> last_voltage_compensation_{std::nullopt};
   std::optional<config::Gains> last_gains_{std::nullopt};
-  // TODO: Change to nullopt
-  config::FollowerConfig last_follower_config_{-1, false};
+  std::optional<config::FollowerConfig> last_follower_config_{std::nullopt};
 
   ctre::phoenix6::hardware::TalonFX talon_;
 

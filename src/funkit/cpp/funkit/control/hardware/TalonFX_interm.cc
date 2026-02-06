@@ -24,10 +24,11 @@ TalonFX_interm::TalonFX_interm(int can_id, std::string_view bus,
 
 void TalonFX_interm::Tick() {
   ctre::phoenix::StatusCode last_status_code = ctre::phoenix::StatusCode::OK;
-  if (last_follower_config_.leader_CAN_id >= 0) {
+  if (last_follower_config_.has_value() &&
+      last_follower_config_.value().leader_CAN_id >= 0) {
     ctre::phoenix6::controls::Follower follower_msg{
-        last_follower_config_.leader_CAN_id,
-        (last_follower_config_.inverted)
+        last_follower_config_.value().leader_CAN_id,
+        (last_follower_config_.value().inverted)
             ? ctre::phoenix6::signals::MotorAlignmentValue::Opposed
             : ctre::phoenix6::signals::MotorAlignmentValue::Aligned};
     follower_msg.WithUpdateFreqHz(0_Hz);
@@ -63,7 +64,7 @@ void TalonFX_interm::SetSoftLimits(pdcsu::units::radian_t forward_limit,
 }
 
 void TalonFX_interm::SetGenome(config::MotorGenome genome, bool force_set) {
-  if (!last_brake_mode_.has_value() ||
+  if (!last_brake_mode_.has_value() || force_set ||
       last_brake_mode_.value() != genome.brake_mode) {
     talon_.SetNeutralMode(
         genome.brake_mode ? ctre::phoenix6::signals::NeutralModeValue::Brake
@@ -71,7 +72,7 @@ void TalonFX_interm::SetGenome(config::MotorGenome genome, bool force_set) {
     last_brake_mode_ = genome.brake_mode;
   }
 
-  if (!last_motor_current_limit_.has_value() ||
+  if (!last_motor_current_limit_.has_value() || force_set ||
       !funkit::math::DEquals(last_motor_current_limit_.value().value(),
           genome.motor_current_limit.value())) {
     ctre::phoenix6::configs::CurrentLimitsConfigs current_configs{};
@@ -84,7 +85,7 @@ void TalonFX_interm::SetGenome(config::MotorGenome genome, bool force_set) {
     last_motor_current_limit_ = genome.motor_current_limit;
   }
 
-  if (!last_voltage_compensation_.has_value() ||
+  if (!last_voltage_compensation_.has_value() || force_set ||
       !funkit::math::DEquals(last_voltage_compensation_.value().value(),
           genome.voltage_compensation.value())) {
     ctre::phoenix6::configs::VoltageConfigs voltage_configs{};
@@ -96,7 +97,7 @@ void TalonFX_interm::SetGenome(config::MotorGenome genome, bool force_set) {
     last_voltage_compensation_ = genome.voltage_compensation;
   }
 
-  if (!last_gains_.has_value() ||
+  if (!last_gains_.has_value() || force_set ||
       !funkit::math::DEquals(last_gains_.value().kP, genome.gains.kP) ||
       !funkit::math::DEquals(last_gains_.value().kI, genome.gains.kI) ||
       !funkit::math::DEquals(last_gains_.value().kD, genome.gains.kD) ||
@@ -110,9 +111,11 @@ void TalonFX_interm::SetGenome(config::MotorGenome genome, bool force_set) {
     last_gains_ = genome.gains;
   }
 
-  if (last_follower_config_.leader_CAN_id !=
+  if (!last_follower_config_.has_value() || force_set ||
+      last_follower_config_.value().leader_CAN_id !=
           genome.follower_config.leader_CAN_id ||
-      last_follower_config_.inverted != genome.follower_config.inverted) {
+      last_follower_config_.value().inverted !=
+          genome.follower_config.inverted) {
     last_follower_config_ = genome.follower_config;
   }
 }

@@ -50,7 +50,10 @@ SparkMXFX_interm::SparkMXFX_interm(int can_id, pdcsu::units::ms_t max_wait_time,
 
 void SparkMXFX_interm::Tick() {
   rev::REVLibError last_status_code = rev::REVLibError::kOk;
-  if (last_follower_config_.leader_CAN_id >= 0) { return; }
+  if (last_follower_config_.has_value() &&
+      last_follower_config_.value().leader_CAN_id >= 0) {
+    return;
+  }
   if (double* dc = std::get_if<double>(&last_command_)) {
     double dc_u = *dc;
     dc_u = cooked.Record(dc_u, radps_t(Read(ReadType::kReadVelocity)),
@@ -128,9 +131,11 @@ void SparkMXFX_interm::SetGenome(config::MotorGenome genome, bool force_set) {
     config_changed = true;
   }
 
-  if (last_follower_config_.leader_CAN_id !=
+  if (!last_follower_config_.has_value() || force_set ||
+      last_follower_config_.value().leader_CAN_id !=
           genome.follower_config.leader_CAN_id ||
-      last_follower_config_.inverted != genome.follower_config.inverted) {
+      last_follower_config_.value().inverted !=
+          genome.follower_config.inverted) {
     if (genome.follower_config.leader_CAN_id >= 0) {
       configs.Follow(genome.follower_config.leader_CAN_id,
           genome.follower_config.inverted);
