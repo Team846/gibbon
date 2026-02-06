@@ -32,13 +32,14 @@ bool SparkMXFX_interm::VerifyConnected() {
 }
 
 SparkMXFX_interm::SparkMXFX_interm(int can_id, pdcsu::units::ms_t max_wait_time,
-    bool is_controller_spark_flex, base::MotorMonkeyType mmtype)
-    : can_id_{can_id}, cooked{mmtype} {
+    bool is_controller_spark_flex, base::MotorMonkeyType mmtype, bool inverted)
+    : inverted_{inverted}, can_id_{can_id}, cooked{mmtype} {
   esc_ = is_controller_spark_flex
              ? static_cast<rev::spark::SparkBase*>(new rev::spark::SparkFlex{
                    can_id, rev::spark::SparkFlex::MotorType::kBrushless})
              : new rev::spark::SparkMax{
                    can_id, rev::spark::SparkMax::MotorType::kBrushless};
+  configs.Inverted(inverted);
   encoder_ = new rev::spark::SparkRelativeEncoder{esc_->GetEncoder()};
   pid_controller_ = new rev::spark::SparkClosedLoopController{
       esc_->GetClosedLoopController()};
@@ -49,12 +50,17 @@ SparkMXFX_interm::SparkMXFX_interm(int can_id, pdcsu::units::ms_t max_wait_time,
 
 void SparkMXFX_interm::Tick() {
   rev::REVLibError last_status_code = rev::REVLibError::kOk;
+  if (last_follower_config_.has_value() &&
+      last_follower_config_.value().leader_CAN_id >= 0) {
+    return;
+  }
   if (double* dc = std::get_if<double>(&last_command_)) {
     double dc_u = *dc;
     dc_u = cooked.Record(dc_u, radps_t(Read(ReadType::kReadVelocity)),
         Read(ReadType::kTemperature));
     last_status_code = pid_controller_->SetSetpoint(
         dc_u, rev::spark::SparkBase::ControlType::kDutyCycle);
+    esc_->Set(dc_u);
   } else if (pdcsu::units::radps_t* vel =
                  std::get_if<pdcsu::units::radps_t>(&last_command_)) {
     units::revolutions_per_minute_t rev_ms_t{
@@ -84,10 +90,11 @@ void SparkMXFX_interm::SetSoftLimits(pdcsu::units::radian_t forward_limit,
   APPLY_CONFIG_NO_RESET();
 }
 
-void SparkMXFX_interm::SetGenome(config::MotorGenome genome) {
+void SparkMXFX_interm::SetGenome(config::MotorGenome genome, bool force_set) {
   bool config_changed = false;
 
-  if (last_brake_mode_ != genome.brake_mode) {
+  if (!last_brake_mode_.has_value() || force_set ||
+      last_brake_mode_.value() != genome.brake_mode) {
     configs.SetIdleMode(genome.brake_mode
                             ? rev::spark::SparkBaseConfig::IdleMode::kBrake
                             : rev::spark::SparkBaseConfig::IdleMode::kCoast);
@@ -95,7 +102,8 @@ void SparkMXFX_interm::SetGenome(config::MotorGenome genome) {
     config_changed = true;
   }
 
-  if (!funkit::math::DEquals(last_motor_current_limit_.value(),
+  if (!last_motor_current_limit_.has_value() || force_set ||
+      !funkit::math::DEquals(last_motor_current_limit_.value().value(),
           genome.motor_current_limit.value())) {
     configs.SmartCurrentLimit(
         static_cast<int>(genome.motor_current_limit.value()));
@@ -103,21 +111,38 @@ void SparkMXFX_interm::SetGenome(config::MotorGenome genome) {
     config_changed = true;
   }
 
-  if (!funkit::math::DEquals(last_voltage_compensation_.value(),
+  if (!last_voltage_compensation_.has_value() || force_set ||
+      !funkit::math::DEquals(last_voltage_compensation_.value().value(),
           genome.voltage_compensation.value())) {
     configs.VoltageCompensation(genome.voltage_compensation.value());
     last_voltage_compensation_ = genome.voltage_compensation;
     config_changed = true;
   }
 
-  if (!funkit::math::DEquals(last_gains_.kP, genome.gains.kP) ||
-      !funkit::math::DEquals(last_gains_.kI, genome.gains.kI) ||
-      !funkit::math::DEquals(last_gains_.kD, genome.gains.kD) ||
-      !funkit::math::DEquals(last_gains_.kF, genome.gains.kF)) {
+  if (!last_gains_.has_value() || force_set ||
+      !funkit::math::DEquals(last_gains_.value().kP, genome.gains.kP) ||
+      !funkit::math::DEquals(last_gains_.value().kI, genome.gains.kI) ||
+      !funkit::math::DEquals(last_gains_.value().kD, genome.gains.kD) ||
+      !funkit::math::DEquals(last_gains_.value().kF, genome.gains.kF)) {
     gains_ = genome.gains;
     configs.closedLoop.Pid(gains_.kP, gains_.kI, std::abs(gains_.kD));
     configs.closedLoop.feedForward.kV(std::abs(gains_.kF));
     last_gains_ = genome.gains;
+    config_changed = true;
+  }
+
+  if (!last_follower_config_.has_value() || force_set ||
+      last_follower_config_.value().leader_CAN_id !=
+          genome.follower_config.leader_CAN_id ||
+      last_follower_config_.value().inverted !=
+          genome.follower_config.inverted) {
+    if (genome.follower_config.leader_CAN_id >= 0) {
+      configs.Follow(genome.follower_config.leader_CAN_id,
+          genome.follower_config.inverted);
+    } else {
+      configs.DisableFollowerMode();
+    }
+    last_follower_config_ = genome.follower_config;
     config_changed = true;
   }
 
@@ -151,6 +176,8 @@ void SparkMXFX_interm::EnableStatusFrames(config::StatusFrameSelections frames,
     // configs.signals.MotorTemperatureAlwaysOn(true);
     configs.signals.MotorTemperaturePeriodMs(
         1000);  // Temperature required less often
+    configs.signals.WarningsPeriodMs(
+        3000);  // Warning/Reset frame required less often
   } else {
     configs.signals.PrimaryEncoderVelocityPeriodMs(32767);
     configs.signals.PrimaryEncoderVelocityAlwaysOn(false);
@@ -232,9 +259,8 @@ ReadResponse SparkMXFX_interm::Read(ReadType type) {
     return (pos_turn.to<double>() * 2.0 * 3.14159265358979323846);
   }
   case ReadType::kReadVelocity: {
-    auto vel_rpm = units::make_unit<units::revolutions_per_minute_t>(
-        encoder_->GetVelocity());
-    return (vel_rpm.to<double>() * 2.0 * 3.14159265358979323846 / 60.0);
+    auto vel_rpm = UnitDivision<rotation_t, minute_t>(encoder_->GetVelocity());
+    return (radps_t(vel_rpm).value());
   }
   case ReadType::kReadCurrent: return esc_->GetOutputCurrent();
   case ReadType::kFwdSwitch:
@@ -247,6 +273,14 @@ ReadResponse SparkMXFX_interm::Read(ReadType type) {
     return turn_wpi.to<double>();
   }
   case ReadType::kTemperature: return esc_->GetMotorTemperature();
+  case ReadType::kRestFault: {
+    if (esc_->GetStickyWarnings().hasReset) {
+      esc_->ClearFaults();
+      return 1.0;
+    } else {
+      return 0.0;
+    }
+  }
   default: return 0.0;
   }
 }
@@ -312,12 +346,13 @@ void SparkMXFX_interm::ZeroEncoder(pdcsu::units::radian_t position) {
       encoder_->SetPosition(position.value() / (2.0 * 3.14159265358979323846)));
 }
 
-SparkMAX_interm::SparkMAX_interm(
-    int can_id, pdcsu::units::ms_t max_wait_time, base::MotorMonkeyType mmtype)
-    : SparkMXFX_interm(can_id, max_wait_time, false, mmtype) {}
+SparkMAX_interm::SparkMAX_interm(int can_id, pdcsu::units::ms_t max_wait_time,
+    base::MotorMonkeyType mmtype, bool inverted)
+    : SparkMXFX_interm(can_id, max_wait_time, false, mmtype, inverted) {}
 
-SparkFLEX_interm::SparkFLEX_interm(int can_id, pdcsu::units::ms_t max_wait_time)
+SparkFLEX_interm::SparkFLEX_interm(
+    int can_id, pdcsu::units::ms_t max_wait_time, bool inverted)
     : SparkMXFX_interm(can_id, max_wait_time, true,
-          base::MotorMonkeyType::SPARK_FLEX_VORTEX) {}
+          base::MotorMonkeyType::SPARK_FLEX_VORTEX, inverted) {}
 
 }  // namespace funkit::control::hardware

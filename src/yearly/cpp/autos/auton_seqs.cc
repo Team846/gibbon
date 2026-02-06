@@ -23,16 +23,17 @@ using WAIT = frc2::WaitCommand;
 
 using FPT = funkit::math::FieldPoint;
 
-#define MAX_ACCEL_3PC 25_fps2_
-#define MAX_DECEL_3PC 20_fps2_
-#define MAX_VEL_3PC 15_fps_
+#define MAX_ACCEL_CS2_NORM 25_fps2_
+#define MAX_DECEL_CS2_NORM 20_fps2_
+#define MAX_VEL_CS2_NORM 15_fps_
 
-#define MAX_ACCEL_1PC 24_fps2_
-#define MAX_DECEL_1PC 24_fps2_
-#define MAX_VEL_1PC 13_fps_
-#define MAX_ACCEL_1PCS 11_fps2_
-#define MAX_DECEL_1PCS 11_fps2_
-#define MAX_VEL_1PCS 9_fps_
+#define MAX_ACCEL_CS2_CURVE 25_fps2_
+#define MAX_DECEL_CS2_CURVE 20_fps2_
+#define MAX_VEL_CS2_CURVE 15_fps_
+
+#define MAX_ACCEL_CS2_BUMP 35_fps2_
+#define MAX_DECEL_CS2_BUMP 35_fps2_
+#define MAX_VEL_CS2_BUMP 15_fps_
 
 #define MAX_ACCEL_LEAVE 10_fps2_
 #define MAX_DECEL_LEAVE 10_fps2_
@@ -84,12 +85,40 @@ using FPT = funkit::math::FieldPoint;
         MAX_VEL_##auto_name, MAX_ACCEL_##auto_name, MAX_DECEL_##auto_name \
   }
 
-#define SOURCELOC_PRE MKPT(34.203_in_, 69.432_in_, 53.5_deg_, 0_fps_)
-#define SOURCELOC MKPT(18_in_, 49.5_in_, 53.5_deg_, 0_fps_)
-#define SOURCELOC_in_WARDS MKPT(-7.08_in_, 32.69_in_, 53.5_deg_, 0_fps_)
+#define DRIVE_PT(auto_name, pt, pt_name)                                     \
+  funkit::robot::swerve::DriveToPointCommand {                               \
+    &(container.drivetrain_), pt, MAX_VEL_##auto_name##_##pt_name,           \
+        MAX_ACCEL_##auto_name##_##pt_name, MAX_DECEL_##auto_name##_##pt_name \
+  }
+
+#define DRIVE_PT_BEARING(auto_name, pt, pt_name)                              \
+  funkit::robot::swerve::DriveToPointCommand {                                \
+    &(container.drivetrain_), pt, MAX_VEL_##auto_name##_##pt_name,            \
+        MAX_ACCEL_##auto_name##_##pt_name, MAX_DECEL_##auto_name##_##pt_name, \
+        funkit::robot::swerve::DriveToPointFlags::kRequireBearing             \
+  }
+
+#define END_BUMPC1_PT MKPT(90_in_, 223.61_in_, 35_deg_, 0_fps_)
+#define START_BUMPC1_PT MKPT(90_in_, 110.61_in_, 35_deg_, 0_fps_)
+// 8_fps
+#define END_BUMPC23_PT MKPT(102_in_, 223.61_in_, 35_deg_, 0_fps_)
+#define START_BUMPC23_PT MKPT(102_in_, 110.61_in_, 35_deg_, 0_fps_)
+
+#define P1C1_INTAKE_PT MKPT(76.5_in_, 287.35_in_, 0_deg_, 11_fps_)
+#define P2C1_INTAKE_PT MKPT(87.25_in_, 312.6_in_, 7_deg_, 7_fps_)
+#define P3C1_INTAKE_PT MKPT(93.75_in_, 324.2_in_, 15_deg_, 0_fps_)
+
+#define P1C2_INTAKE_PT MKPT(121.1_in_, 260.5_in_, 0_deg_, 11_fps_)
+#define P2C2_INTAKE_PT MKPT(129.35_in_, 300.42_in_, 7_deg_, 7_fps_)
+#define P3C2_INTAKE_PT MKPT(134.85_in_, 324.35_in_, 15_deg_, 0_fps_)
+
+#define P1C3_INTAKE_PT MKPT(111.1_in_, 254.5_in_, 20_deg_, 11_fps_)
+#define P2C3_INTAKE_PT MKPT(118.35_in_, 280.42_in_, 40_deg_, 11_fps_)
+#define P3C3_INTAKE_PT MKPT(124.85_in_, 290.65_in_, 60_deg_, 7_fps_)
+#define P4C3_INTAKE_PT MKPT(146.85_in_, 295.35_in_, 90_deg_, 0_fps_)
 
 #define FPC_EXPECTED_START_UF \
-  FPT { {50.5_in_, 271.3_in_}, 140_deg_, 0_fps_ }
+  FPT { {92.5_in_, 144.54_in_}, 0_deg_, 0_fps_ }
 #define SIM_EXP_START_UF \
   FPT { {20_in_, 20_in_}, 0_deg_, 0_fps_ }
 
@@ -140,6 +169,34 @@ __AUTO__(LeaveAuto, "LEAVE")
 SEQUENCE {
   START2(158.5_in_, START_Y, 180_deg_), WAIT{0.25_s},
       DRIVE(LEAVE, 158.5_in_, START_Y - 3_ft_, 180_deg_, 0_fps_),
+}
+}
+{}
+
+__AUTO__(CS2Auto, "CS2")
+SEQUENCE {
+  START2(92.5_in_, 144.54_in_, 0_deg_),
+      DRIVE_PT_BEARING(CS2, END_BUMPC1_PT, BUMP),
+      DRIVE_PT(CS2, P1C1_INTAKE_PT, NORM), DRIVE_PT(CS2, P2C1_INTAKE_PT, NORM),
+      DRIVE_PT(CS2, P3C1_INTAKE_PT, NORM), DRIVE_PT(CS2, P2C1_INTAKE_PT, NORM),
+      DRIVE_PT(CS2, P1C1_INTAKE_PT, NORM),
+      // driveuntilfull
+      DRIVE_PT_BEARING(CS2, END_BUMPC1_PT, NORM),
+      DRIVE_PT_BEARING(CS2, START_BUMPC1_PT, BUMP),
+      DRIVE_PT(CS2, END_BUMPC1_PT, NORM), DRIVE_PT(CS2, P1C2_INTAKE_PT, NORM),
+      DRIVE_PT(CS2, P2C2_INTAKE_PT, NORM), DRIVE_PT(CS2, P3C2_INTAKE_PT, NORM),
+      DRIVE_PT(CS2, P2C2_INTAKE_PT, NORM), DRIVE_PT(CS2, P1C2_INTAKE_PT, NORM),
+      // driveuntilfull
+      DRIVE_PT_BEARING(CS2, END_BUMPC23_PT, NORM),
+      DRIVE_PT_BEARING(CS2, START_BUMPC23_PT, BUMP),
+      DRIVE_PT(CS2, END_BUMPC23_PT, BUMP), DRIVE_PT(CS2, P1C3_INTAKE_PT, NORM),
+      DRIVE_PT(CS2, P2C3_INTAKE_PT, NORM), DRIVE_PT(CS2, P3C3_INTAKE_PT, NORM),
+      DRIVE_PT(CS2, P4C3_INTAKE_PT, NORM), DRIVE_PT(CS2, P3C3_INTAKE_PT, NORM),
+      DRIVE_PT(CS2, P2C3_INTAKE_PT, NORM), DRIVE_PT(CS2, P1C3_INTAKE_PT, NORM),
+      // driveuntilfull
+      DRIVE_PT_BEARING(CS2, END_BUMPC23_PT, NORM),
+      DRIVE_PT_BEARING(CS2, START_BUMPC23_PT, BUMP),
+      DRIVE_PT_BEARING(CS2, END_BUMPC23_PT, BUMP),
 }
 }
 {}

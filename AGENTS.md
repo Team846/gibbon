@@ -22,17 +22,17 @@ This document provides a comprehensive overview of the FRC Team 846 codebase arc
 
 ## Project Overview
 
-This is the **2026 FRC codebase for Team 846 (Gibbon)**, written in **C++** using **WPILib 2026.1.1**. The codebase implements a custom robot architecture built on top of WPILib's command-based framework.
+This is the **2026 FRC codebase for Team 846 (Gibbon)**, written in **C++** using **WPILib 2026.2.1**. The codebase implements a custom robot architecture built on top of WPILib's command-based framework.
 
 ### Key Technologies
 - **Language**: C++17/20
-- **Framework**: WPILib 2026.1.1
-- **Build System**: Gradle (WPILib GradleRIO plugin 2026.1.1)
+- **Framework**: WPILib 2026.2.1
+- **Build System**: Gradle (WPILib GradleRIO plugin 2026.2.1)
 - **Vendor Libraries**: 
   - Phoenix 6 v26.1.0 (CTRE motor controllers)
   - REVLib 2026.0.0 (REV motor controllers)
 - **Code Quality**: Spotless (clang-format 18.1.8), CppCheck 2.16.0
-- **PDCSU**: tr12
+- **PDCSU**: tr15
 
 ### Project Philosophy
 - **Subsystem-based architecture**: Each hardware component is a subsystem
@@ -86,23 +86,23 @@ Gibbon/
 │   ├── yearly/                    # Year-specific robot code (2026 season)
 │   │   ├── cpp/                  # Implementation files (.cc)
 │   │   │   ├── subsystems/
-│   │   │   │   ├── abstract/     # Abstract/logic subsystems (not hardware)
+│   │   │   │   ├── abstract/     # Abstract/logic subsystems (control_input, gpd)
 │   │   │   │   └── hardware/     # Hardware subsystem implementations
 │   │   │   ├── commands/
-│   │   │   │   ├── general/      # General commands
-│   │   │   │   └── teleop/       # Teleoperated commands
-│   │   │   ├── calculators/      # Utility calculators
+│   │   │   │   └── teleop/       # Teleoperated commands (drive, intake, shooter)
+│   │   │   ├── calculators/      # Utility calculators (ShootingCalculator, TurretPositionCalculator)
+│   │   │   ├── control_triggers.cc
 │   │   │   └── FunkyRobot.cc     # Main robot class implementation
 │   │   ├── include/              # Header files (.h)
-│   │   │   ├── subsystems/       # Subsystem headers
+│   │   │   ├── subsystems/       # Subsystem headers (robot_container, robot_constants, SubsystemHelper)
 │   │   │   ├── commands/         # Command headers
 │   │   │   ├── autos/            # Autonomous routine definitions
+│   │   │   ├── calculators/      # Calculator headers
+│   │   │   ├── control_triggers.h # Teleop trigger binding (ControlTriggerInitializer)
+│   │   │   ├── rsighandler.h     # Signal handlers for simulation (configureSignalHandlers)
 │   │   │   ├── ports.h           # CAN IDs, PWM ports, etc.
-│   │   │   ├── robot_constants.h # Robot-specific constants
 │   │   │   └── FunkyRobot.h      # Main robot class header
 │   │   └── resources/            # Non-code resources
-│   │       ├── deploy/           # Files deployed to RoboRIO
-│   │       │   └── autos/        # Scriptable autonomous routines
 │   │       ├── logsclient/       # Log client scripts
 │   │       ├── ntbackup/         # NetworkTables backup tools
 │   │       └── swervevis/        # Swerve visualization tools
@@ -110,24 +110,23 @@ Gibbon/
 │   │   ├── cpp/                  # Implementation files
 │   │   └── include/
 │   │       └── funkit/
-│   │           ├── base/         # Base classes (Loggable, logging)
+│   │           ├── base/         # Base classes (Loggable, FunkyLogSystem, compression, fserver)
 │   │           ├── control/      # Motor control system
-│   │           │   ├── base/     # Motor control base classes
-│   │           │   ├── calculators/  # Motor calculations
-│   │           │   ├── config/       # Configuration structures
-│   │           │   └── hardware/     # Hardware abstractions
+│   │           │   ├── base/     # Motor control base (MotorMonkeyType, motor_specs)
+│   │           │   ├── calculators/  # Motor calculations (CurrentTorque, CircuitResistance)
+│   │           │   ├── config/       # Configuration (genome, soft_limits)
+│   │           │   └── hardware/     # Hardware abstractions (Cooked, TalonFX_interm, SparkMXFX_interm, simulation)
 │   │           ├── math/         # Math utilities
 │   │           ├── robot/        # Robot framework
 │   │           │   ├── calculators/  # Robot calculators (e.g., AprilTag)
 │   │           │   └── swerve/       # Swerve drive implementation
-│   │           └── wpilib/       # WPILib utilities
-│   ├── pdcsu_tr12/               # PDCSU library (external, auto-downloaded)
-│   └── deploy/                   # Files to deploy to RoboRIO
-│       └── autos/                # Autonomous sequence files
+│   │           └── wpilib/       # WPILib utilities (NTAction, time, win_debug_stubs)
+│   ├── pdcsu_tr15/               # PDCSU library (external, auto-downloaded)
+│   └── deploy/                   # Autonomous sequence files (e.g. autos/points.lst)
 ├── build/                        # Build outputs (generated)
 ├── gradle/                       # Gradle wrapper files
 ├── vendordeps/                   # Vendor dependency JSON files
-├── build.gradle                  # Main build configuration
+├── build.gradle                  # Main build configuration (static deploy from src/yearly/deploy)
 └── README.md                     # Setup and usage documentation
 ```
 
@@ -153,11 +152,13 @@ class FunkyRobot : public funkit::robot::GenericRobot {
 ```
 
 **Key responsibilities**:
-- Dashboard button initialization
-- Path recording control
-- LED state management
-- Homing switch handling
-- Coast mode control
+- Dashboard button initialization (CANCoder offsets, zero bearing/odometry, zero turret encoders, path recording)
+- Path recording control (start/stop, auto-start on enable)
+- LED state management via `LEDsLogic` (homing, coasting, normal update)
+- Homing/coast/gyro switch handling via `DigitalInput`s
+- Teleop default commands: `DriveCommand`, `ShooterCommand`, `IntakeCommand`; trigger binding via `ControlTriggerInitializer::InitTeleopTriggers` (from `control_triggers.h`)
+- Simulation: `configureSignalHandlers()` from `rsighandler.h` in `main()`; FunkyFMS control mode for DS state
+- `ShootingCalculator::Setup` in `OnInitialize`; `ShootingCalculator::Calculate` in `OnPeriodic`
 
 ### RobotContainer
 
@@ -172,13 +173,15 @@ class RobotContainer : public funkit::robot::GenericRobotContainer {
   funkit::robot::swerve::DrivetrainSubsystem drivetrain_{...};
   GPDSubsystem GPD_{&drivetrain_};
   ControlInputSubsystem control_input_{&drivetrain_};
-  ICTestSubsystem ictest_{};
+  TurretTestSubsystem turr_test{};
+  ShooterSubsystem shooter_{};
+  IntakeSubsystem intake_{};
 };
 ```
 
 **Registration pattern**:
-- Use preferences to conditionally initialize subsystems
-- Register with appropriate group (A, B, or AB) for update scheduling
+- Use preferences (`init_drivetrain`, `init_leds`, `init_gpd`, `init_shooter`, `init_intake`) to conditionally initialize subsystems
+- Register with appropriate group (A, B, or AB): control_input and drivetrain/GPD/shooter/intake use Group AB; leds uses Group A
 
 ---
 
@@ -220,9 +223,11 @@ class GenericSubsystem : public frc2::SubsystemBase, public SubsystemBase {
 ### Current Subsystems
 
 #### Hardware Subsystems
-- **DrivetrainSubsystem**: Swerve drive with 4 modules
-- **LEDsSubsystem**: LED strip control
-- **ICTestSubsystem**: Test subsystem for motor controllers
+- **DrivetrainSubsystem**: Swerve drive with 4 modules (built by `DrivetrainConstructor`)
+- **LEDsSubsystem**: LED strip control (logic in `LEDsLogic`, `leds_logic.h/.cc`)
+- **ShooterSubsystem**: Shooter hardware (`shooter.h/.cc`)
+- **IntakeSubsystem**: Intake hardware (`intake.h/.cc`)
+- **TurretTestSubsystem**: Turret/motor test subsystem (`testcrt.h/.cc`), optionally registered
 
 #### Abstract Subsystems
 - **ControlInputSubsystem**: Processes joystick/gamepad input
@@ -271,8 +276,10 @@ class DriveCommand : public funkit::robot::GenericCommand<RobotContainer, DriveC
 };
 ```
 
-**Key commands**:
+**Key commands** (under `commands/teleop/`):
 - **DriveCommand**: Teleoperated swerve drive control
+- **ShooterCommand**: Shooter control (default command for `ShooterSubsystem`)
+- **IntakeCommand**: Intake control (default command for `IntakeSubsystem`)
 
 ---
 
@@ -286,36 +293,42 @@ High-level motor controller abstraction that interfaces with `MonkeyMaster`:
 
 ```cpp
 class HigherMotorController {
-  HigherMotorController(MotorMonkeyType mmtype, MotorConstructionParameters params);
+  HigherMotorController(base::MotorMonkeyType mmtype, config::MotorConstructionParameters params);
   
-  void Setup(MotorGenome genome, std::variant<DefLinearSys, DefArmSys> plant);
-  void ModifyGenome(MotorGenome genome);
+  void Setup(config::MotorGenome genome, std::variant<pdcsu::util::DefLinearSys, pdcsu::util::DefArmSys> plant);
+  void ModifyGenome(config::MotorGenome genome);
   
   // Control modes:
   void WriteDC(double duty_cycle);
-  template <typename VelUnit> void WriteVelocity(VelUnit velocity);
-  template <typename PosUnit> void WritePosition(PosUnit position);
-  template <typename VelUnit> void WriteVelocityOnController(VelUnit velocity);
-  template <typename PosUnit> void WritePositionOnController(PosUnit position);
-  template <typename PosUnit> void SetPosition(PosUnit position);  // Zeroes encoder
+  void WriteVelocity(mps_t velocity);  void WriteVelocity(radps_t velocity);
+  void WritePosition(meter_t position);  void WritePosition(radian_t position);
+  void WriteVelocityOnController(mps_t velocity);  void WriteVelocityOnController(radps_t velocity);
+  void WritePositionOnController(meter_t position);  void WritePositionOnController(radian_t position);
+  void SetPosition(meter_t position);  void SetPosition(radian_t position);  // Zeroes encoder
   
-  // Sensor readings (template functions with unit type safety):
+  // Sensor readings (template with specializations):
   template <typename VelUnit> VelUnit GetVelocity();
   template <typename PosUnit> PosUnit GetPosition();
-  pdcsu::units::amp_t GetCurrent();
+  amp_t GetCurrent();
   
   // Utility:
-  void SetLoad(pdcsu::units::nm_t load);
+  void SetLoad(nm_t load);
   bool VerifyConnected();
-  void EnableStatusFrames(std::vector<StatusFrame> frames, ...);
+  void SetControllerSoftLimits(radian_t forward_limit, radian_t reverse_limit);
+  void SetSoftLimits(config::SoftLimits soft_limits);
+  void EnableStatusFrames(std::vector<config::StatusFrame> frames, ms_t faults_ms, ...);
+  void OverrideStatusFramePeriod(config::StatusFrame frame, ms_t period);
+  void SpecialConfiguration(hardware::SpecialConfigureType type);
+  hardware::ReadResponse SpecialRead(hardware::ReadType type);
 };
 ```
 
 **Key features**:
-- **Template functions**: `GetPosition<meter_t>()` for linear systems, `GetPosition<radian_t>()` for arm systems
-- **Plant-based unit conversion**: Uses `DefLinearSys` or `DefArmSys` to convert between real-world units and native motor controller units
-- **Type safety**: `static_assert` ensures correct unit types match the plant type
-- **MotorGenome configuration**: All motor parameters (current limits, voltage compensation, PIDF gains, brake mode) stored in `MotorGenome`
+- **Constructor**: Takes `funkit::control::base::MotorMonkeyType` and `config::MotorConstructionParameters`
+- **Plant**: `std::variant<pdcsu::util::DefLinearSys, pdcsu::util::DefArmSys>`; unit types (e.g. `mps_t`, `radps_t`, `meter_t`, `radian_t`) are PDCSU types
+- **Template GetVelocity/GetPosition**: Specializations for `mps_t`/`radps_t` and `meter_t`/`radian_t` dispatch on plant type
+- **Soft limits**: `SetControllerSoftLimits` (on-controller) and `SetSoftLimits` (SupremeLimiter/custom)
+- **MotorGenome configuration**: All motor parameters (current limits, voltage compensation, PIDF gains, brake mode) in `config::MotorGenome`
 
 ### MonkeyMaster
 
@@ -366,7 +379,7 @@ Preferences use hierarchical naming based on the `Loggable` name:
 
 **Location**: `src/funkit/include/funkit/control/config/genome.h`
 
-Motor configuration is managed through `MotorGenome` and `SubsystemGenomeHelper`:
+Motor configuration is managed through `MotorGenome` and `SubsystemGenomeHelper` (both in `funkit::control::config`):
 
 ```cpp
 // MotorGenome contains all motor configuration:
@@ -375,15 +388,11 @@ struct MotorGenome {
   pdcsu::units::amp_t smart_current_limit;
   pdcsu::units::volt_t voltage_compensation;
   bool brake_mode;
-  config::Gains gains;  // PIDF gains (kP, kI, kD, kF)
+  Gains gains;  // kP, kI, kD, kF
 };
 
 // Create genome preferences in constructor:
-MotorGenome genome_backup{
-    .motor_current_limit = 40_A_,
-    .smart_current_limit = 30_A_,
-    .voltage_compensation = 12_V_,
-    .brake_mode = true};
+MotorGenome genome_backup{...};
 SubsystemGenomeHelper::CreateGenomePreferences(*this, "genome", genome_backup);
 
 // Load genome in Setup():
@@ -391,30 +400,38 @@ auto genome = SubsystemGenomeHelper::LoadGenomePreferences(*this, "genome");
 motor_.Setup(genome, plant_variant);
 ```
 
-**MotorConstructionParameters** is now simplified to only contain:
+**MotorConstructionParameters** contains:
 - `can_id`: CAN address
-- `bus`: CAN bus name (empty string for default)
-- `inverted`: Motor inversion
-- `max_wait_time`: Control message timeout
+- `bus`: CAN bus name (`std::string_view`, default `""`)
+- `inverted`: Motor inversion (default `false`)
+- `max_wait_time`: Control message timeout (`pdcsu::units::ms_t`, default 20 ms)
+
+**StatusFrame** enum: `kPositionFrame`, `kVelocityFrame`, `kCurrentFrame`, `kFaultFrame`, `kSensorFrame`, `kAbsoluteFrame`, `kLeader`.
 
 ### Ports Configuration
 
 **Location**: `src/yearly/include/ports.h`
 
-All hardware ports defined in a single location:
+All hardware ports defined in a single location (`ports.h` uses `funkit::control::config::MotorConstructionParameters` where applicable):
 ```cpp
 struct ports {
+  struct driver_ { static constexpr int kXbox_DSPort = 0; };
+  struct operator_ { static constexpr int kXbox_DSPort = 1; };
   struct drivetrain_ {
-    static constexpr int kFRDrive_CANID = 2;
-    static constexpr int kFLDrive_CANID = 5;
-    // ...
+    static constexpr int kFRDrive_CANID = 2;  // ... steer, CANCoder, PIGEON
   };
-  struct leds_ {
-    static constexpr int kLEDStrip1 = 6;
+  struct leds_ { static constexpr int kLEDStrip1 = 6; };
+  struct shooter_ {
+    static constexpr MotorConstructionParameters kMotor1Params = {24, "", false};
+    static constexpr MotorConstructionParameters kMotor2Params = {25, "", true};
   };
-  // ...
+  struct intake_ {
+    static constexpr MotorConstructionParameters kMotorParams = {21, "", true};
+  };
 };
 ```
+
+**Robot constants** (`src/yearly/include/subsystems/robot_constants.h`): `robot_constants::total_weight`, `robot_constants::base::wheelbase_x`, `robot_constants::base::wheelbase_y`, `robot_constants::base::weight`, `robot_constants::base::height`. Used by `DrivetrainConstructor` for drivetrain geometry and weight.
 
 ---
 
@@ -460,11 +477,12 @@ Loggers form a tree structure:
 **Main file**: `build.gradle`
 
 Key features:
-- **WPILib GradleRIO plugin**: 2026.1.1
+- **WPILib GradleRIO plugin**: 2026.2.1
 - **Spotless**: Code formatting with clang-format 18.1.8
 - **CppCheck**: Static analysis (2.16.0)
-- **PDCSU auto-download**: Downloads PDCSU tr12 library from GitHub releases
+- **PDCSU auto-download**: Downloads PDCSU tr15 library from GitHub releases (config: `pdcsuGroup = "tr"`, `pdcsuReleaseNumber = "15"`)
 - **Multi-platform**: Supports RoboRIO and desktop (simulation)
+- **Static file deploy**: `fileTree('src/yearly/deploy')` deployed to `/home/lvuser/deploy`
 
 ### Build Targets
 
@@ -476,7 +494,7 @@ Key features:
 ### Source Organization
 
 - **C++ sources**: `src/funkit/cpp/**/*.cc`, `src/yearly/cpp/**/*.cc`
-- **Headers**: `src/funkit/include`, `src/yearly/include`, `src/pdcsu_tr12`
+- **Headers**: `src/funkit/include`, `src/yearly/include`, `src/pdcsu_tr15`
 
 ### Dependencies
 
@@ -570,7 +588,9 @@ RegisterSubsystemGroupA({{&my_subsystem_, my_subsystem_init}});
 
 ### Creating a New Command
 
-1. **Create header** (`src/yearly/include/commands/my_command.h`):
+Teleop commands live under `commands/teleop/` (e.g. `drive_command.h`, `intake_command.h`, `shooter_command.h`).
+
+1. **Create header** (`src/yearly/include/commands/my_command.h` or `commands/teleop/my_command.h`):
 ```cpp
 #pragma once
 
@@ -637,12 +657,12 @@ auto unit_value = GetPreferenceValue_unit_type<units::feet>("param_name");
 
 ### Units Library
 
-The codebase uses **PDCSU units** (`pdcsu::units`) as the primary unit system for type-safe physical quantities. PDCSU units provide compile-time type checking and automatic conversions between compatible unit types.
+The codebase uses **PDCSU units** (`pdcsu::units`, from `pdcsu_tr15/util/units.h`) as the primary unit system for type-safe physical quantities. PDCSU units provide compile-time type checking and automatic conversions between compatible unit types. **Keep quantities in unit form as much as possible**; only call `.value()` when necessary (e.g. at API boundaries, logging, or when a raw double is required). Units with the same dimensions (L, M, T, I, R) **auto-convert** via constructors and operators.
 
 #### Why Use PDCSU Units
 
 - **Type safety**: Prevents mixing incompatible units (e.g., can't accidentally add meters to seconds)
-- **Automatic conversions**: Units with the same dimensions are automatically converted
+- **Automatic conversions**: Units with the same dimensions (L, M, T, I, R) are automatically converted when combined or assigned
 - **Self-documenting code**: Makes physical quantities clear in the code
 - **Compile-time checking**: Catches unit errors at compile time, not runtime
 - **Consistent internal representation**: All internal code uses PDCSU units for consistency
@@ -658,7 +678,7 @@ pdcsu::units::inch_t distance = pdcsu::units::inch_t{24};
 pdcsu::units::meter_t length = pdcsu::units::meter_t{1.5};
 ```
 
-**Note**: PDCSU units do not support user-defined literals like WPILib. Always use explicit constructors: `pdcsu::units::degree_t{90}` instead of `90_deg_`.
+**Note**: PDCSU supports user-defined literals (e.g. `45_deg_`, `10_fps_`, `1_rad_`, `12_V_`, `20_A_`, `5_in_`, `1.5_m_`) and explicit constructors; use whichever keeps expressions in unit form and readable.
 
 #### Common PDCSU Unit Types
 
@@ -682,16 +702,48 @@ pdcsu::units::second_t, pdcsu::units::ms_t, pdcsu::units::minute_t
 pdcsu::units::amp_t, pdcsu::units::nm_t, pdcsu::units::kg_t, pdcsu::units::pound_t
 ```
 
-#### Extracting Numeric Values
+#### Unit class: members and free functions
 
-When you need to extract the raw numeric value (for calculations, logging, or APIs that don't support units), use `.value()`:
+**Members** (`pdcsu::units::Unit`, `pdcsu_tr15/util/units.h`):
+
+| Member | Description |
+|--------|-------------|
+| `value()` | Returns the quantity in display units (e.g. `foot_t{3}.value()` → 3.0). Use only at API/logging boundaries. |
+| `to_base()` | Internal representation in base units; used for same-dimension math. Prefer typed operations over manual base use. |
+| `from_base(double)` | Static: build a unit from a base-value. Same type as the unit you call it on (e.g. `foot_t::from_base(x)`). |
+| `dims()` | Returns a string of dimension exponents (e.g. `"m"`, `"ft/s"`) for debugging. |
+
+**Arithmetic**: Same-dimension units support `+`, `-`, `+=`, `-=` (types can differ in factor/tag, e.g. `inch_t` and `foot_t`). `*` and `/` with another unit yield a new compound/division type (e.g. `foot_t * second_t` → length×time). Multiplication/division by a plain `double` scale the value and preserve the unit type. `operator%(unit)` and `operator%(double)` use `std::fmod` on the numeric value and return the same unit type.
+
+**Comparisons**: `==`, `!=`, `<`, `<=`, `>`, `>=` are defined for same-dimension units.
+
+**Free functions** (in `pdcsu::units`):
+
+| Function | Description |
+|----------|-------------|
+| `u_abs(u)` | Returns the unit with non-negative numeric value; same type as `u`. |
+| `u_sqrt(u)` | Returns the square root as a unit with halved dimension exponents (e.g. `mps2_t` → `mps_t`). |
+| `u_sin(u)`, `u_cos(u)`, `u_tan(u)` | Trig on `radian_t` or `degree_t`; return `double`. |
+| `u_asin(x)`, `u_acos(x)`, `u_atan(x)` | Inverse trig on raw `double`; return `radian_t`. |
+| `u_atan2(y, x)` | Two-argument atan; `y` and `x` must be same-dimension units; returns `radian_t`. |
+| `u_min(a, b)`, `u_max(a, b)` | Same-dimension units; return type of first argument. |
+| `u_clamp(u, min, max)` | Clamp `u` to `[min, max]`; all same dimensions. |
+| `u_floor(u)`, `u_ceil(u)`, `u_round(u)` | Round to integer value in display units; return same unit type. |
+| `u_pow(u, exp)` | Power; `exp` is `double`; dimensions scale by `exp`. |
+| `u_copysign(u, sign)` | Copy sign from `sign` (unit or `double`) onto `u`; return same type as `u`. |
+
+#### When to use `.value()`
+
+Use `.value()` **only when necessary**: e.g. passing to APIs that take `double`, logging, or serialization. **Prefer keeping values in unit form** for type safety and so the type system can catch dimension errors. Let units auto-convert by combining and assigning typed values rather than extracting scalars early.
 
 ```cpp
-pdcsu::units::fps_t speed = pdcsu::units::fps_t{10};
-double speed_value = speed.value();  // Extracts 10.0
+// Prefer: keep in units, let types convert
+pdcsu::units::fps_t v = 10_fps_;
+pdcsu::units::inch_t x = v * 1_s_;  // same dimension as length: fine
 
-pdcsu::units::degree_t angle = pdcsu::units::degree_t{45};
-double angle_radians = pdcsu::units::radian_t{angle}.value();  // Convert and extract
+// Only at boundaries: extract when the API requires double
+double raw = v.value();
+units::feet_per_second_t wpi_v{raw};
 ```
 
 #### Units in Preferences
@@ -707,13 +759,71 @@ RegisterPreference("max_speed", pdcsu::units::fps_t{15});
 auto max_speed = GetPreferenceValue_unit_type<pdcsu::units::fps_t>("max_speed");
 ```
 
-#### Vector Types
+#### Radians and arc-length (r·θ = s)
 
-The codebase uses **PDCSU vectors** (`pdcsu::util::math::uVec`) instead of WPILib vectors:
+Arc-length is **s = r·θ**. In PDCSU, angle is a distinct dimension (R). So:
+
+- **r·θ → length**: If `r` is `foot_t` and `θ` is `radian_t`, then `r * θ` has type (length × angle), **not** pure length. To obtain a length from `r * θ`, **divide by 1_rad_** (or by a `radian_t`): e.g. `(r * theta) / 1_rad_` gives a length.
+- **θ = s/r**: The quotient `s / r` is dimensionless. To get an **angle** (e.g. `radian_t`), **multiply by 1_rad_** (or otherwise express the result as `radian_t`): e.g. `(s / r) * 1_rad_` or `radian_t{(s / r).value()}` if you must break out.
+
+This matches how PDCSU's `DefLinearSys` and related code use `1_rad_` when combining length and angle (see `pdcsu_tr15/util/sysdef.h`).
+
+#### Vector Types and uVec class
+
+The codebase uses **PDCSU vectors** (`pdcsu::util::math::uVec<UT, N>` from `pdcsu_tr15/util/math/uvec.h`) instead of WPILib vectors. Vectors hold unit-typed elements and keep type safety. Common aliases: `Vector1D`, `Vector2D`, `Vector3D` are `uVec<pdcsu::units::inch_t, 1>`, `uVec<pdcsu::units::inch_t, 2>`, `uVec<pdcsu::units::inch_t, 3>`.
+
+**uVec constructors**:
+
+| Constructor | Description |
+|-------------|-------------|
+| `uVec()` | Default: N elements of zero (same unit type UT). |
+| `uVec({a, b, ...})` | From initializer list of N values of type UT. |
+| `uVec(magnitude, theta, angleIsBearing)` | **2D only.** Polar: `magnitude` (UT), `theta` (`degree_t`). If `angleIsBearing == true`, 0° is +y and angle is clockwise; else 0° is +x and counter-clockwise. |
+| `uVec(std::pair<T,T>)` | **2D only.** From a pair of UT values. |
+| `uVec(other)` | Copy constructor. |
+
+**uVec arithmetic and access**:
+
+| Operation | Description |
+|-----------|-------------|
+| `a + b`, `a - b` | Element-wise; same `UT` and `N`. |
+| `v * scalar`, `v / scalar` | Scale each element; scalar is `double`. |
+| `+=`, `-=`, `*=`, `/=` | In-place; right-hand side as above. |
+| `v[i]` | Element access; `i < N`; returns `UT&` or `const UT&`. |
+| `v == w` | Equality with tolerance 1e-9 on base values. |
+
+**uVec methods** (return types and constraints):
+
+| Method | Returns | Notes |
+|--------|---------|--------|
+| `magnitude()` | `UT` | Euclidean norm; 2D or 3D. |
+| `unit()` | `uVec<UT,N>` | Normalized direction; uses `magnitude().to_base()` for division. |
+| `rotate(angle, clockwise=true)` | `uVec<UT,N>` | **2D only.** Returns new vector; default is clockwise. Does not modify `*this`. |
+| `dot(other)` | compound type | Dot product; `other` can be `uVec<UT2,N>`; result has units UT×UT2. |
+| `cross(other)` | `uVec<ResultType,3>` | **3D only.** Cross product; result type from `data[i]*other[j]`. |
+| `angle(angleIsBearing=false)` | `degree_t` | **2D only.** Angle of vector. If `angleIsBearing`, 0° is +y, clockwise. |
+| `angleBetween(other, angleIsBearing=false)` | `degree_t` | **2D.** Angle from this to `other` (signed). |
+| `angleAimTowards(other, angleIsBearing=false)` | `degree_t` | **2D.** Angle of `(other - *this)`; direction to aim from this toward other. |
+| `projectOntoAnother(other)` | `uVec<UT,N>` | **2D.** Project this onto `other`; returns component of this along other. |
+| `projectOntoThis(other)` | `uVec<UT2,N>` | **2D.** Project `other` onto this; returns component of other along this. |
+| `AddToMagnitude(delta)` | `uVec<UT,N>` | **2D.** New vector with same direction, magnitude = current magnitude + `delta` (UT). |
+| `resize(magnitude)` | `uVec<UT,N>` | **2D.** New vector with same direction, given magnitude (UT). |
+| `toPair()` | `std::pair<T,T>` | **2D only.** |
+| `toString()` | `std::string` | Format `"<v0, v1, ...>"` using `.value()` on each element. |
+
+**Example usage**:
 
 ```cpp
 using Vector2D = pdcsu::util::math::uVec<pdcsu::units::inch_t, 2>;
-Vector2D position{pdcsu::units::inch_t{10}, pdcsu::units::inch_t{20}};
+Vector2D position{10_in_, 20_in_};
+Vector2D from_polar(mag_inch, 45_deg_, false);  // magnitude (inch_t) + angle
+auto mag = position.magnitude();                // inch_t
+auto ang = position.angle(true);                // degree_t, bearing from +y
+auto turned = position.rotate(90_deg_);         // new vector, clockwise
+auto d = position.dot(other);                   // unit type from UT*UT
+auto aim = pos.angleAimTowards(target, true);   // angle to turn toward target
+Vector2D along = v.projectOntoAnother(direction);
+Vector2D scaled = v.resize(12_in_);             // same direction, length 12 in
 ```
 
 #### Conversion at Boundaries
@@ -736,11 +846,12 @@ pdcsu::units::fps_t pdcsu_velocity{wpi_velocity.to<double>()};
 
 #### Best Practices
 
-1. **Always prefer PDCSU units**: Use PDCSU unit types internally throughout the codebase
-2. **Convert at boundaries**: Only convert to WPILib units when interfacing with WPILib APIs
-3. **Use explicit constructors**: Always use `pdcsu::units::degree_t{90}` instead of literals
-4. **Extract only when necessary**: Use `.value()` only when interfacing with APIs that require raw values
-5. **Type safety is your friend**: If code doesn't compile due to unit mismatch, it's preventing a bug!
+1. **Always prefer PDCSU units**: Use PDCSU unit types internally throughout the codebase; keep expressions in unit form.
+2. **Convert at boundaries**: Only convert to WPILib units (or call `.value()`) when interfacing with WPILib or other APIs that need raw numbers.
+3. **Use literals or explicit constructors**: e.g. `90_deg_` or `pdcsu::units::degree_t{90}`; stay in units rather than extracting early.
+4. **Extract only when necessary**: Use `.value()` only when an API, logger, or serializer requires a `double`.
+5. **Radians vs length**: For arc-length `s = r·θ`, get length by `(r * theta) / 1_rad_`; for angle from `s/r`, get `radian_t` by multiplying by `1_rad_` or constructing `radian_t` from the dimensionless quotient when appropriate.
+6. **Type safety is your friend**: If code doesn't compile due to unit/dimension mismatch, it's preventing a bug.
 
 ### Swerve Drive
 
@@ -806,7 +917,7 @@ The drivetrain includes path recording functionality:
 
 11. **Inverted steer gear ratio**: The steer gear ratio in `DrivetrainConstructor.cc` was inverted, causing steer position readings to be 21.4x too large. PDCSU's `DefArmSys` expects `gear_ratio` to represent "motor rotations per output rotation" because it uses `toReal(motor_pos) = motor_pos / gear_ratio`. For a 150:7 gearbox (150 motor rotations → 7 output rotations), the gear ratio should be `150_tr / 7_tr = 21.43`, NOT `7_tr / 150_tr = 0.0467`. **Always verify gear ratio direction**: if the gearbox is N:M (N motor rotations → M output rotations), use `N/M` for PDCSU plants.
 
-12. **Inverted drive gear ratio**: The drive gear ratio formula in `DrivetrainConstructor.cc` was inverted, causing drive position readings to be 68x too small. PDCSU's `DefLinearSys` expects `gear_ratio` (type `UnitDivision<radian_t, meter_t>`) to represent "motor radians per meter" because it uses `toReal(motor_radians) = motor_radians / gear_ratio` to get meters. The formula was `(drive_reduction_value * 12.0) / M_PI` which gave ~1.94 rad/m, but should be `(2.0 * M_PI * 3.28084) / drive_reduction_value` which gives ~132.9 rad/m. **For DefLinearSys**: gear_ratio = (2π × conversion_to_feet) / (feet_per_motor_rotation).
+12. **Inverted drive gear ratio**: The drive gear ratio formula in `DrivetrainConstructor.cc` was inverted, causing drive position readings to be 68x too small. PDCSU's `DefLinearSys` expects `gear_ratio` (type `UnitDivision<radian_t, meter_t>`) to represent "motor radians per meter" because it uses `toReal(motor_radians) = motor_radians / gear_ratio` to get meters. The formula was `(drive_reduction_value * 12.0) / 3.14159265358979323846` which gave ~1.94 rad/m, but should be `(2.0 * 3.14159265358979323846 * 3.28084) / drive_reduction_value` which gives ~132.9 rad/m. **For DefLinearSys**: gear_ratio = (2π × conversion_to_feet) / (feet_per_motor_rotation).
 
 ### Windows Terminal Environment
 
@@ -882,5 +993,5 @@ The codebase follows consistent naming conventions for maintainability:
 
 ---
 
-*Last Updated: Jan 2026 - Updated for 2026 season with WPILib 2026.1.1, Phoenix 6 v26.1.0, REVLib 2026.0.0, and PDCSU tr12. Previous updates include MotorMonkey→MonkeyMaster rename, HigherMotorController API changes (MotorGenome, plant-based unit conversion), and removal of HMCHelper*
+*Last Updated: Jan 2026 - WPILib 2026.2.1, PDCSU tr15. RobotContainer: ShooterSubsystem, IntakeSubsystem, TurretTestSubsystem (testcrt); no ICTestSubsystem. Commands: DriveCommand, ShooterCommand, IntakeCommand (commands/teleop/). FunkyRobot: control_triggers (ControlTriggerInitializer), rsighandler (configureSignalHandlers in sim), ShootingCalculator, LEDsLogic. yearly include: control_triggers.h, rsighandler.h, robot_constants.h, SubsystemHelper.h. HigherMotorController: base::MotorMonkeyType, config::MotorGenome/MotorConstructionParameters, pdcsu::util::DefLinearSys/DefArmSys, SetControllerSoftLimits/SetSoftLimits, SpecialConfiguration/SpecialRead, config::StatusFrame. ports: driver_, operator_, shooter_, intake_ (MotorConstructionParameters).*
 
