@@ -22,7 +22,7 @@ void ShooterSubsystem::Setup() {
       .brake_mode = true,
       .gains = {.kP = 0.0, .kI = 0.0, .kD = 0.0, .kF = 0.0}};
   funkit::control::config::SubsystemGenomeHelper::CreateGenomePreferences(
-      *this, "genome2", genome_backup);
+      *this, "genome", genome_backup);
 
   auto motor_specs =
       base::MotorSpecificationPresets::get(base::SPARK_MAX_NEO550);
