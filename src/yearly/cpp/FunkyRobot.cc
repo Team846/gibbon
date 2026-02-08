@@ -52,7 +52,11 @@ void FunkyRobot::OnInitialize() {
 
   frc::SmartDashboard::PutData("zero_turret_encoders",
       new funkit::wpilib::NTAction(
-          [this] { container_.turr_test.ZeroEncoders(); }));
+          [this] { container_.ictest_.ZeroEncoders(); }));
+
+  frc::SmartDashboard::PutData("zero_turret_with_CRT",
+    new funkit::wpilib::NTAction(
+        [this] { container_.ictest_.ZeroWithCRT(); }));
 
   // Add path recording controls
   frc::SmartDashboard::PutData(
@@ -90,8 +94,8 @@ void FunkyRobot::OnEnable() {
         time_buffer, sizeof(time_buffer), "%m-%d-%Y_%H-%M-%S", tm_now);
     std::string filename = "pathlogs_" + std::string(time_buffer);
 
-    container_.drivetrain_.StartPathRecording(filename);
-    Log("Started recording auto path data to {}.csv", filename);
+    // container_.drivetrain_.StartPathRecording(filename);
+    // Log("Started recording auto path data to {}.csv", filename);
   }
 }
 

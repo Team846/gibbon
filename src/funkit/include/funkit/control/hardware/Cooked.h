@@ -13,7 +13,7 @@ struct CookedConfig {
   CookedConfig(funkit::control::base::MotorMonkeyType mmtype) {
     switch (mmtype) {
     case funkit::control::base::MotorMonkeyType::SPARK_MAX_NEO550:
-      thermal_mass_ = 50;
+      thermal_mass_ = 5000;
       break;
     case funkit::control::base::MotorMonkeyType::SPARK_MAX_NEO:
       thermal_mass_ = 200;

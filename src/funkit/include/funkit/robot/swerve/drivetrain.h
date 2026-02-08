@@ -58,6 +58,8 @@ struct DrivetrainConfigs {
       april_camera_configs;
 
   std::map<size_t, funkit::robot::calculators::AprilTagData> april_locations;
+  std::optional<funkit::robot::calculators::TurretTagCameraConfig>
+      turret_camera_config;
   pdcsu::units::fps2_t max_accel;
 };
 

@@ -18,4 +18,6 @@ public:
   bool IsFinished() override;
 
 private:
+  radian_t icpostarget = 0_rad_;
+  radian_t icposz = 0_rad_;
 };

@@ -24,7 +24,8 @@ SwerveOdometryOutput SwerveOdometryCalculator::calculate(
 
   std::array<Vec2D, 4> wheel_vecs;
   for (int i = 0; i < 4; i++) {
-    wheel_vecs[i] = Vec2D{module_diffs[i], inputs.steer_pos[i], true};
+    wheel_vecs[i] = Vec2D{module_diffs[i], inputs.steer_pos[i],
+        true};
   }
 
   int min_idx = 0;

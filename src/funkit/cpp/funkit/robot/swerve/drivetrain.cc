@@ -110,8 +110,17 @@ DrivetrainSubsystem::DrivetrainSubsystem(DrivetrainConfigs configs)
         {config, nt::NetworkTableInstance::GetDefault().GetTable(
                      "AprilTagsCam" + std::to_string(config.camera_id))});
   }
-  tag_pos_calculator.setConstants(
-      {.tag_locations = configs.april_locations, .cameras = cameras});
+  std::optional<funkit::robot::calculators::TurretTagCamera> turret_tag_camera;
+  if (configs.turret_camera_config.has_value()) {
+    const auto& tc = configs.turret_camera_config.value();
+    turret_tag_camera.emplace(
+        funkit::robot::calculators::TurretTagCamera{.config = tc,
+            .table = nt::NetworkTableInstance::GetDefault().GetTable(
+                "AprilTagsCam" + std::to_string(tc.camera_id))});
+  }
+  tag_pos_calculator.setConstants({.tag_locations = configs.april_locations,
+      .cameras = cameras,
+      .turret_camera = turret_tag_camera});
 
 #ifndef _WIN32
   for (int i = 0; i < 20; i++) {

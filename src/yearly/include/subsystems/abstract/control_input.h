@@ -18,6 +18,10 @@ struct ControlInputReadings {
   bool prepare_shot;
   bool shoot;
   double intake;
+
+  // Ictest
+  bool ictest_x;
+  bool ictest_y;
 };
 
 struct ControlInputTarget {

@@ -65,11 +65,26 @@ struct AprilTagCameraConfig {
 struct AprilTagCamera {
   AprilTagCameraConfig config;
   std::shared_ptr<nt::NetworkTable> table;
+  bool equiv_turret = false;
+};
+
+struct TurretTagCameraConfig {
+  size_t camera_id;
+  pdcsu::units::inch_t turret_x_offset;
+  pdcsu::units::inch_t turret_y_offset;
+  pdcsu::units::inch_t x_offset;
+  pdcsu::units::inch_t y_offset;
+};
+
+struct TurretTagCamera {
+  TurretTagCameraConfig config;
+  std::shared_ptr<nt::NetworkTable> table;
 };
 
 struct ATCalculatorConstants {
   std::map<size_t, AprilTagData> tag_locations;
   std::vector<AprilTagCamera> cameras;
+  std::optional<TurretTagCamera> turret_camera;
 };
 
 class AprilTagCalculator : public funkit::math::Calculator<ATCalculatorInput,
@@ -78,6 +93,12 @@ public:
   AprilTagCalculator() {};
 
   ATCalculatorOutput calculate(ATCalculatorInput input) override;
+
+  static pdcsu::units::degree_t turret_angle;
+  static pdcsu::units::degps_t turret_vel;
+
+  static inch_t view_turret_off_x;
+  static inch_t view_turret_off_y;
 
 private:
   Vector2D correction;

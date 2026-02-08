@@ -4,6 +4,7 @@
 #include "subsystems/abstract/control_input.h"
 #include "subsystems/abstract/gpd.h"
 #include "subsystems/hardware/DrivetrainConstructor.h"
+#include "subsystems/hardware/ictest.h"
 #include "subsystems/hardware/intake.h"
 #include "subsystems/hardware/leds.h"
 #include "subsystems/hardware/shooter.h"
@@ -27,16 +28,21 @@ public:
 
   IntakeSubsystem intake_{};
 
+  ICTestSubsystem ictest_{};
+
   RobotContainer() {
     RegisterPreference("init_drivetrain", true);
     RegisterPreference("init_leds", true);
     RegisterPreference("init_gpd", true);
+
     RegisterPreference("init_shooter", true);
     RegisterPreference("init_intake", true);
+    RegisterPreference("init_ictest", true);
 
     bool drivetrain_init = (GetPreferenceValue_bool("init_drivetrain"));
     bool leds_init = (GetPreferenceValue_bool("init_leds"));
     bool gpd_init = (GetPreferenceValue_bool("init_gpd"));
+    bool ictest_init = (GetPreferenceValue_bool("init_ictest"));
 
     RegisterSubsystemGroupAB({{&control_input_, true}});
     RegisterSubsystemGroupA({{&leds_, leds_init}});
@@ -47,9 +53,6 @@ public:
     // bool shooter_init = (GetPreferenceValue_bool("init_shooter"));
     // bool intake_init = (GetPreferenceValue_bool("init_intake"));
 
-    // RegisterSubsystemGroupAB({{&shooter_, shooter_init}});
-    // RegisterSubsystemGroupAB({{&intake_, intake_init}});
-
-    // RegisterSubsystemGroupAB({{&turr_test, true}});
+    RegisterSubsystemGroupAB({{&ictest_, ictest_init}});
   }
 };

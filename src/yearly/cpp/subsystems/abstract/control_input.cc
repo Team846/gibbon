@@ -67,6 +67,9 @@ ControlInputReadings ControlInputSubsystem::UpdateWithInput() {
   ci_readings_.prepare_shot = dr_readings.right_trigger;
   ci_readings_.shoot = dr_readings.left_trigger;
 
+  ci_readings_.ictest_x = dr_readings.x_button;
+  ci_readings_.ictest_y = dr_readings.y_button;
+
   if (dr_readings.right_bumper) {
     ci_readings_.intake = 1.0;
   } else if (dr_readings.left_bumper) {

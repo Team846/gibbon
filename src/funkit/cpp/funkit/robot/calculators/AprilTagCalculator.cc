@@ -9,6 +9,11 @@
 
 namespace funkit::robot::calculators {
 
+pdcsu::units::degree_t AprilTagCalculator::turret_angle = 0.0_deg_;
+pdcsu::units::degps_t AprilTagCalculator::turret_vel = 0.0_degps_;
+inch_t AprilTagCalculator::view_turret_off_x = 0.0_in_;
+inch_t AprilTagCalculator::view_turret_off_y = 0.0_in_;
+
 ATCalculatorOutput AprilTagCalculator::calculate(ATCalculatorInput input) {
   ATCalculatorOutput output;
 
@@ -16,13 +21,40 @@ ATCalculatorOutput AprilTagCalculator::calculate(ATCalculatorInput input) {
   double variance = 0;
 
   std::vector<std::vector<Line>> sight_lines;
-  for (size_t i = 0; i < constants_.cameras.size(); i++) {
+
+  std::vector<funkit::robot::calculators::AprilTagCamera> temp_cameras{};
+  for (auto x : constants_.cameras)
+    temp_cameras.push_back(x);
+
+  if (constants_.turret_camera.has_value()) {
+    auto turret_camera = constants_.turret_camera.value();
+    Vector2D cam_offset =
+        Vector2D{turret_camera.config.turret_x_offset,
+            turret_camera.config.turret_y_offset}
+            .rotate(-turret_angle, true) +
+        Vector2D{turret_camera.config.x_offset, turret_camera.config.y_offset};
+    AprilTagCalculator::view_turret_off_x = cam_offset[0];
+    AprilTagCalculator::view_turret_off_y = cam_offset[1];
+    AprilTagCamera turret_tag_camera{
+        .config =
+            {
+                .camera_id = turret_camera.config.camera_id,
+                .x_offset = cam_offset[0],
+                .y_offset = cam_offset[1],
+            },
+        .table = turret_camera.table,
+        .equiv_turret = true,
+    };
+    temp_cameras.push_back(turret_tag_camera);
+  }
+
+  for (size_t i = 0; i < temp_cameras.size(); i++) {
     sight_lines.push_back({});
   }
   int tagsSeen = 0;
 
-  for (size_t i = 0; i < constants_.cameras.size(); i++) {
-    const auto& camera = constants_.cameras[i];
+  for (size_t i = 0; i < temp_cameras.size(); i++) {
+    const auto& camera = temp_cameras[i];
     auto cam_table = camera.table;
     const auto& config = camera.config;
 
@@ -50,6 +82,10 @@ ATCalculatorOutput AprilTagCalculator::calculate(ATCalculatorInput input) {
     pdcsu::units::degree_t bearingAtCapture =
         input.pose.bearing -
         input.angular_velocity * (tl - input.bearing_latency);
+    if (camera.equiv_turret) {
+      bearingAtCapture += turret_angle;
+      bearingAtCapture -= turret_vel * (tl - input.bearing_latency);
+    }
 
     if (!(tags.size() == distances.size() && tags.size() == tx.size())) {
       continue;
@@ -131,7 +167,7 @@ ATCalculatorOutput AprilTagCalculator::calculate(ATCalculatorInput input) {
 
   Line first_line = {{pdcsu::units::inch_t{-1}, pdcsu::units::inch_t{-1}},
       pdcsu::units::degree_t{0}};
-  for (size_t i = 0; i < constants_.cameras.size(); i++) {
+  for (size_t i = 0; i < temp_cameras.size(); i++) {
     if (sight_lines[i].size() > 0) {
       if (first_line.point[0].value() != -1.0) {
         // Double Cam Triangulation!
@@ -151,7 +187,7 @@ ATCalculatorOutput AprilTagCalculator::calculate(ATCalculatorInput input) {
   }
 
   // Single Cam?
-  for (size_t i = 0; i < constants_.cameras.size(); i++) {
+  for (size_t i = 0; i < temp_cameras.size(); i++) {
     if (sight_lines[i].size() > 1) {
       // Double Tag, Single Cam Triangulation!
       output.pos = sight_lines[i].at(1).intersect(sight_lines[i].at(0));
