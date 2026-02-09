@@ -38,6 +38,8 @@ public:
 
   bool VerifyHardware() override;
 
+  bool inpos = false;
+
 private:
   ICTestReadings ReadFromHardware() override;
 

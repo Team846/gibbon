@@ -139,6 +139,8 @@ public:
       pdcsu::util::math::uVec<pdcsu::units::inch_t, 2> position,
       pdcsu::units::degree_t rotation);
 
+  double variance = 1000.0;
+
 private:
   DrivetrainReadings ReadFromHardware() override;
 

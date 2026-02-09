@@ -1,5 +1,6 @@
 #include "funkit/robot/calculators/AprilTagCalculator.h"
 
+#include <algorithm>
 #include <iostream>
 
 #include "funkit/math/collection.h"
@@ -13,14 +14,10 @@ pdcsu::units::degree_t AprilTagCalculator::turret_angle = 0.0_deg_;
 pdcsu::units::degps_t AprilTagCalculator::turret_vel = 0.0_degps_;
 inch_t AprilTagCalculator::view_turret_off_x = 0.0_in_;
 inch_t AprilTagCalculator::view_turret_off_y = 0.0_in_;
+degree_t AprilTagCalculator::view_full_turret_angle = 0_deg_;
 
 ATCalculatorOutput AprilTagCalculator::calculate(ATCalculatorInput input) {
   ATCalculatorOutput output;
-
-  double totalTagWeight = 0;
-  double variance = 0;
-
-  std::vector<std::vector<Line>> sight_lines;
 
   std::vector<funkit::robot::calculators::AprilTagCamera> temp_cameras{};
   for (auto x : constants_.cameras)
@@ -30,9 +27,9 @@ ATCalculatorOutput AprilTagCalculator::calculate(ATCalculatorInput input) {
     auto turret_camera = constants_.turret_camera.value();
     Vector2D cam_offset =
         Vector2D{turret_camera.config.turret_x_offset,
-            turret_camera.config.turret_y_offset}
-            .rotate(-turret_angle, true) +
-        Vector2D{turret_camera.config.x_offset, turret_camera.config.y_offset};
+            turret_camera.config.turret_y_offset} +
+        Vector2D{turret_camera.config.x_offset, turret_camera.config.y_offset}
+            .rotate(turret_angle, true);
     AprilTagCalculator::view_turret_off_x = cam_offset[0];
     AprilTagCalculator::view_turret_off_y = cam_offset[1];
     AprilTagCamera turret_tag_camera{
@@ -48,10 +45,8 @@ ATCalculatorOutput AprilTagCalculator::calculate(ATCalculatorInput input) {
     temp_cameras.push_back(turret_tag_camera);
   }
 
-  for (size_t i = 0; i < temp_cameras.size(); i++) {
-    sight_lines.push_back({});
-  }
-  int tagsSeen = 0;
+  std::vector<Vector2D> m_positions{};
+  std::vector<double> pure_variances{};
 
   for (size_t i = 0; i < temp_cameras.size(); i++) {
     const auto& camera = temp_cameras[i];
@@ -82,9 +77,14 @@ ATCalculatorOutput AprilTagCalculator::calculate(ATCalculatorInput input) {
     pdcsu::units::degree_t bearingAtCapture =
         input.pose.bearing -
         input.angular_velocity * (tl - input.bearing_latency);
+    degree_t imuBearingAtCapture = bearingAtCapture;
     if (camera.equiv_turret) {
       bearingAtCapture += turret_angle;
       bearingAtCapture -= turret_vel * (tl - input.bearing_latency);
+      if (u_abs(turret_vel) > 45_degps_) {
+        continue;
+      }
+      view_full_turret_angle = bearingAtCapture;
     }
 
     if (!(tags.size() == distances.size() && tags.size() == tx.size())) {
@@ -106,123 +106,50 @@ ATCalculatorOutput AprilTagCalculator::calculate(ATCalculatorInput input) {
         if (input.fudge_latency.contains(config.camera_id)) {
           latency += input.fudge_latency.at(config.camera_id);
         }
-        Vector2D velComp = {
-            pdcsu::units::inch_t{vel_avg_x.value() * latency.value() * 12.0},
-            pdcsu::units::inch_t{vel_avg_y.value() * latency.value() * 12.0}};
+        Vector2D velComp = {vel_avg_x * latency, vel_avg_y * latency};
 
         Vector2D comp_cam_pos = uncomp_cam_pos + velComp;
 
-        pdcsu::units::degree_t comp_angle = (tag_pos - comp_cam_pos).angle();
-        Line sight_line{tag_pos, comp_angle};
+        Vector2D center_to_cam =
+            Vector2D{
+                config.x_offset,
+                config.y_offset,
+            }
+                .rotate(imuBearingAtCapture, true);
 
-        Vector2D center_to_cam{
-            config.x_offset,
-            config.y_offset,
-        };
+        Vector2D comp_center_pos = comp_cam_pos - center_to_cam;
 
-        sight_line.translate(center_to_cam.rotate(bearingAtCapture) * -1.0);
-        sight_lines[i].push_back(sight_line);
         if (distances.at(j).value() < 300.0) {
-          output.pos = (getPos(bearingAtCapture, tx.at(j), distances.at(j),
-                            tags.at(j), config) +
-                        velComp);
-          output.variance = std::max(
-              (input.aprilVarianceCoeff * std::pow(distances.at(j).value(), 3) *
-                  std::pow(
-                      1 + input.pose.velocity.magnitude().value() / 12.0, 2) *
-                  std::pow(1 + input.angular_velocity.value() / 300.0, 2)),
-              0.0000000001);
-
-          correction = output.pos - input.pose.position;
-          return output;
+          m_positions.push_back(comp_center_pos);
+          inch_t distance_i = distances.at(j);
+          double var_i =
+              input.aprilVarianceCoeff *
+                  (std::sqrt(distances.at(j).value() + 1.0) / 30.0 +
+                      input.pose.velocity.magnitude().value() / 12.0 +
+                      input.angular_velocity.value() *
+                          std::sqrt(distance_i.value()) / 30.0) +
+              0.5;
+          if (camera.equiv_turret) { var_i *= 2.0; }
+          pure_variances.push_back(var_i);
         }
-        double weight = 48.0 / distances.at(j).value();
-        output.pos = output.pos + (getPos(bearingAtCapture, tx.at(j),
-                                       distances.at(j), tags.at(j), config) +
-                                      velComp) *
-                                      weight;
-
-        variance +=
-            1 /
-            std::max(
-                (input.aprilVarianceCoeff *
-                    std::pow(distances.at(j).value(), 3) *
-                    std::pow(
-                        1 + input.pose.velocity.magnitude().value() / 12.0, 2) *
-                    std::pow(1 + input.angular_velocity.value() / 300.0, 2)),
-                0.0000000001);
-        totalTagWeight += weight;
-
-        tagsSeen++;
       }
     }
   }
 
-  if (tagsSeen == 1) {
-    output.variance = 1 / variance;
-    output.pos = output.pos / totalTagWeight;
-    correction = output.pos - input.pose.position;
-    return output;
+  if (m_positions.size() == 0) { return {input.pose.position, -1}; }
+
+  double sum_w = 0;
+  Vector2D sum_wp{0_in_, 0_in_};
+  for (size_t i = 0; i < m_positions.size(); i++) {
+    double w = 1.0 / std::max(pure_variances[i], 1e-9);
+    sum_w += w;
+    sum_wp[0] += w * m_positions[i][0];
+    sum_wp[1] += w * m_positions[i][1];
   }
+  output.pos = sum_wp / sum_w;
 
-  Line first_line = {{pdcsu::units::inch_t{-1}, pdcsu::units::inch_t{-1}},
-      pdcsu::units::degree_t{0}};
-  for (size_t i = 0; i < temp_cameras.size(); i++) {
-    if (sight_lines[i].size() > 0) {
-      if (first_line.point[0].value() != -1.0) {
-        // Double Cam Triangulation!
-        output.pos = first_line.intersect(sight_lines[i].at(0));
-        output.variance = std::max(
-            (input.triangularVarianceCoeff *
-                std::pow(1 + input.pose.velocity.magnitude().value() / 12, 2) *
-                std::pow(1 + input.angular_velocity.value() / 300, 2)),
-            0.0000000001);  // TODO: make better
-
-        correction = output.pos - input.pose.position;
-        return output;
-      } else {
-        first_line = sight_lines[i].at(0);
-      }
-    }
-  }
-
-  // Single Cam?
-  for (size_t i = 0; i < temp_cameras.size(); i++) {
-    if (sight_lines[i].size() > 1) {
-      // Double Tag, Single Cam Triangulation!
-      output.pos = sight_lines[i].at(1).intersect(sight_lines[i].at(0));
-      output.variance = std::max(
-          (input.triangularVarianceCoeff *
-              std::pow(1 + input.pose.velocity.magnitude().value() / 12, 2) *
-              std::pow(1 + input.angular_velocity.value() / 300, 2)),
-          0.0000000001);  // TODO: make better
-
-      correction = output.pos - input.pose.position;
-      return output;
-    }
-  }
-  return {input.pose.position + correction, -1};
-}
-
-Vector2D AprilTagCalculator::getPos(pdcsu::units::degree_t bearing,
-    pdcsu::units::degree_t theta, pdcsu::units::inch_t distance, int tag,
-    const AprilTagCameraConfig& config) {
-  double theta_rad = pdcsu::units::radian_t{theta}.value();
-  Vector2D cam_to_tag{
-      pdcsu::units::inch_t{distance.value() * std::sin(theta_rad)},
-      pdcsu::units::inch_t{distance.value() * std::cos(theta_rad)},
-  };
-  Vector2D center_to_cam{
-      config.x_offset,
-      config.y_offset,
-  };
-
-  Vector2D local_tag_pos = center_to_cam + cam_to_tag;
-  local_tag_pos = local_tag_pos.rotate(bearing);
-
-  return {
-      constants_.tag_locations[tag].x_pos - local_tag_pos[0],
-      constants_.tag_locations[tag].y_pos - local_tag_pos[1],
-  };
+  output.variance = 1.0 / sum_w;
+  correction = output.pos - input.pose.position;
+  return output;
 }
 }

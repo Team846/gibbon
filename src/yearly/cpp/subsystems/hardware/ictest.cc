@@ -107,7 +107,7 @@ void ICTestSubsystem::Setup() {
 
   icnor_controller_->setProjectionHorizon(1);
 
-  icnor_controller_->setDesaturationThresh(30_rad_);
+  icnor_controller_->setDesaturationThresh(15_rad_);
 
   std::string learner_path =
       frc::filesystem::GetDeployDirectory() + "/ictest.iclearn";
@@ -169,6 +169,7 @@ ICTestReadings ICTestSubsystem::ReadFromHardware() {
 
   Graph("caf_x", funkit::robot::calculators::AprilTagCalculator::view_turret_off_x);
   Graph("caf_y",  funkit::robot::calculators::AprilTagCalculator::view_turret_off_y);
+  Graph("ca_bearing", funkit::robot::calculators::AprilTagCalculator::view_full_turret_angle);
 
   auto abs1 = rotation_t{cancoder_1_.GetAbsolutePosition().GetValueAsDouble()};
   auto abs2 = rotation_t{cancoder_2_.GetAbsolutePosition().GetValueAsDouble()};
@@ -216,6 +217,7 @@ void ICTestSubsystem::WriteToHardware(ICTestTarget target) {
   output *= GetPreferenceValue_double("ipg");
 
   radian_t error_real = target.pos - current_pos_real;
+  inpos = error_real < 2_deg_;
   Graph("icerror", error_real);
   Graph("output", output);
   Graph("icnor/has_valid_solution",

@@ -470,6 +470,7 @@ DrivetrainReadings DrivetrainSubsystem::ReadFromHardware() {
   Graph("estimated_pose/velocity_x", estimated_pose.velocity[0]);
   Graph("estimated_pose/velocity_y", estimated_pose.velocity[1]);
   Graph("estimated_pose/variance", pose_estimator.getVariance());
+  variance = pose_estimator.getVariance();
 
   Graph("readings/position_x", new_pose.position[0]);
   Graph("readings/position_y", new_pose.position[1]);

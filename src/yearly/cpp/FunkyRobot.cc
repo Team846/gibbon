@@ -55,8 +55,8 @@ void FunkyRobot::OnInitialize() {
           [this] { container_.ictest_.ZeroEncoders(); }));
 
   frc::SmartDashboard::PutData("zero_turret_with_CRT",
-    new funkit::wpilib::NTAction(
-        [this] { container_.ictest_.ZeroWithCRT(); }));
+      new funkit::wpilib::NTAction(
+          [this] { container_.ictest_.ZeroWithCRT(); }));
 
   // Add path recording controls
   frc::SmartDashboard::PutData(
@@ -181,6 +181,8 @@ void FunkyRobot::OnPeriodic() {
   else if (coast_count_ > 0 && isDisabled)
     LEDsLogic::CoastingLEDs(&container_,
         (1.0 * coast_count_) / GetPreferenceValue_int("num_coasting_loops"));
+  else if (container_.ictest_.inpos && container_.drivetrain_.variance < 16.0)
+    LEDsLogic::SetLEDsState(&container_, kLEDsSequencing);
   else
     LEDsLogic::UpdateLEDs(&container_);
 }

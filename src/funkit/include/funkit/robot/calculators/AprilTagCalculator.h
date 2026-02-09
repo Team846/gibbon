@@ -14,27 +14,6 @@ namespace funkit::robot::calculators {
 
 using Vector2D = pdcsu::util::math::uVec<pdcsu::units::inch_t, 2>;
 
-struct Line {
-  Vector2D point;
-  pdcsu::units::degree_t angle;
-
-  [[nodiscard]] Vector2D intersect(const Line& other) const {
-    double x_val = (point[1].value() - other.point[1].value() +
-                       std::tan(pdcsu::units::radian_t{other.angle}.value()) *
-                           other.point[0].value() -
-                       std::tan(pdcsu::units::radian_t{angle}.value()) *
-                           point[0].value()) /
-                   (std::tan(pdcsu::units::radian_t{other.angle}.value()) -
-                       std::tan(pdcsu::units::radian_t{angle}.value()));
-    double y_val = std::tan(pdcsu::units::radian_t{angle}.value()) *
-                       (x_val - point[0].value()) +
-                   point[1].value();
-    return {pdcsu::units::inch_t{x_val}, pdcsu::units::inch_t{y_val}};
-  }
-
-  void translate(const Vector2D& addend) { point += addend; }
-};
-
 struct ATCalculatorInput {
   funkit::robot::swerve::odometry::SwervePose pose;
   funkit::robot::swerve::odometry::SwervePose old_pose;
@@ -99,11 +78,9 @@ public:
 
   static inch_t view_turret_off_x;
   static inch_t view_turret_off_y;
+  static degree_t view_full_turret_angle;
 
 private:
   Vector2D correction;
-  Vector2D getPos(pdcsu::units::degree_t bearing, pdcsu::units::degree_t theta,
-      pdcsu::units::inch_t distance, int tag,
-      const AprilTagCameraConfig& config);
 };
 }
