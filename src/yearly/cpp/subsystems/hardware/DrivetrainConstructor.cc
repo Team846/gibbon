@@ -60,7 +60,7 @@ struct UserSettableValues {
 UserSettableValues GetUserSettableValues() {
   return UserSettableValues{
       .imu_connection =
-          swerve::PigeonConnection{ports::drivetrain_::kPIGEON_CANID},
+          swerve::NavXConnection{swerve::NavXConnectionType::kMXP},
       .wheel_diameter = inch_t{4},
       .drive_gear_ratio = 6.75,
       .steer_reduction = 150_rot_ / 7_rot_,
@@ -84,7 +84,7 @@ UserSettableValues GetUserSettableValues() {
           .BR = {ports::drivetrain_::kBRCANCoder_CANID,
               ports::drivetrain_::kBRDrive_CANID,
               ports::drivetrain_::kBRSteer_CANID}},
-      .april_camera_configs = {{1U, 4.0_in_, -11.0_in_},
+      .april_camera_configs = {{1U, 4.0_in_, -11.0_in_}, {2U, 4.0_in_, 0.0_in_},
           {3U, 5.0_in_, -3.0_in_}},
       .april_locations = {{1U, {25.38_in_, 183.58_in_}},
           {2U, {135.09_in_, 182.11_in_}}, {3U, {144.85_in_, 205.87_in_}},

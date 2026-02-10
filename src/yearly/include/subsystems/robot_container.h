@@ -47,8 +47,8 @@ public:
     // bool shooter_init = (GetPreferenceValue_bool("init_shooter"));
     // bool intake_init = (GetPreferenceValue_bool("init_intake"));
 
-    // RegisterSubsystemGroupAB({{&shooter_, shooter_init}});
-    // RegisterSubsystemGroupAB({{&intake_, intake_init}});
+    RegisterSubsystemGroupAB({{&shooter_, true}});
+    RegisterSubsystemGroupAB({{&intake_, true}});
 
     // RegisterSubsystemGroupAB({{&turr_test, true}});
   }
