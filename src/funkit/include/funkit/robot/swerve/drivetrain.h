@@ -174,8 +174,7 @@ private:
   funkit::robot::calculators::AprilTagCalculator tag_pos_calculator;
   funkit::robot::swerve::odometry::PoseEstimator pose_estimator{
       {pdcsu::units::foot_t{0}, pdcsu::units::foot_t{0}},
-      {pdcsu::units::fps_t{0}, pdcsu::units::fps_t{0}},
-      {pdcsu::units::fps2_t{0}, pdcsu::units::fps2_t{0}}};
+      {pdcsu::units::fps_t{0}, pdcsu::units::fps_t{0}}};
 
   // Path logger for recording odometry data
   PathLogger path_logger_;
@@ -192,9 +191,6 @@ private:
   pdcsu::units::second_t cached_bearing_latency_{pdcsu::units::second_t{0}};
   double cached_odom_fudge_factor_ = 0.0;
   double cached_odom_variance_ = 0.0;
-  double cached_pose_variance_ = 0.0;
-  double cached_velocity_variance_ = 0.0;
-  double cached_accel_variance_ = 0.0;
   bool cached_pose_override_ = false;
   double cached_april_variance_coeff_ = 0.0;
   double cached_triangular_variance_coeff_ = 0.0;

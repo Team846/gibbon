@@ -75,9 +75,6 @@ DrivetrainSubsystem::DrivetrainSubsystem(DrivetrainConfigs configs)
   RegisterPreference("steer_lag", pdcsu::units::second_t{0.05});
   RegisterPreference("bearing_latency", pdcsu::units::second_t{0.01});
 
-  RegisterPreference("pose_estimator/pose_variance", 0.1);
-  RegisterPreference("pose_estimator/velocity_variance", 1.0);
-  RegisterPreference("pose_estimator/accel_variance", 1.0);
   RegisterPreference("pose_estimator/override", false);
 
   RegisterPreference("april_tags/april_variance_coeff", 0.08);
@@ -328,14 +325,7 @@ DrivetrainSubsystem::GetAcceleration() {
 }
 
 DrivetrainReadings DrivetrainSubsystem::ReadFromHardware() {
-  cached_pose_variance_ =
-      GetPreferenceValue_double("pose_estimator/pose_variance");
-  cached_velocity_variance_ =
-      GetPreferenceValue_double("pose_estimator/velocity_variance");
-  cached_accel_variance_ =
-      GetPreferenceValue_double("pose_estimator/accel_variance");
-  pose_estimator.Update(
-      cached_pose_variance_, cached_velocity_variance_, cached_accel_variance_);
+  pose_estimator.Update();
 
   pdcsu::units::degree_t bearing = GetBearing();
   pdcsu::units::degps_t yaw_rate = GetYawRate();
@@ -483,8 +473,6 @@ DrivetrainReadings DrivetrainSubsystem::ReadFromHardware() {
   Graph("readings/accel_y", accl[1]);
 
   accl = accl.rotate(bearing_offset_);
-  pose_estimator.AddAccelerationMeasurement({accl[0].value(), accl[1].value()});
-
   pdcsu::units::fps2_t accel_mag{std::sqrt(
       accl[0].value() * accl[0].value() + accl[1].value() * accl[1].value())};
   // Graph("readings/accel_mag", accel_mag);
