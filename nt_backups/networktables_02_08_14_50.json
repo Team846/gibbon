@@ -226,7 +226,7 @@
   {
     "name": "/Preferences/SwerveDrivetrain/april_bearing_latency (ms)",
     "type": "double",
-    "value": 0.0,
+    "value": -50.0,
     "properties": {
       "persistent": true
     }
@@ -330,7 +330,7 @@
   {
     "name": "/Preferences/SwerveDrivetrain/april_tags/april_variance_coeff",
     "type": "double",
-    "value": 100.0,
+    "value": 4.0,
     "properties": {
       "persistent": true
     }
@@ -346,7 +346,7 @@
   {
     "name": "/Preferences/SwerveDrivetrain/april_tags/fudge_latency1 (ms)",
     "type": "double",
-    "value": 75.0,
+    "value": 250.0,
     "properties": {
       "persistent": true
     }
@@ -850,7 +850,7 @@
   {
     "name": "/Preferences/SwerveDrivetrain/april_tags/fudge_latency3 (ms)",
     "type": "double",
-    "value": 75.0,
+    "value": 250.0,
     "properties": {
       "persistent": true
     }
@@ -882,7 +882,7 @@
   {
     "name": "/Preferences/ictest/friction_nm (m^2 kg s^-2)",
     "type": "double",
-    "value": 25.0,
+    "value": 0.5,
     "properties": {
       "persistent": true
     }
@@ -962,7 +962,7 @@
   {
     "name": "/Preferences/SwerveDrivetrain/april_tags/fudge_latency4 (ms)",
     "type": "double",
-    "value": 75.0,
+    "value": 250.0,
     "properties": {
       "persistent": true
     }
@@ -970,7 +970,7 @@
   {
     "name": "/Preferences/ictest/offset1 (rot)",
     "type": "double",
-    "value": -0.42138671875,
+    "value": -0.431884765625,
     "properties": {
       "persistent": true
     }
@@ -978,7 +978,7 @@
   {
     "name": "/Preferences/ictest/offset2 (rot)",
     "type": "double",
-    "value": -0.37548828124999994,
+    "value": -0.38134765625,
     "properties": {
       "persistent": true
     }

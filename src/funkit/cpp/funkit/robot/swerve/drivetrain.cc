@@ -63,7 +63,6 @@ DrivetrainSubsystem::DrivetrainSubsystem(DrivetrainConfigs configs)
   RegisterPreference("bearing_gains/_kF", -0.3);
   RegisterPreference("bearing_gains/deadband", pdcsu::units::degps_t{3.0});
 
-  RegisterPreference("april_bearing_latency", pdcsu::units::ms_t{0});
   RegisterPreference("drive_latency", pdcsu::units::ms_t{0});
 
   RegisterPreference("max_speed", pdcsu::units::fps_t{15});
@@ -420,13 +419,15 @@ DrivetrainReadings DrivetrainSubsystem::ReadFromHardware() {
             "april_tags/fudge_latency" + std::to_string(config.camera_id));
   }
 
-  cached_april_bearing_latency_ =
-      GetPreferenceValue_unit_type<pdcsu::units::ms_t>("april_bearing_latency");
-
+  funkit::robot::swerve::odometry::SwervePose odom_pose{
+      .position = odom_output.position,
+      .bearing = bearing,
+      .velocity = velocity,
+  };
   funkit::robot::calculators::ATCalculatorOutput tag_pos =
-      tag_pos_calculator.calculate({new_pose, GetReadings().pose, yaw_rate,
-          cached_april_variance_coeff_, cached_triangular_variance_coeff_,
-          cached_fudge_latencies_, cached_april_bearing_latency_});
+      tag_pos_calculator.calculate({new_pose, GetReadings().pose, odom_pose,
+          yaw_rate, cached_april_variance_coeff_,
+          cached_triangular_variance_coeff_, cached_fudge_latencies_});
 
   if (tag_pos.variance >= 0) {
     pose_estimator.AddVisionMeasurement(

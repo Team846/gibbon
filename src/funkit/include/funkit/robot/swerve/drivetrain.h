@@ -199,7 +199,6 @@ private:
   double cached_april_variance_coeff_ = 0.0;
   double cached_triangular_variance_coeff_ = 0.0;
   std::map<size_t, pdcsu::units::second_t> cached_fudge_latencies_{};
-  pdcsu::units::ms_t cached_april_bearing_latency_{pdcsu::units::ms_t{0}};
 
   frc::Field2d MainField_;
 

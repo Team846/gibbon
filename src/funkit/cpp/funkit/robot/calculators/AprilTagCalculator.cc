@@ -16,8 +16,97 @@ inch_t AprilTagCalculator::view_turret_off_x = 0.0_in_;
 inch_t AprilTagCalculator::view_turret_off_y = 0.0_in_;
 degree_t AprilTagCalculator::view_full_turret_angle = 0_deg_;
 
+void AprilTagCalculator::AddToHistory(pdcsu::units::second_t time,
+    Vector2D position, pdcsu::units::degree_t bearing,
+    pdcsu::units::degree_t turret_angle) {
+  odom_history_.push_back({time, position, bearing, turret_angle});
+  while (odom_history_.size() > kMaxHistorySize) {
+    odom_history_.pop_front();
+  }
+}
+
+Vector2D AprilTagCalculator::InterpolatePosition(
+    pdcsu::units::second_t time) const {
+  if (odom_history_.empty()) { return Vector2D{0_in_, 0_in_}; }
+  if (odom_history_.size() == 1) { return odom_history_.front().position; }
+  if (time.value() <= odom_history_.front().time.value()) {
+    return odom_history_.front().position;
+  }
+  if (time.value() >= odom_history_.back().time.value()) {
+    return odom_history_.back().position;
+  }
+  for (size_t i = 0; i + 1 < odom_history_.size(); i++) {
+    const auto& a = odom_history_[i];
+    const auto& b = odom_history_[i + 1];
+    if (time.value() >= a.time.value() && time.value() <= b.time.value()) {
+      double denom = b.time.value() - a.time.value();
+      double frac = (denom <= 0) ? 0.0 :
+          (time.value() - a.time.value()) / denom;
+      return Vector2D{
+          inch_t{(1.0 - frac) * a.position[0].value() + frac * b.position[0].value()},
+          inch_t{(1.0 - frac) * a.position[1].value() + frac * b.position[1].value()}};
+    }
+  }
+  return odom_history_.back().position;
+}
+
+pdcsu::units::degree_t AprilTagCalculator::InterpolateRobotBearing(
+    pdcsu::units::second_t time) const {
+  if (odom_history_.empty()) { return 0_deg_; }
+  if (odom_history_.size() == 1) { return odom_history_.front().bearing; }
+  if (time.value() <= odom_history_.front().time.value()) {
+    return odom_history_.front().bearing;
+  }
+  if (time.value() >= odom_history_.back().time.value()) {
+    return odom_history_.back().bearing;
+  }
+  for (size_t i = 0; i + 1 < odom_history_.size(); i++) {
+    const auto& a = odom_history_[i];
+    const auto& b = odom_history_[i + 1];
+    if (time.value() >= a.time.value() && time.value() <= b.time.value()) {
+      double denom = b.time.value() - a.time.value();
+      double frac = (denom <= 0) ? 0.0 :
+          (time.value() - a.time.value()) / denom;
+      double diff = b.bearing.value() - a.bearing.value();
+      if (diff > 180.0) { diff -= 360.0; }
+      if (diff < -180.0) { diff += 360.0; }
+      return degree_t{a.bearing.value() + frac * diff};
+    }
+  }
+  return odom_history_.back().bearing;
+}
+
+pdcsu::units::degree_t AprilTagCalculator::InterpolateTurretAngle(
+    pdcsu::units::second_t time) const {
+  if (odom_history_.empty()) { return 0_deg_; }
+  if (odom_history_.size() == 1) { return odom_history_.front().turret_angle; }
+  if (time.value() <= odom_history_.front().time.value()) {
+    return odom_history_.front().turret_angle;
+  }
+  if (time.value() >= odom_history_.back().time.value()) {
+    return odom_history_.back().turret_angle;
+  }
+  for (size_t i = 0; i + 1 < odom_history_.size(); i++) {
+    const auto& a = odom_history_[i];
+    const auto& b = odom_history_[i + 1];
+    if (time.value() >= a.time.value() && time.value() <= b.time.value()) {
+      double denom = b.time.value() - a.time.value();
+      double frac = (denom <= 0) ? 0.0 :
+          (time.value() - a.time.value()) / denom;
+      double diff = b.turret_angle.value() - a.turret_angle.value();
+      if (diff > 180.0) { diff -= 360.0; }
+      if (diff < -180.0) { diff += 360.0; }
+      return degree_t{a.turret_angle.value() + frac * diff};
+    }
+  }
+  return odom_history_.back().turret_angle;
+}
+
 ATCalculatorOutput AprilTagCalculator::calculate(ATCalculatorInput input) {
   ATCalculatorOutput output;
+  pdcsu::units::second_t now = funkit::wpilib::CurrentFPGATime();
+  AddToHistory(now, input.odom_pose.position, input.odom_pose.bearing,
+      AprilTagCalculator::turret_angle);
 
   std::vector<funkit::robot::calculators::AprilTagCamera> temp_cameras{};
   for (auto x : constants_.cameras)
@@ -54,7 +143,7 @@ ATCalculatorOutput AprilTagCalculator::calculate(ATCalculatorInput input) {
     const auto& config = camera.config;
 
     pdcsu::units::second_t delay =
-        funkit::wpilib::CurrentFPGATime() -
+        now -
         pdcsu::units::second_t{
             cam_table->GetEntry("tl").GetLastChange() / 1000000.0};
     pdcsu::units::second_t tl =
@@ -73,18 +162,23 @@ ATCalculatorOutput AprilTagCalculator::calculate(ATCalculatorInput input) {
       distances.push_back(pdcsu::units::inch_t{distance_num});
     };
 
+    pdcsu::units::second_t fudge{0};
+    if (input.fudge_latency.contains(config.camera_id)) {
+      fudge = input.fudge_latency.at(config.camera_id);
+    }
+    pdcsu::units::second_t effective_latency = tl + fudge;
+    pdcsu::units::second_t capture_time = now - effective_latency;
+
     std::vector<double> tags = cam_table->GetNumberArray("tags", {});
-    pdcsu::units::degree_t bearingAtCapture =
-        input.pose.bearing -
-        input.angular_velocity * (tl - input.bearing_latency);
-    degree_t imuBearingAtCapture = bearingAtCapture;
+    pdcsu::units::degree_t imuBearingAtCapture =
+        InterpolateRobotBearing(capture_time);
+    pdcsu::units::degree_t bearingAtCapture;
     if (camera.equiv_turret) {
-      bearingAtCapture += turret_angle;
-      bearingAtCapture -= turret_vel * (tl - input.bearing_latency);
-      if (u_abs(turret_vel) > 45_degps_) {
-        continue;
-      }
+      bearingAtCapture =
+          imuBearingAtCapture + InterpolateTurretAngle(capture_time);
       view_full_turret_angle = bearingAtCapture;
+    } else {
+      bearingAtCapture = imuBearingAtCapture;
     }
 
     if (!(tags.size() == distances.size() && tags.size() == tx.size())) {
@@ -98,18 +192,6 @@ ATCalculatorOutput AprilTagCalculator::calculate(ATCalculatorInput input) {
             constants_.tag_locations[tags.at(j)].y_pos};
         Vector2D uncomp_cam_pos = tag_pos - cam_to_tag;
 
-        auto vel_avg_x =
-            (input.pose.velocity[0] + input.old_pose.velocity[0]) / 2.0;
-        auto vel_avg_y =
-            (input.pose.velocity[1] + input.old_pose.velocity[1]) / 2.0;
-        auto latency = tl;
-        if (input.fudge_latency.contains(config.camera_id)) {
-          latency += input.fudge_latency.at(config.camera_id);
-        }
-        Vector2D velComp = {vel_avg_x * latency, vel_avg_y * latency};
-
-        Vector2D comp_cam_pos = uncomp_cam_pos + velComp;
-
         Vector2D center_to_cam =
             Vector2D{
                 config.x_offset,
@@ -117,10 +199,16 @@ ATCalculatorOutput AprilTagCalculator::calculate(ATCalculatorInput input) {
             }
                 .rotate(imuBearingAtCapture, true);
 
-        Vector2D comp_center_pos = comp_cam_pos - center_to_cam;
+        Vector2D position_at_capture = uncomp_cam_pos - center_to_cam;
+
+        Vector2D position_at_capture_from_history =
+            InterpolatePosition(capture_time);
+        Vector2D position_map =
+            input.odom_pose.position - position_at_capture_from_history;
+        Vector2D position_compensated = position_at_capture + position_map;
 
         if (distances.at(j).value() < 300.0) {
-          m_positions.push_back(comp_center_pos);
+          m_positions.push_back(position_compensated);
           inch_t distance_i = distances.at(j);
           double var_i =
               input.aprilVarianceCoeff *
@@ -129,14 +217,14 @@ ATCalculatorOutput AprilTagCalculator::calculate(ATCalculatorInput input) {
                       input.angular_velocity.value() *
                           std::sqrt(distance_i.value()) / 30.0) +
               0.5;
-          if (camera.equiv_turret) { var_i *= 2.0; }
+          if (camera.equiv_turret) { var_i *= 3.0; }
           pure_variances.push_back(var_i);
         }
       }
     }
   }
 
-  if (m_positions.size() == 0) { return {input.pose.position, -1}; }
+  if (m_positions.size() == 0) { return {input.odom_pose.position, -1}; }
 
   double sum_w = 0;
   Vector2D sum_wp{0_in_, 0_in_};
@@ -149,7 +237,7 @@ ATCalculatorOutput AprilTagCalculator::calculate(ATCalculatorInput input) {
   output.pos = sum_wp / sum_w;
 
   output.variance = 1.0 / sum_w;
-  correction = output.pos - input.pose.position;
+  correction = output.pos - input.odom_pose.position;
   return output;
 }
 }

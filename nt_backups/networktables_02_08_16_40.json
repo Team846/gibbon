@@ -882,7 +882,7 @@
   {
     "name": "/Preferences/ictest/friction_nm (m^2 kg s^-2)",
     "type": "double",
-    "value": 25.0,
+    "value": 0.5,
     "properties": {
       "persistent": true
     }
@@ -970,7 +970,7 @@
   {
     "name": "/Preferences/ictest/offset1 (rot)",
     "type": "double",
-    "value": -0.42138671875,
+    "value": 0.144287109375,
     "properties": {
       "persistent": true
     }
@@ -978,7 +978,7 @@
   {
     "name": "/Preferences/ictest/offset2 (rot)",
     "type": "double",
-    "value": -0.37548828124999994,
+    "value": 0.44775390625000006,
     "properties": {
       "persistent": true
     }
