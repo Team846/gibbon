@@ -40,67 +40,68 @@ Vector2D AprilTagCalculator::InterpolatePosition(
     const auto& b = odom_history_[i + 1];
     if (time.value() >= a.time.value() && time.value() <= b.time.value()) {
       double denom = b.time.value() - a.time.value();
-      double frac = (denom <= 0) ? 0.0 :
-          (time.value() - a.time.value()) / denom;
-      return Vector2D{
-          inch_t{(1.0 - frac) * a.position[0].value() + frac * b.position[0].value()},
-          inch_t{(1.0 - frac) * a.position[1].value() + frac * b.position[1].value()}};
+      double frac =
+          (denom <= 0) ? 0.0 : (time.value() - a.time.value()) / denom;
+      return Vector2D{inch_t{(1.0 - frac) * a.position[0].value() +
+                             frac * b.position[0].value()},
+          inch_t{(1.0 - frac) * a.position[1].value() +
+                 frac * b.position[1].value()}};
     }
   }
   return odom_history_.back().position;
 }
 
-pdcsu::units::degree_t AprilTagCalculator::InterpolateRobotBearing(
-    pdcsu::units::second_t time) const {
-  if (odom_history_.empty()) { return 0_deg_; }
-  if (odom_history_.size() == 1) { return odom_history_.front().bearing; }
-  if (time.value() <= odom_history_.front().time.value()) {
-    return odom_history_.front().bearing;
-  }
-  if (time.value() >= odom_history_.back().time.value()) {
-    return odom_history_.back().bearing;
-  }
-  for (size_t i = 0; i + 1 < odom_history_.size(); i++) {
-    const auto& a = odom_history_[i];
-    const auto& b = odom_history_[i + 1];
-    if (time.value() >= a.time.value() && time.value() <= b.time.value()) {
-      double denom = b.time.value() - a.time.value();
-      double frac = (denom <= 0) ? 0.0 :
-          (time.value() - a.time.value()) / denom;
-      double diff = b.bearing.value() - a.bearing.value();
-      if (diff > 180.0) { diff -= 360.0; }
-      if (diff < -180.0) { diff += 360.0; }
-      return degree_t{a.bearing.value() + frac * diff};
-    }
-  }
-  return odom_history_.back().bearing;
-}
+// pdcsu::units::degree_t AprilTagCalculator::InterpolateRobotBearing(
+//     pdcsu::units::second_t time) const {
+//   if (odom_history_.empty()) { return 0_deg_; }
+//   if (odom_history_.size() == 1) { return odom_history_.front().bearing; }
+//   if (time.value() <= odom_history_.front().time.value()) {
+//     return odom_history_.front().bearing;
+//   }
+//   if (time.value() >= odom_history_.back().time.value()) {
+//     return odom_history_.back().bearing;
+//   }
+//   for (size_t i = 0; i + 1 < odom_history_.size(); i++) {
+//     const auto& a = odom_history_[i];
+//     const auto& b = odom_history_[i + 1];
+//     if (time >= a.time && time <= b.time) {
+//       second_t denom = b.time - a.time;
+//       auto frac =
+//           (denom <= 0_s_) ? 0.0_u_ : (time - a.time) / denom;
+//       degree_t diff = b.bearing - a.bearing;
+//       if (diff > 180.0) { diff -= 360.0; }
+//       if (diff < -180.0) { diff += 360.0; }
+//       return degree_t{a.bearing.value() + frac * diff};
+//     }
+//   }
+//   return odom_history_.back().bearing;
+// }
 
-pdcsu::units::degree_t AprilTagCalculator::InterpolateTurretAngle(
-    pdcsu::units::second_t time) const {
-  if (odom_history_.empty()) { return 0_deg_; }
-  if (odom_history_.size() == 1) { return odom_history_.front().turret_angle; }
-  if (time.value() <= odom_history_.front().time.value()) {
-    return odom_history_.front().turret_angle;
-  }
-  if (time.value() >= odom_history_.back().time.value()) {
-    return odom_history_.back().turret_angle;
-  }
-  for (size_t i = 0; i + 1 < odom_history_.size(); i++) {
-    const auto& a = odom_history_[i];
-    const auto& b = odom_history_[i + 1];
-    if (time.value() >= a.time.value() && time.value() <= b.time.value()) {
-      double denom = b.time.value() - a.time.value();
-      double frac = (denom <= 0) ? 0.0 :
-          (time.value() - a.time.value()) / denom;
-      double diff = b.turret_angle.value() - a.turret_angle.value();
-      if (diff > 180.0) { diff -= 360.0; }
-      if (diff < -180.0) { diff += 360.0; }
-      return degree_t{a.turret_angle.value() + frac * diff};
-    }
-  }
-  return odom_history_.back().turret_angle;
-}
+// pdcsu::units::degree_t AprilTagCalculator::InterpolateTurretAngle(
+//     pdcsu::units::second_t time) const {
+//   if (odom_history_.empty()) { return 0_deg_; }
+//   if (odom_history_.size() == 1) { return odom_history_.front().turret_angle;
+//   } if (time.value() <= odom_history_.front().time.value()) {
+//     return odom_history_.front().turret_angle;
+//   }
+//   if (time.value() >= odom_history_.back().time.value()) {
+//     return odom_history_.back().turret_angle;
+//   }
+//   for (size_t i = 0; i + 1 < odom_history_.size(); i++) {
+//     const auto& a = odom_history_[i];
+//     const auto& b = odom_history_[i + 1];
+//     if (time.value() >= a.time.value() && time.value() <= b.time.value()) {
+//       double denom = b.time.value() - a.time.value();
+//       double frac =
+//           (denom <= 0) ? 0.0 : (time.value() - a.time.value()) / denom;
+//       double diff = b.turret_angle.value() - a.turret_angle.value();
+//       if (diff > 180.0) { diff -= 360.0; }
+//       if (diff < -180.0) { diff += 360.0; }
+//       return degree_t{a.turret_angle.value() + frac * diff};
+//     }
+//   }
+//   return odom_history_.back().turret_angle;
+// }
 
 ATCalculatorOutput AprilTagCalculator::calculate(ATCalculatorInput input) {
   ATCalculatorOutput output;
@@ -143,9 +144,8 @@ ATCalculatorOutput AprilTagCalculator::calculate(ATCalculatorInput input) {
     const auto& config = camera.config;
 
     pdcsu::units::second_t delay =
-        now -
-        pdcsu::units::second_t{
-            cam_table->GetEntry("tl").GetLastChange() / 1000000.0};
+        now - pdcsu::units::second_t{
+                  cam_table->GetEntry("tl").GetLastChange() / 1000000.0};
     pdcsu::units::second_t tl =
         pdcsu::units::second_t(cam_table->GetNumber("tl", -1));
     if (delay > 3.5 * funkit::robot::GenericRobot::kPeriod) { continue; }
@@ -171,11 +171,11 @@ ATCalculatorOutput AprilTagCalculator::calculate(ATCalculatorInput input) {
 
     std::vector<double> tags = cam_table->GetNumberArray("tags", {});
     pdcsu::units::degree_t imuBearingAtCapture =
-        InterpolateRobotBearing(capture_time);
+        input.pose.bearing - input.angular_velocity * effective_latency;
     pdcsu::units::degree_t bearingAtCapture;
     if (camera.equiv_turret) {
       bearingAtCapture =
-          imuBearingAtCapture + InterpolateTurretAngle(capture_time);
+          imuBearingAtCapture + turret_angle + turret_vel * effective_latency;
       view_full_turret_angle = bearingAtCapture;
     } else {
       bearingAtCapture = imuBearingAtCapture;
@@ -214,10 +214,12 @@ ATCalculatorOutput AprilTagCalculator::calculate(ATCalculatorInput input) {
               input.aprilVarianceCoeff *
                   (std::sqrt(distances.at(j).value() + 1.0) / 30.0 +
                       input.pose.velocity.magnitude().value() / 12.0 +
-                      input.angular_velocity.value() *
-                          std::sqrt(distance_i.value()) / 30.0) +
+                      (input.angular_velocity +
+                          (camera.equiv_turret ? turret_vel : 0_degps_))
+                              .value() *
+                          std::sqrt(distance_i.value()) / 25.0) +
               0.5;
-          if (camera.equiv_turret) { var_i *= 3.0; }
+          if (camera.equiv_turret) { var_i *= 2.0; }
           pure_variances.push_back(var_i);
         }
       }

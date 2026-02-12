@@ -24,8 +24,7 @@ SwerveOdometryOutput SwerveOdometryCalculator::calculate(
 
   std::array<Vec2D, 4> wheel_vecs;
   for (int i = 0; i < 4; i++) {
-    wheel_vecs[i] = Vec2D{module_diffs[i], inputs.steer_pos[i],
-        true};
+    wheel_vecs[i] = Vec2D{module_diffs[i], inputs.steer_pos[i], true};
   }
 
   int min_idx = 0;
@@ -71,11 +70,9 @@ SwerveOdometryOutput SwerveOdometryCalculator::calculate(
 
   displacement *= inputs.odom_ff_;
 
-  pdcsu::units::degree_t dtheta_deg{
-      pdcsu::units::degree_t{dtheta.value() * 180.0 / 3.14159265358979323846}};
-  last_position_ += displacement.rotate(inputs.bearing - dtheta_deg);
+  last_position_ += displacement.rotate(inputs.bearing - dtheta);
 
-  odom_bearing_ += dtheta_deg;
+  odom_bearing_ += dtheta;
 
   return {last_position_ + position_offset_, odom_bearing_};
 }

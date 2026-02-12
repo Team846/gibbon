@@ -103,8 +103,7 @@ SwerveOpenLoopCalculatorOutput SwerveOpenLoopCalculator::calculate(
   SwerveOpenLoopCalculatorOutput output{};
   for (int i = 0; i < 4; i++) {
     output.drive_outputs[i] = module_targets[i].magnitude();
-    output.steer_outputs[i] =
-        module_targets[i].angle(true);
+    output.steer_outputs[i] = module_targets[i].angle(true);
   }
   return output;
 }

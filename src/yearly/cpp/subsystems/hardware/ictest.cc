@@ -45,7 +45,10 @@ ICTestSubsystem::ICTestSubsystem()
     : GenericSubsystem("ictest"),
       esc_1_{base::TALON_FX_KRAKENX60,
           MotorConstructionParameters{
-              ports::ictest_::kMotor1_CANID, "", false}}, cancoder_1_{ports::ictest_::kCANCoder1_CANID, ctre::phoenix6::CANBus{""}}, cancoder_2_{ports::ictest_::kCANCoder2_CANID, ctre::phoenix6::CANBus{""}} {
+              ports::ictest_::kMotor1_CANID, "", false}},
+      cancoder_1_{ports::ictest_::kCANCoder1_CANID, ctre::phoenix6::CANBus{""}},
+      cancoder_2_{
+          ports::ictest_::kCANCoder2_CANID, ctre::phoenix6::CANBus{""}} {
   RegisterPreference("end_mass_lbs", 0.25);
   RegisterPreference("friction_nm", 0.5_Nm_);
   RegisterPreference("num_motors", 1);
@@ -144,7 +147,6 @@ void ICTestSubsystem::ZeroWithCRT() {
   esc_1_.SetPosition(-sol.turretRotations);
 }
 
-
 void ICTestSubsystem::ZeroEncoders() {
   auto abs1 = rotation_t{cancoder_1_.GetAbsolutePosition().GetValueAsDouble()};
   auto abs2 = rotation_t{cancoder_2_.GetAbsolutePosition().GetValueAsDouble()};
@@ -167,9 +169,12 @@ ICTestReadings ICTestSubsystem::ReadFromHardware() {
   Graph("position", degree_t(readings.pos));
   Graph("velocity", degps_t(readings.vel));
 
-  Graph("caf_x", funkit::robot::calculators::AprilTagCalculator::view_turret_off_x);
-  Graph("caf_y",  funkit::robot::calculators::AprilTagCalculator::view_turret_off_y);
-  Graph("ca_bearing", funkit::robot::calculators::AprilTagCalculator::view_full_turret_angle);
+  Graph("caf_x",
+      funkit::robot::calculators::AprilTagCalculator::view_turret_off_x);
+  Graph("caf_y",
+      funkit::robot::calculators::AprilTagCalculator::view_turret_off_y);
+  Graph("ca_bearing",
+      funkit::robot::calculators::AprilTagCalculator::view_full_turret_angle);
 
   auto abs1 = rotation_t{cancoder_1_.GetAbsolutePosition().GetValueAsDouble()};
   auto abs2 = rotation_t{cancoder_2_.GetAbsolutePosition().GetValueAsDouble()};
@@ -217,7 +222,7 @@ void ICTestSubsystem::WriteToHardware(ICTestTarget target) {
   output *= GetPreferenceValue_double("ipg");
 
   radian_t error_real = target.pos - current_pos_real;
-  inpos = error_real < 2_deg_;
+  inpos = u_abs(error_real) < 2_deg_;
   Graph("icerror", error_real);
   Graph("output", output);
   Graph("icnor/has_valid_solution",

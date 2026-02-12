@@ -74,7 +74,7 @@
   {
     "name": "/Preferences/SwerveDrivetrain/drive_genome/motor_current_limit (A)",
     "type": "double",
-    "value": 80.0,
+    "value": 25.0,
     "properties": {
       "persistent": true
     }
@@ -82,7 +82,7 @@
   {
     "name": "/Preferences/SwerveDrivetrain/drive_genome/smart_current_limit (A)",
     "type": "double",
-    "value": 80.0,
+    "value": 25.0,
     "properties": {
       "persistent": true
     }
@@ -274,7 +274,7 @@
   {
     "name": "/Preferences/SwerveDrivetrain/odom_variance",
     "type": "double",
-    "value": 2.0,
+    "value": 0.35,
     "properties": {
       "persistent": true
     }
@@ -290,7 +290,7 @@
   {
     "name": "/Preferences/SwerveDrivetrain/bearing_latency (s)",
     "type": "double",
-    "value": 0.01,
+    "value": 0.0,
     "properties": {
       "persistent": true
     }
@@ -314,7 +314,7 @@
   {
     "name": "/Preferences/SwerveDrivetrain/pose_estimator/accel_variance",
     "type": "double",
-    "value": 1.0,
+    "value": 500000.0,
     "properties": {
       "persistent": true
     }
@@ -330,7 +330,7 @@
   {
     "name": "/Preferences/SwerveDrivetrain/april_tags/april_variance_coeff",
     "type": "double",
-    "value": 100.0,
+    "value": 1000.0,
     "properties": {
       "persistent": true
     }
@@ -346,7 +346,7 @@
   {
     "name": "/Preferences/SwerveDrivetrain/april_tags/fudge_latency1 (ms)",
     "type": "double",
-    "value": 75.0,
+    "value": 50.0,
     "properties": {
       "persistent": true
     }
@@ -850,7 +850,7 @@
   {
     "name": "/Preferences/SwerveDrivetrain/april_tags/fudge_latency3 (ms)",
     "type": "double",
-    "value": 75.0,
+    "value": 50.0,
     "properties": {
       "persistent": true
     }
@@ -882,7 +882,7 @@
   {
     "name": "/Preferences/ictest/friction_nm (m^2 kg s^-2)",
     "type": "double",
-    "value": 25.0,
+    "value": 22.0,
     "properties": {
       "persistent": true
     }
@@ -962,7 +962,7 @@
   {
     "name": "/Preferences/SwerveDrivetrain/april_tags/fudge_latency4 (ms)",
     "type": "double",
-    "value": 75.0,
+    "value": 50.0,
     "properties": {
       "persistent": true
     }
@@ -970,7 +970,7 @@
   {
     "name": "/Preferences/ictest/offset1 (rot)",
     "type": "double",
-    "value": -0.42138671875,
+    "value": -0.281494140625,
     "properties": {
       "persistent": true
     }
@@ -978,7 +978,7 @@
   {
     "name": "/Preferences/ictest/offset2 (rot)",
     "type": "double",
-    "value": -0.37548828124999994,
+    "value": 0.278564453125,
     "properties": {
       "persistent": true
     }
@@ -1003,6 +1003,14 @@
     "name": "/Preferences/ictest/max_tolerance (rot)",
     "type": "double",
     "value": 0.025,
+    "properties": {
+      "persistent": true
+    }
+  },
+  {
+    "name": "/Preferences/SwerveDrivetrain/scalar_pigeon",
+    "type": "double",
+    "value": 1.0101010101010102,
     "properties": {
       "persistent": true
     }

@@ -17,7 +17,6 @@ using Vector2D = pdcsu::util::math::uVec<pdcsu::units::inch_t, 2>;
 
 struct ATCalculatorInput {
   funkit::robot::swerve::odometry::SwervePose pose;
-  funkit::robot::swerve::odometry::SwervePose old_pose;
   funkit::robot::swerve::odometry::SwervePose odom_pose;
   pdcsu::units::degps_t angular_velocity;
 
@@ -88,16 +87,15 @@ public:
     pdcsu::units::degree_t turret_angle;
   };
   std::deque<HistoryEntry> odom_history_{};
-  static constexpr size_t kMaxHistorySize = 150;
+  static constexpr size_t kMaxHistorySize = 500;
 
   void AddToHistory(pdcsu::units::second_t time, Vector2D position,
-      pdcsu::units::degree_t bearing,
-      pdcsu::units::degree_t turret_angle);
+      pdcsu::units::degree_t bearing, pdcsu::units::degree_t turret_angle);
   Vector2D InterpolatePosition(pdcsu::units::second_t time) const;
-  pdcsu::units::degree_t InterpolateRobotBearing(
-      pdcsu::units::second_t time) const;
-  pdcsu::units::degree_t InterpolateTurretAngle(
-      pdcsu::units::second_t time) const;
+  // pdcsu::units::degree_t InterpolateRobotBearing(
+  //     pdcsu::units::second_t time) const;
+  // pdcsu::units::degree_t InterpolateTurretAngle(
+  //     pdcsu::units::second_t time) const;
 
   Vector2D correction;
 };

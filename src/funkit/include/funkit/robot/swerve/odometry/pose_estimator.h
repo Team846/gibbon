@@ -36,15 +36,17 @@ public:
 
   double getVariance();
 
+  double getLatency();
+
   void Zero();
 
 private:
-  static constexpr double kLatencyMinSec = -0.02;
-  static constexpr double kLatencyMaxSec = 0.1;
-  static constexpr double kLatencyInitialSec = 0.04;
+  static constexpr double kLatencyMinSec = -0.01;
+  static constexpr double kLatencyMaxSec = 0.06;
+  static constexpr double kLatencyInitialSec = 0.0;
   static constexpr double kLatencyProcessVar = 1e-7;
   static constexpr double kPoseProcessVar = 1e-4;
-  static constexpr double kVelocityProcessVar = 0.1;
+  static constexpr double kVelocityProcessVar = 0.03;
 
   void ClampLatency();
 

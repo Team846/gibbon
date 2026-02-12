@@ -57,6 +57,8 @@ DrivetrainSubsystem::DrivetrainSubsystem(DrivetrainConfigs configs)
   funkit::control::config::SubsystemGenomeHelper::CreateGenomePreferences(
       *this, "steer_genome", steer_genome_backup);
 
+  RegisterPreference("scalar_pigeon", 1.010101010101010101010101010101);
+
   RegisterPreference("bearing_gains/_kP", 9);
   RegisterPreference("bearing_gains/_kI", 0.0);
   RegisterPreference("bearing_gains/_kD", -0.6);
@@ -270,8 +272,10 @@ pdcsu::units::degps_t DrivetrainSubsystem::ApplyBearingPID(
 pdcsu::units::degree_t DrivetrainSubsystem::GetBearing() {
   if (pigeon_.has_value()) {
     auto bearing_wpi =
-        -1 * ctre::phoenix6::BaseStatusSignal::GetLatencyCompensatedValue(
-                 pigeon_->GetYaw(), pigeon_->GetAngularVelocityZWorld());
+        -1 *
+        ctre::phoenix6::BaseStatusSignal::GetLatencyCompensatedValue(
+            pigeon_->GetYaw(), pigeon_->GetAngularVelocityZWorld()) *
+        GetPreferenceValue_double("scalar_pigeon");
     return pdcsu::units::degree_t{bearing_wpi.to<double>()};
   } else if (navX_.has_value()) {
     return pdcsu::units::degree_t{navX_->GetAngle()};
@@ -415,7 +419,7 @@ DrivetrainReadings DrivetrainSubsystem::ReadFromHardware() {
       .velocity = velocity,
   };
   funkit::robot::calculators::ATCalculatorOutput tag_pos =
-      tag_pos_calculator.calculate({new_pose, GetReadings().pose, odom_pose,
+      tag_pos_calculator.calculate({new_pose, odom_pose,
           yaw_rate, cached_april_variance_coeff_,
           cached_triangular_variance_coeff_, cached_fudge_latencies_});
 
@@ -432,6 +436,8 @@ DrivetrainReadings DrivetrainSubsystem::ReadFromHardware() {
   Graph("april_tags/april_pos_x", tag_pos.pos[0]);
   Graph("april_tags/april_pos_y", tag_pos.pos[1]);
   Graph("april_tags/april_variance", tag_pos.variance);
+
+  Graph("pose_estimator/latency_est", pose_estimator.getLatency());
 
   if (first_loop) {
     pose_estimator.SetPoint(

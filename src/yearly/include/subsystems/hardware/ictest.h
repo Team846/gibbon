@@ -3,10 +3,10 @@
 #include <ctre/phoenix6/CANcoder.hpp>
 #include <memory>
 
+#include "calculators/TurretPositionCalculator.h"
 #include "funkit/control/HigherMotorController.h"
 #include "funkit/robot/GenericRobot.h"
 #include "funkit/robot/GenericSubsystem.h"
-#include "calculators/TurretPositionCalculator.h"
 #include "funkit/wpilib/time.h"
 #include "pdcsu_control.h"
 #include "pdcsu_units.h"

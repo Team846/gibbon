@@ -86,17 +86,20 @@ UserSettableValues GetUserSettableValues() {
           .BR = {ports::drivetrain_::kBRCANCoder_CANID,
               ports::drivetrain_::kBRDrive_CANID,
               ports::drivetrain_::kBRSteer_CANID}},
-      .april_camera_configs = {{1U, 14.2125_in_, 4.3125_in_}, {3U, -5.625_in_, 6.8125_in_}},
+      .april_camera_configs = {{1U, 14.2125_in_, 4.3125_in_},
+          {3U, -5.625_in_, 6.8125_in_}},
       .turret_camera_config =
           std::make_optional<funkit::robot::calculators::TurretTagCameraConfig>(
               {.camera_id = 4U,
-                  .turret_x_offset = 1.3125_in_ ,
+                  .turret_x_offset = 1.3125_in_,
                   .turret_y_offset = -0.1875_in_,
                   .x_offset = 4.25_in_,
                   .y_offset = 5.15_in_}),
-      .april_locations = {{1U, {144.85_in_ - 182.25_in_, 158.34_in_ - 58.25_in_}},
+      .april_locations = {
+          {1U, {144.85_in_ - 182.25_in_, 158.34_in_ - 58.25_in_}},
           {2U, {135.09_in_, 182.11_in_}}, {3U, {144.85_in_, 205.87_in_}},
-          {4U, {158.85_in_, 205.87_in_}}, {5U, {144.85_in_ - 83.5_in_, 158.34_in_ - 30.25_in_}},
+          {4U, {158.85_in_, 205.87_in_}},
+          {5U, {144.85_in_ - 83.5_in_, 158.34_in_ - 30.25_in_}},
           {6U, {25.37_in_, 183.58_in_}}, {7U, {292.32_in_, 180.63_in_}},
           {8U, {182.60_in_, 168.11_in_}}, {9U, {144.85_in_, 158.34_in_}},
           {10U, {158.85_in_, 158.34_in_}}, {11U, {135.09_in_, 168.11_in_}},
@@ -110,7 +113,9 @@ UserSettableValues GetUserSettableValues() {
           {26U, {158.85_in_, 492.88_in_}}, {27U, {182.60_in_, 483.11_in_}},
           {28U, {292.32_in_, 470.58_in_}}, {29U, {291.47_in_, 650.92_in_}},
           {30U, {274.47_in_, 650.92_in_}}, {31U, {170.22_in_, 650.90_in_}},
-          {32U, {144.85_in_ - 108.5_in_, 158.34_in_ - 244.75_in_}}}};  // TODO: Double check locations
+          {32U,
+              {144.85_in_ - 108.5_in_,
+                  158.34_in_ - 244.75_in_}}}};  // TODO: Double check locations
 }
 
 //--------------------------------------------------------
