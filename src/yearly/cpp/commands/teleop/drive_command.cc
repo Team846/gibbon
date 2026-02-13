@@ -58,7 +58,7 @@ void DriveCommand::Periodic() {
         ShootingCalculator::GetOutputs();
     if (shooting_outputs.is_valid) {
       target.angular_velocity = container_.drivetrain_.ApplyBearingPID(
-          shooting_outputs.aim_angle + 4_deg_,
+          shooting_outputs.aim_angle,
           shooting_outputs.vel_aim_compensation);
     }
   }
@@ -89,7 +89,6 @@ void DriveCommand::Periodic() {
     icpostarget = icposz + tbb;
   }
   radps_t icposvel = container_.drivetrain_.GetReadings().yaw_rate * 1.5;
-  // icpostarget += icposvel / 100_Hz_;
   ICTestTarget ictarget{};
   ictarget.pos = icpostarget;
   ictarget.vel = icposvel;

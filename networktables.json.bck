@@ -346,7 +346,7 @@
   {
     "name": "/Preferences/SwerveDrivetrain/april_tags/fudge_latency1 (ms)",
     "type": "double",
-    "value": 50.0,
+    "value": 15.0,
     "properties": {
       "persistent": true
     }
@@ -850,7 +850,7 @@
   {
     "name": "/Preferences/SwerveDrivetrain/april_tags/fudge_latency3 (ms)",
     "type": "double",
-    "value": 50.0,
+    "value": 15.0,
     "properties": {
       "persistent": true
     }
@@ -962,7 +962,7 @@
   {
     "name": "/Preferences/SwerveDrivetrain/april_tags/fudge_latency4 (ms)",
     "type": "double",
-    "value": 50.0,
+    "value": 15.0,
     "properties": {
       "persistent": true
     }

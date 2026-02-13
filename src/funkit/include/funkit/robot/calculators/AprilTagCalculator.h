@@ -92,10 +92,10 @@ public:
   void AddToHistory(pdcsu::units::second_t time, Vector2D position,
       pdcsu::units::degree_t bearing, pdcsu::units::degree_t turret_angle);
   Vector2D InterpolatePosition(pdcsu::units::second_t time) const;
-  // pdcsu::units::degree_t InterpolateRobotBearing(
-  //     pdcsu::units::second_t time) const;
-  // pdcsu::units::degree_t InterpolateTurretAngle(
-  //     pdcsu::units::second_t time) const;
+  pdcsu::units::degree_t InterpolateRobotBearing(
+      pdcsu::units::second_t time) const;
+  pdcsu::units::degree_t InterpolateTurretAngle(
+      pdcsu::units::second_t time) const;
 
   Vector2D correction;
 };

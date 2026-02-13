@@ -29,79 +29,74 @@ Vector2D AprilTagCalculator::InterpolatePosition(
     pdcsu::units::second_t time) const {
   if (odom_history_.empty()) { return Vector2D{0_in_, 0_in_}; }
   if (odom_history_.size() == 1) { return odom_history_.front().position; }
-  if (time.value() <= odom_history_.front().time.value()) {
+  if (time <= odom_history_.front().time) {
     return odom_history_.front().position;
   }
-  if (time.value() >= odom_history_.back().time.value()) {
+  if (time >= odom_history_.back().time) {
     return odom_history_.back().position;
   }
   for (size_t i = 0; i + 1 < odom_history_.size(); i++) {
     const auto& a = odom_history_[i];
     const auto& b = odom_history_[i + 1];
-    if (time.value() >= a.time.value() && time.value() <= b.time.value()) {
-      double denom = b.time.value() - a.time.value();
-      double frac =
-          (denom <= 0) ? 0.0 : (time.value() - a.time.value()) / denom;
-      return Vector2D{inch_t{(1.0 - frac) * a.position[0].value() +
-                             frac * b.position[0].value()},
-          inch_t{(1.0 - frac) * a.position[1].value() +
-                 frac * b.position[1].value()}};
+    if (time >= a.time && time <= b.time) {
+      second_t denom = b.time - a.time;
+      double frac = (denom <= 0_s_) ? 0.0 : ((time - a.time) / denom).value();
+      return Vector2D{(1.0 - frac) * a.position[0] + frac * b.position[0],
+          (1.0 - frac) * a.position[1] + frac * b.position[1]};
     }
   }
   return odom_history_.back().position;
 }
 
-// pdcsu::units::degree_t AprilTagCalculator::InterpolateRobotBearing(
-//     pdcsu::units::second_t time) const {
-//   if (odom_history_.empty()) { return 0_deg_; }
-//   if (odom_history_.size() == 1) { return odom_history_.front().bearing; }
-//   if (time.value() <= odom_history_.front().time.value()) {
-//     return odom_history_.front().bearing;
-//   }
-//   if (time.value() >= odom_history_.back().time.value()) {
-//     return odom_history_.back().bearing;
-//   }
-//   for (size_t i = 0; i + 1 < odom_history_.size(); i++) {
-//     const auto& a = odom_history_[i];
-//     const auto& b = odom_history_[i + 1];
-//     if (time >= a.time && time <= b.time) {
-//       second_t denom = b.time - a.time;
-//       auto frac =
-//           (denom <= 0_s_) ? 0.0_u_ : (time - a.time) / denom;
-//       degree_t diff = b.bearing - a.bearing;
-//       if (diff > 180.0) { diff -= 360.0; }
-//       if (diff < -180.0) { diff += 360.0; }
-//       return degree_t{a.bearing.value() + frac * diff};
-//     }
-//   }
-//   return odom_history_.back().bearing;
-// }
+pdcsu::units::degree_t AprilTagCalculator::InterpolateRobotBearing(
+    pdcsu::units::second_t time) const {
+  if (odom_history_.empty()) { return 0_deg_; }
+  if (odom_history_.size() == 1) { return odom_history_.front().bearing; }
+  if (time <= odom_history_.front().time) {
+    return odom_history_.front().bearing;
+  }
+  if (time >= odom_history_.back().time) {
+    return odom_history_.back().bearing;
+  }
+  for (size_t i = 0; i + 1 < odom_history_.size(); i++) {
+    const auto& a = odom_history_[i];
+    const auto& b = odom_history_[i + 1];
+    if (time >= a.time && time <= b.time) {
+      second_t denom = b.time - a.time;
+      auto frac = (denom <= 0_s_) ? 0.0_u_ : (time - a.time) / denom;
+      degree_t diff = b.bearing - a.bearing;
+      if (diff > 180.0_deg_) { diff -= 360.0_deg_; }
+      if (diff < -180.0_deg_) { diff += 360.0_deg_; }
+      return a.bearing + frac * diff;
+    }
+  }
+  return odom_history_.back().bearing;
+}
 
-// pdcsu::units::degree_t AprilTagCalculator::InterpolateTurretAngle(
-//     pdcsu::units::second_t time) const {
-//   if (odom_history_.empty()) { return 0_deg_; }
-//   if (odom_history_.size() == 1) { return odom_history_.front().turret_angle;
-//   } if (time.value() <= odom_history_.front().time.value()) {
-//     return odom_history_.front().turret_angle;
-//   }
-//   if (time.value() >= odom_history_.back().time.value()) {
-//     return odom_history_.back().turret_angle;
-//   }
-//   for (size_t i = 0; i + 1 < odom_history_.size(); i++) {
-//     const auto& a = odom_history_[i];
-//     const auto& b = odom_history_[i + 1];
-//     if (time.value() >= a.time.value() && time.value() <= b.time.value()) {
-//       double denom = b.time.value() - a.time.value();
-//       double frac =
-//           (denom <= 0) ? 0.0 : (time.value() - a.time.value()) / denom;
-//       double diff = b.turret_angle.value() - a.turret_angle.value();
-//       if (diff > 180.0) { diff -= 360.0; }
-//       if (diff < -180.0) { diff += 360.0; }
-//       return degree_t{a.turret_angle.value() + frac * diff};
-//     }
-//   }
-//   return odom_history_.back().turret_angle;
-// }
+pdcsu::units::degree_t AprilTagCalculator::InterpolateTurretAngle(
+    pdcsu::units::second_t time) const {
+  if (odom_history_.empty()) { return 0_deg_; }
+  if (odom_history_.size() == 1) { return odom_history_.front().turret_angle; }
+  if (time <= odom_history_.front().time) {
+    return odom_history_.front().turret_angle;
+  }
+  if (time >= odom_history_.back().time) {
+    return odom_history_.back().turret_angle;
+  }
+  for (size_t i = 0; i + 1 < odom_history_.size(); i++) {
+    const auto& a = odom_history_[i];
+    const auto& b = odom_history_[i + 1];
+    if (time >= a.time && time <= b.time) {
+      second_t denom = b.time - a.time;
+      double frac = (denom <= 0_s_) ? 0.0 : ((time - a.time) / denom).value();
+      degree_t diff = b.turret_angle - a.turret_angle;
+      if (diff > 180.0_deg_) { diff -= 360.0_deg_; }
+      if (diff < -180.0_deg_) { diff += 360.0_deg_; }
+      return a.turret_angle + frac * diff;
+    }
+  }
+  return odom_history_.back().turret_angle;
+}
 
 ATCalculatorOutput AprilTagCalculator::calculate(ATCalculatorInput input) {
   ATCalculatorOutput output;
@@ -171,11 +166,11 @@ ATCalculatorOutput AprilTagCalculator::calculate(ATCalculatorInput input) {
 
     std::vector<double> tags = cam_table->GetNumberArray("tags", {});
     pdcsu::units::degree_t imuBearingAtCapture =
-        input.pose.bearing - input.angular_velocity * effective_latency;
+        InterpolateRobotBearing(capture_time); //input.pose.bearing - input.angular_velocity * effective_latency;
     pdcsu::units::degree_t bearingAtCapture;
     if (camera.equiv_turret) {
       bearingAtCapture =
-          imuBearingAtCapture + turret_angle + turret_vel * effective_latency;
+          imuBearingAtCapture + InterpolateTurretAngle(capture_time); //turret_angle + turret_vel * effective_latency;
       view_full_turret_angle = bearingAtCapture;
     } else {
       bearingAtCapture = imuBearingAtCapture;
