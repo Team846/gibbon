@@ -110,7 +110,7 @@ void ICTestSubsystem::Setup() {
 
   icnor_controller_->setProjectionHorizon(1);
 
-  icnor_controller_->setDesaturationThresh(15_rad_);
+  icnor_controller_->setDesaturationThresh(25_rad_);
 
   std::string learner_path =
       frc::filesystem::GetDeployDirectory() + "/ictest.iclearn";

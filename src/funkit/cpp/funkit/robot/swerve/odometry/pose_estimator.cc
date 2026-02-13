@@ -42,13 +42,21 @@ void PoseEstimator::AddVisionMeasurement(
   double L = state_(4, 0);
   double vx = state_(2, 0);
   double vy = state_(3, 0);
+  double speed_fps = std::sqrt(vx * vx + vy * vy);
+  bool update_latency = speed_fps >= kMinSpeedForLatencyObsFps;
   Eigen::Matrix<double, 2, 5> Hv;
-  Hv << 1, 0, -L, 0, -vx, 0, 1, 0, -L, -vy;
+  Hv << 1, 0, -L, 0, update_latency ? -vx : 0, 0, 1, 0, -L,
+      update_latency ? -vy : 0;
   Eigen::Matrix<double, 2, 1> z_obs;
   z_obs << pos[0], pos[1];
+  double L_before = state_(4, 0);
   filter.Update(
       Hv, z_obs, Eigen::Matrix<double, 2, 1>({{variance}, {variance}}));
   state_ = filter.getEstimate();
+  double dL = state_(4, 0) - L_before;
+  if (std::abs(dL) > kMaxLatencyStepSec) {
+    state_(4, 0) = L_before + std::copysign(kMaxLatencyStepSec, dL);
+  }
   ClampLatency();
   filter.setState(state_);
 }
@@ -61,6 +69,8 @@ void PoseEstimator::AddOdometryMeasurement(
       Eigen::Matrix<double, 2, 1>({{difPos[0] / dt}, {difPos[1] / dt}}),
       Eigen::Matrix<double, 2, 1>({{variance}, {variance}}));
   state_ = filter.getEstimate();
+  ClampLatency();
+  filter.setState(state_);
 }
 
 void PoseEstimator::SetPoint(std::array<double, 2> point) {

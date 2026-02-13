@@ -882,7 +882,7 @@
   {
     "name": "/Preferences/ictest/friction_nm (m^2 kg s^-2)",
     "type": "double",
-    "value": 22.0,
+    "value": 5.0,
     "properties": {
       "persistent": true
     }

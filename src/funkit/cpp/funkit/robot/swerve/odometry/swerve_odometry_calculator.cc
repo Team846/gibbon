@@ -84,13 +84,13 @@ SwerveOdometryOutput SwerveOdometryCalculator::calculate(
     scalar_t dtheta_ratio =
         (S_theta + (W_y * S_wx - W_x * S_wy) / W_d) / denom;
     dtheta = radian_t{dtheta_ratio.value()};
-    dx = (S_wx + W_y * dtheta) / W_d;
-    dy = (S_wy - W_x * dtheta) / W_d;
+    dx = (S_wx + W_y * dtheta_ratio) / W_d;
+    dy = (S_wy - W_x * dtheta_ratio) / W_d;
 
     std::array<pdcsu::units::inch_t, kNumWheels> res;
     for (int i = 0; i < kNumWheels; i++) {
-      inch_t wx_pred = dx - dtheta * r_y[i];
-      inch_t wy_pred = dy + dtheta * r_x[i];
+      inch_t wx_pred = dx - dtheta_ratio * r_y[i];
+      inch_t wy_pred = dy + dtheta_ratio * r_x[i];
       inch_t ex = wx[i] - wx_pred;
       inch_t ey = wy[i] - wy_pred;
       res[i] = u_sqrt(ex * ex + ey * ey);

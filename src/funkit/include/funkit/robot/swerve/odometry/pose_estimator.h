@@ -41,12 +41,14 @@ public:
   void Zero();
 
 private:
-  static constexpr double kLatencyMinSec = -0.01;
-  static constexpr double kLatencyMaxSec = 0.06;
+  static constexpr double kLatencyMinSec = 0.0;
+  static constexpr double kLatencyMaxSec = 0.0;
   static constexpr double kLatencyInitialSec = 0.0;
   static constexpr double kLatencyProcessVar = 1e-7;
   static constexpr double kPoseProcessVar = 1e-4;
   static constexpr double kVelocityProcessVar = 0.03;
+  static constexpr double kMinSpeedForLatencyObsFps = 0.5;
+  static constexpr double kMaxLatencyStepSec = 0.008;
 
   void ClampLatency();
 
