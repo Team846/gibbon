@@ -1,0 +1,56 @@
+#pragma once
+
+#include <deque>
+#include <memory>
+
+#include "calculators/TurretPositionCalculator.h"
+#include "funkit/control/HigherMotorController.h"
+#include "funkit/robot/GenericRobot.h"
+#include "funkit/robot/GenericSubsystem.h"
+#include "funkit/robot/swerve/drivetrain.h"
+#include "funkit/wpilib/time.h"
+#include "subsystems/hardware/hoptake/intake.h"
+#include "subsystems/hardware/hoptake/pivot.h"
+
+enum class HoptakeState { kIntaking, kAgitate };
+
+enum class HoptakeOverrides { kNothing, kAgitate, kEvac };
+
+struct HoptakeSSReadings {};
+
+struct HoptakeSSTarget {
+  funkit::robot::swerve::odometry::SwervePose pose;
+  HoptakeOverrides override_state = HoptakeOverrides::kNothing;
+};
+
+class HoptakeSuperstructure
+    : public funkit::robot::GenericSubsystem<HoptakeSSReadings,
+          HoptakeSSTarget> {
+public:
+  HoptakeSuperstructure();
+  ~HoptakeSuperstructure();
+
+  void Setup() override;
+
+  HoptakeSSTarget ZeroTarget() const override;
+
+  IntakeSubsystem intake;
+  PivotSubsystem pivot;
+
+  bool HasReachedShooter(degps_t vel);
+  bool HasReachedHood(degree_t pos);
+  bool HasReachedTurret(degree_t pos);
+
+  void AdjustTurret(bool cw);
+  void AdjustHood(bool up);
+  void ClearAdjustments();
+
+  bool VerifyHardware() override;
+
+  void ZeroEncoders();
+
+private:
+  HoptakeSSReadings ReadFromHardware() override;
+
+  void WriteToHardware(HoptakeSSTarget target) override;
+};

@@ -18,6 +18,5 @@ public:
   bool IsFinished() override;
 
 private:
-  radian_t icpostarget = 0_rad_;
-  radian_t icposz = 0_rad_;
+  fps_t ema_comp_gpd_;
 };

@@ -53,7 +53,7 @@ void DriveCommand::Periodic() {
   target.angular_velocity = degps_t{rotation * max_omega.value()};
 
   /* For shooting while in motion */
-  if (ci_readings_.prepare_shot) {
+  if (container_.scorer_ss_.GetCurrState() == ScorerState::kWithDT) {
     ShootingCalculatorOutputs shooting_outputs =
         ShootingCalculator::GetOutputs();
     if (shooting_outputs.is_valid) {
@@ -69,6 +69,45 @@ void DriveCommand::Periodic() {
                  frc::DriverStation::Alliance::kBlue);
 
   if (isBlue) target.velocity = target.velocity.rotate(degree_t{180});
+
+  GPDReadings gpd_readings = container_.GPD_.GetReadings();
+  gpd_readings.locked_target = false;
+
+  if (/*ci_readings_.gpd_drive_button &&*/ target.velocity.magnitude() >
+      1.0_fps_) {
+    gpd_readings.locked_target = true;
+    Graph("locked_target", gpd_readings.locked_target);
+
+    radian_t x_off = gpd_readings.optimal_pos - target.velocity.angle(true);
+
+    fps_t x_off_comp = target.velocity.magnitude() / 2.0 *
+                       std::tanh(x_off.value() * u_abs(x_off).value() * 400.0);
+
+    degree_t dir_xoff = target.velocity.angle(true) + 90_deg_;
+
+    double ema_alpha = container_.GPD_.GetPreferenceValue_double("ema_alpha");
+    double ema_decay = container_.GPD_.GetPreferenceValue_double("ema_decay");
+
+    ema_comp_gpd_ = ema_alpha * x_off_comp + ema_decay * ema_comp_gpd_;
+
+    Graph("ema_comp_gpd", ema_comp_gpd_);
+    Graph("x_off_comp", x_off_comp);
+
+    if (u_abs(x_off_comp) > 1_fps_) {
+      target.velocity = target.velocity + pdcsu::util::math::uVec<fps_t, 2>{
+                                              ema_comp_gpd_, dir_xoff, true};
+    } else {
+      target.velocity =
+          target.velocity +
+          pdcsu::util::math::uVec<fps_t, 2>{
+              ema_comp_gpd_ * u_abs(ema_comp_gpd_) / 1_fps_, dir_xoff, true};
+    }
+
+  } else if (/*ci_readings_.gpd_drive_button add back gpd*/ false) {
+    ema_comp_gpd_ = 0.95 * ema_comp_gpd_;
+  } else {
+    ema_comp_gpd_ = 0.0_fps_;
+  }
 
   container_.drivetrain_.SetTarget({target});
 

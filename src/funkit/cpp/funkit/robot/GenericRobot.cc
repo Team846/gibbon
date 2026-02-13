@@ -197,6 +197,10 @@ void GenericRobot::StartCompetition() {
     // Tick MonkeyMaster
     funkit::control::MonkeyMaster::Tick(mode == Mode::kDisabled);
 
+    if (update_tick_counter_ % 300 == 0) {
+      funkit::control::MonkeyMaster::CheckForResets();
+    }
+
     // Update dashboards
     update_tick_counter_ += 1;
     if (update_tick_counter_ == GetPreferenceValue_int("update_tick_1")) {

@@ -32,7 +32,7 @@ public:
     (void)reverse_limit;
   }
 
-  void SetGenome(config::MotorGenome genome) override;
+  void SetGenome(config::MotorGenome genome, bool force_set = false) override;
 
   void EnableStatusFrames(config::StatusFrameSelections frames,
       pdcsu::units::ms_t faults_ms = pdcsu::units::ms_t{20},

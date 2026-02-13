@@ -30,7 +30,7 @@ public:
   void SetSoftLimits(pdcsu::units::radian_t forward_limit,
       pdcsu::units::radian_t reverse_limit) override;
 
-  void SetGenome(config::MotorGenome genome) override;
+  void SetGenome(config::MotorGenome genome, bool force_set = false) override;
 
   void EnableStatusFrames(config::StatusFrameSelections frames,
       pdcsu::units::ms_t faults_ms = pdcsu::units::ms_t{20},
@@ -70,6 +70,7 @@ private:
   std::optional<pdcsu::units::amp_t> last_motor_current_limit_{std::nullopt};
   std::optional<pdcsu::units::volt_t> last_voltage_compensation_{std::nullopt};
   std::optional<config::Gains> last_gains_{std::nullopt};
+  std::optional<config::FollowerConfig> last_follower_config_{std::nullopt};
 
   rev::spark::SparkBase* esc_;
   rev::spark::SparkRelativeEncoder* encoder_;

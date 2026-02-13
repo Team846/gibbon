@@ -62,7 +62,7 @@ struct UserSettableValues {
 UserSettableValues GetUserSettableValues() {
   return UserSettableValues{
       .imu_connection =
-          swerve::PigeonConnection{ports::drivetrain_::kPIGEON_CANID},
+          swerve::NavXConnection{swerve::NavXConnectionType::kMXP},
       .wheel_diameter = inch_t{4},
       .drive_gear_ratio = 8.16,  // TODO fix
       .steer_reduction = 12.8_rot_ / 1_rot_,
@@ -86,17 +86,9 @@ UserSettableValues GetUserSettableValues() {
           .BR = {ports::drivetrain_::kBRCANCoder_CANID,
               ports::drivetrain_::kBRDrive_CANID,
               ports::drivetrain_::kBRSteer_CANID}},
-      .april_camera_configs = {{1U, 14.2125_in_, 4.3125_in_},
-          {3U, -5.625_in_, 6.8125_in_}},
-      .turret_camera_config =
-          std::make_optional<funkit::robot::calculators::TurretTagCameraConfig>(
-              {.camera_id = 4U,
-                  .turret_x_offset = 1.3125_in_,
-                  .turret_y_offset = -0.1875_in_,
-                  .x_offset = 4.25_in_,
-                  .y_offset = 5.15_in_}),
-      .april_locations = {
-          {1U, {144.85_in_ - 182.25_in_, 158.34_in_ - 58.25_in_}},
+      .april_camera_configs = {{1U, 4.0_in_, -11.0_in_}, {2U, 4.0_in_, 0.0_in_},
+          {3U, 5.0_in_, -3.0_in_}},
+      .april_locations = {{1U, {25.38_in_, 183.58_in_}},
           {2U, {135.09_in_, 182.11_in_}}, {3U, {144.85_in_, 205.87_in_}},
           {4U, {158.85_in_, 205.87_in_}},
           {5U, {144.85_in_ - 83.5_in_, 158.34_in_ - 30.25_in_}},

@@ -325,12 +325,14 @@ void MonkeyMaster::SetLoad(size_t slot_id, pdcsu::units::nm_t load) {
   load_registry[slot_id] = load;
 }
 
-void MonkeyMaster::SetGenome(size_t slot_id, config::MotorGenome genome) {
+void MonkeyMaster::SetGenome(
+    size_t slot_id, config::MotorGenome genome, bool force_set) {
   CHECK_SLOT_ID();
 
   genome_registry[slot_id] = genome;
 
-  SMART_RETRY(controller_registry[slot_id]->SetGenome(genome), "SetGenome");
+  SMART_RETRY(
+      controller_registry[slot_id]->SetGenome(genome, force_set), "SetGenome");
   LOG_IF_ERROR("SetGenome");
 }
 
@@ -417,6 +419,19 @@ std::string_view MonkeyMaster::parseError(
   case funkit::control::hardware::ControllerErrorCodes::kError:
     return "Unknown Error";
   default: return "Unknown";
+  }
+}
+
+void MonkeyMaster::CheckForResets() {
+  for (size_t i = 1; i <= slot_counter_; i++) {
+    if (controller_registry[i] != nullptr) {
+      if (controller_registry[i]->Read(hardware::ReadType::kRestFault) > 0.5) {
+        loggable_.Warn(
+            "Reset detected on Motor Controller Slot ID {}. Reconfiguring...",
+            i);
+        SetGenome(i, genome_registry[i], true);
+      }
+    }
   }
 }
 

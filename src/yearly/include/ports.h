@@ -34,17 +34,36 @@ struct ports {
     static constexpr int kLEDStrip1 = 6;
   };
 
+  struct turret_ {
+    static constexpr funkit::control::config::MotorConstructionParameters
+        kTurretParams = {15, "", false};  // TODO: add to canivore
+  };
+
   struct shooter_ {
     static constexpr funkit::control::config::MotorConstructionParameters
-        kMotor1Params = {24, "", false};
+        kShooter1Params = {16, "", false};
     static constexpr funkit::control::config::MotorConstructionParameters
-        kMotor2Params = {25, "", true};
+        kShooter2Params = {17, "", true};
   };
+
+  struct hood_ {
+    static constexpr funkit::control::config::MotorConstructionParameters
+        kHoodParams = {18, "", false};
+  };
+
   struct intake_ {
     static constexpr funkit::control::config::MotorConstructionParameters
-        kMotorParams = {21, "", false};
+        kIntakeParams = {19, "", false};
+  };
+
+  struct dye_rotor_ {
     static constexpr funkit::control::config::MotorConstructionParameters
-        kMotorParams2 = {20, "", true};
+        kDyeRotorParams = {20, "", false};
+  };
+
+  struct pivot_ {
+    static constexpr funkit::control::config::MotorConstructionParameters
+        kPivotParams = {21, "", false};
   };
   struct ictest_ {
     static constexpr int kMotor1_CANID = 51;

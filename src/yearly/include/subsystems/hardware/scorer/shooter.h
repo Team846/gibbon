@@ -1,9 +1,5 @@
 #pragma once
 
-#include <units/length.h>
-#include <units/time.h>
-#include <units/velocity.h>
-
 #include <deque>
 #include <memory>
 
@@ -19,7 +15,8 @@ struct ShooterReadings {
 };
 
 struct ShooterTarget {
-  fps_t target_vel;
+  fps_t vel;
+  bool idle_ = true;
 };
 
 class ShooterSubsystem
@@ -34,11 +31,15 @@ public:
 
   bool VerifyHardware() override;
 
+  void ZeroEncoders();
+
 private:
+  funkit::control::HigherMotorController esc_1_;
+  funkit::control::HigherMotorController esc_2_;
+
+  static constexpr inch_t kWheelRadius{1.5};
+
   ShooterReadings ReadFromHardware() override;
 
   void WriteToHardware(ShooterTarget target) override;
-
-  funkit::control::HigherMotorController esc_1_;
-  funkit::control::HigherMotorController esc_2_;
 };

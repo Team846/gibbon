@@ -37,17 +37,6 @@
         "window": {
           "visible": true
         }
-      },
-      "/SmartDashboard/MainField": {
-        "bottom": 1914,
-        "height": 8.069275856018066,
-        "left": 245,
-        "right": 3942,
-        "top": 118,
-        "width": 16.54119300842285,
-        "window": {
-          "visible": true
-        }
       }
     }
   },
@@ -125,6 +114,12 @@
     },
     "Elastic@1": {
       "Subscribers": {
+        "open": true
+      },
+      "open": true
+    },
+    "MonkeySee@1": {
+      "Publishers": {
         "open": true
       },
       "open": true
@@ -213,36 +208,7 @@
             0.0,
             0.8500000238418579
           ],
-          "height": 252,
-          "series": [
-            {
-              "color": [
-                0.2980392277240753,
-                0.44705885648727417,
-                0.6901960968971252,
-                1.0
-              ],
-              "id": "NT:/SmartDashboard/SwerveDrivetrain/BL/target/drive_dc"
-            },
-            {
-              "color": [
-                0.8666667342185974,
-                0.5176470875740051,
-                0.32156863808631897,
-                1.0
-              ],
-              "id": "NT:/SmartDashboard/SwerveDrivetrain/BL/target/steer_dir (deg)"
-            },
-            {
-              "color": [
-                0.3333333432674408,
-                0.658823549747467,
-                0.4078431725502014,
-                1.0
-              ],
-              "id": "NT:/SmartDashboard/Robot/loop_time (ms)"
-            }
-          ]
+          "height": 0
         }
       ]
     }

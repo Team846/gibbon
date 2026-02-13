@@ -1,4 +1,4 @@
-#include "commands/teleop/intake_command.h"
+#include "commands/general/intake_command.h"
 
 #include <utility>
 
@@ -8,7 +8,7 @@
 IntakeCommand::IntakeCommand(RobotContainer &container)
     : funkit::robot::GenericCommand<RobotContainer, IntakeCommand>{
           container, "intake_command"} {
-  AddRequirements({&container_.intake_});
+  AddRequirements({&container_.hoptake_ss_});
 }
 
 void IntakeCommand::OnInit() {}
@@ -16,13 +16,16 @@ void IntakeCommand::OnInit() {}
 void IntakeCommand::Periodic() {
   ControlInputReadings ci_readings_{container_.control_input_.GetReadings()};
 
-  IntakeTarget target{IntakeState::kIdle};
+  HoptakeSSTarget target;
+  target.intake_speed = ci_readings_.intake_speed;
 
-  if (ci_readings_.shoot && container_.shooter_.GetReadings().is_spun_up)
-    target.state = IntakeState::kIntake;
+  if (ci_readings_.agitate) {
+    target.override_state = HoptakeOverrides::kAgitate;
+  } else if (ci_readings_.evac_storage) {
+    target.override_state = HoptakeOverrides::kEvac;
+  }
 
-  target.realintake = ci_readings_.intake;
-  container_.intake_.SetTarget(target);
+  container_.hoptake_ss_.SetTarget(target);
 }
 
 void IntakeCommand::OnEnd(bool interrupted) {}

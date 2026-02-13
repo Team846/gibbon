@@ -106,7 +106,7 @@ void ShootingCalculator::Calculate(const RobotContainer* container_) {
       shooter_vel * 1.0 /
       u_cos(u_min(u_abs(twist * loggable.GetPreferenceValue_double(
                                     "swim/twistVelCompensation")),
-          3.1415_rad_ / 2.0));
+          3.14159265358979323846_rad_ / 2.0));
 
   outputs_.aim_angle = aim_angle + 180_deg_;
 
