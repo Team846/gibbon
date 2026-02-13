@@ -1,45 +1,45 @@
-// #pragma once
+#pragma once
 
-// #include <deque>
-// #include <memory>
+#include <deque>
+#include <memory>
 
-// #include "funkit/control/HigherMotorController.h"
-// #include "funkit/robot/GenericRobot.h"
-// #include "funkit/robot/GenericSubsystem.h"
-// #include "funkit/wpilib/time.h"
-// #include "pdcsu_control.h"
+#include "funkit/control/HigherMotorController.h"
+#include "funkit/robot/GenericRobot.h"
+#include "funkit/robot/GenericSubsystem.h"
+#include "funkit/wpilib/time.h"
+#include "pdcsu_control.h"
 
-// struct ShooterReadings {
-//   fps_t vel;
-//   bool is_spun_up;
-// };
+struct ShooterReadings {
+  fps_t vel;
+  bool is_spun_up;
+};
 
-// struct ShooterTarget {
-//   fps_t vel;
-// };
+struct ShooterTarget {
+  fps_t vel;
+  bool idle_ = true;
+};
 
-// class ShooterSubsystem
-//     : public funkit::robot::GenericSubsystem<ShooterReadings, ShooterTarget>
-//     {
-// public:
-//   ShooterSubsystem();
-//   ~ShooterSubsystem();
+class ShooterSubsystem
+    : public funkit::robot::GenericSubsystem<ShooterReadings, ShooterTarget> {
+public:
+  ShooterSubsystem();
+  ~ShooterSubsystem();
 
-//   void Setup() override;
+  void Setup() override;
 
-//   ShooterTarget ZeroTarget() const override;
+  ShooterTarget ZeroTarget() const override;
 
-//   bool VerifyHardware() override;
+  bool VerifyHardware() override;
 
-//   void ZeroEncoders();
+  void ZeroEncoders();
 
-// private:
-//   funkit::control::HigherMotorController esc_1_;
-//   funkit::control::HigherMotorController esc_2_;
+private:
+  funkit::control::HigherMotorController esc_1_;
+  funkit::control::HigherMotorController esc_2_;
 
-//   static constexpr inch_t kWheelRadius{1.5};
+  static constexpr inch_t kWheelRadius{1.5};
 
-//   ShooterReadings ReadFromHardware() override;
+  ShooterReadings ReadFromHardware() override;
 
-//   void WriteToHardware(ShooterTarget target) override;
-// };
+  void WriteToHardware(ShooterTarget target) override;
+};

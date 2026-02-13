@@ -4,7 +4,7 @@
 #include <frc2/command/WaitCommand.h>
 #include <frc2/command/button/Trigger.h>
 
-#include "funkit/robot/swerve/drive_to_point_command.h"
+#include "commands/teleop/climb_align_command.h"
 
 void ControlTriggerInitializer::InitTeleopTriggers(RobotContainer& container) {
   frc2::Trigger drivetrain_zero_bearing_trigger{[&] {
@@ -13,4 +13,9 @@ void ControlTriggerInitializer::InitTeleopTriggers(RobotContainer& container) {
   drivetrain_zero_bearing_trigger.WhileTrue(frc2::InstantCommand([&] {
     container.drivetrain_.ZeroBearing();
   }).ToPtr());
+
+  frc2::Trigger climb_align_trigger{[&] {
+    return container.control_input_.GetReadings().climb_align;
+  }};
+  climb_align_trigger.WhileTrue(ClimbAlignCommand(container).ToPtr());
 }

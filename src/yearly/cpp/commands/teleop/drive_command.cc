@@ -53,7 +53,7 @@ void DriveCommand::Periodic() {
   target.angular_velocity = degps_t{rotation * max_omega.value()};
 
   /* For shooting while in motion */
-  if (ci_readings_.prepare_shot) {
+  if (container_.scorer_ss_.GetCurrState() == ScorerState::kWithDT) {
     ShootingCalculatorOutputs shooting_outputs =
         ShootingCalculator::GetOutputs();
     if (shooting_outputs.is_valid) {
@@ -73,7 +73,8 @@ void DriveCommand::Periodic() {
   GPDReadings gpd_readings = container_.GPD_.GetReadings();
   gpd_readings.locked_target = false;
 
-  if (ci_readings_.gpd_drive_button && target.velocity.magnitude() > 1.0_fps_) {
+  if (/*ci_readings_.gpd_drive_button &&*/ target.velocity.magnitude() >
+      1.0_fps_) {
     gpd_readings.locked_target = true;
     Graph("locked_target", gpd_readings.locked_target);
 
@@ -102,7 +103,7 @@ void DriveCommand::Periodic() {
               ema_comp_gpd_ * u_abs(ema_comp_gpd_) / 1_fps_, dir_xoff, true};
     }
 
-  } else if (ci_readings_.gpd_drive_button) {
+  } else if (/*ci_readings_.gpd_drive_button add back gpd*/ false) {
     ema_comp_gpd_ = 0.95 * ema_comp_gpd_;
   } else {
     ema_comp_gpd_ = 0.0_fps_;

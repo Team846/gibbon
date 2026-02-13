@@ -9,32 +9,32 @@
 #include "funkit/wpilib/time.h"
 #include "pdcsu_control.h"
 
-struct TurretReadings {
+struct PivotReadings {
   degree_t pos_;
 };
 
-struct TurretTarget {
+struct PivotTarget {
   degree_t pos_;
 };
 
-class TurretSubsystem
-    : public funkit::robot::GenericSubsystem<TurretReadings, TurretTarget> {
+class PivotSubsystem
+    : public funkit::robot::GenericSubsystem<PivotReadings, PivotTarget> {
 public:
-  TurretSubsystem();
-  ~TurretSubsystem();
+  PivotSubsystem();
+  ~PivotSubsystem();
 
   void Setup() override;
 
-  TurretTarget ZeroTarget() const override;
+  PivotTarget ZeroTarget() const override;
 
   bool VerifyHardware() override;
 
   void ZeroEncoders();
 
 private:
-  TurretReadings ReadFromHardware() override;
-
   funkit::control::HigherMotorController esc_;
 
-  void WriteToHardware(TurretTarget target) override;
+  PivotReadings ReadFromHardware() override;
+
+  void WriteToHardware(PivotTarget target) override;
 };

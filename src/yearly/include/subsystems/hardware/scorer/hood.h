@@ -1,40 +1,40 @@
-// #pragma once
+#pragma once
 
-// #include <deque>
-// #include <memory>
+#include <deque>
+#include <memory>
 
-// #include "funkit/control/HigherMotorController.h"
-// #include "funkit/robot/GenericRobot.h"
-// #include "funkit/robot/GenericSubsystem.h"
-// #include "funkit/wpilib/time.h"
-// #include "pdcsu_control.h"
+#include "funkit/control/HigherMotorController.h"
+#include "funkit/robot/GenericRobot.h"
+#include "funkit/robot/GenericSubsystem.h"
+#include "funkit/wpilib/time.h"
+#include "pdcsu_control.h"
 
-// struct HoodReadings {
-//   degree_t pos_;
-// };
+struct HoodReadings {
+  degree_t pos_;
+};
 
-// struct HoodTarget {
-//   degree_t pos_;
-// };
+struct HoodTarget {
+  degree_t pos_;
+};
 
-// class HoodSubsystem
-//     : public funkit::robot::GenericSubsystem<HoodReadings, HoodTarget> {
-// public:
-//   HoodSubsystem();
-//   ~HoodSubsystem();
+class HoodSubsystem
+    : public funkit::robot::GenericSubsystem<HoodReadings, HoodTarget> {
+public:
+  HoodSubsystem();
+  ~HoodSubsystem();
 
-//   void Setup() override;
+  void Setup() override;
 
-//   HoodTarget ZeroTarget() const override;
+  HoodTarget ZeroTarget() const override;
 
-//   bool VerifyHardware() override;
+  bool VerifyHardware() override;
 
-//   void ZeroEncoders();
+  void ZeroEncoders();
 
-// private:
-//   funkit::control::HigherMotorController esc_;
+private:
+  funkit::control::HigherMotorController esc_;
 
-//   HoodReadings ReadFromHardware() override;
+  HoodReadings ReadFromHardware() override;
 
-//   void WriteToHardware(HoodTarget target) override;
-// };
+  void WriteToHardware(HoodTarget target) override;
+};

@@ -9,32 +9,33 @@
 #include "funkit/wpilib/time.h"
 #include "pdcsu_control.h"
 
-struct TurretReadings {
+struct DyeRotorReadings {
+  degree_t pos_;
+  bool has_balls_;
+};
+
+struct DyeRotorTarget {
   degree_t pos_;
 };
 
-struct TurretTarget {
-  degree_t pos_;
-};
-
-class TurretSubsystem
-    : public funkit::robot::GenericSubsystem<TurretReadings, TurretTarget> {
+class DyeRotorSubsystem
+    : public funkit::robot::GenericSubsystem<DyeRotorReadings, DyeRotorTarget> {
 public:
-  TurretSubsystem();
-  ~TurretSubsystem();
+  DyeRotorSubsystem();
+  ~DyeRotorSubsystem();
 
   void Setup() override;
 
-  TurretTarget ZeroTarget() const override;
+  DyeRotorTarget ZeroTarget() const override;
 
   bool VerifyHardware() override;
 
   void ZeroEncoders();
 
 private:
-  TurretReadings ReadFromHardware() override;
+  DyeRotorReadings ReadFromHardware() override;
 
   funkit::control::HigherMotorController esc_;
 
-  void WriteToHardware(TurretTarget target) override;
+  void WriteToHardware(DyeRotorTarget target) override;
 };

@@ -14,9 +14,9 @@
 
 #include "autos/auton_seqs.h"
 #include "calculators/ShootingCalculator.h"
+#include "commands/general/shooter_command.h"
 #include "commands/teleop/drive_command.h"
 #include "commands/teleop/intake_command.h"
-#include "commands/teleop/shooter_command.h"
 #include "control_triggers.h"
 #include "funkit/wpilib/NTAction.h"
 #include "rsighandler.h"
@@ -49,10 +49,6 @@ void FunkyRobot::OnInitialize() {
       "zero_odometry", new funkit::wpilib::NTAction([this] {
         container_.drivetrain_.SetPosition({inch_t{0}, inch_t{0}});
       }));
-
-  frc::SmartDashboard::PutData("zero_turret_encoders",
-      new funkit::wpilib::NTAction(
-          [this] { container_.turr_test.ZeroEncoders(); }));
 
   // Add path recording controls
   frc::SmartDashboard::PutData(
@@ -107,9 +103,6 @@ void FunkyRobot::OnDisable() {
 
 void FunkyRobot::InitTeleop() {
   container_.drivetrain_.SetDefaultCommand(DriveCommand{container_});
-  container_.shooter_.SetDefaultCommand(ShooterCommand{container_});
-  container_.intake_.SetDefaultCommand(IntakeCommand{container_});
-
   ControlTriggerInitializer::InitTeleopTriggers(container_);
 }
 
@@ -183,8 +176,6 @@ void FunkyRobot::OnPeriodic() {
 
 void FunkyRobot::InitTest() {
   container_.drivetrain_.SetDefaultCommand(DriveCommand{container_});
-  container_.shooter_.SetDefaultCommand(ShooterCommand{container_});
-  container_.intake_.SetDefaultCommand(IntakeCommand{container_});
 }
 
 #ifndef RUNNING_FRC_TESTS

@@ -1,9 +1,5 @@
 #pragma once
 
-#include <units/length.h>
-#include <units/time.h>
-#include <units/velocity.h>
-
 #include <deque>
 #include <memory>
 
@@ -13,13 +9,12 @@
 #include "funkit/wpilib/time.h"
 #include "pdcsu_control.h"
 
-enum struct IntakeState { kIdle, kIntake };
-
-struct IntakeReadings {};
+struct IntakeReadings {
+  degps_t pos_;
+};
 
 struct IntakeTarget {
-  IntakeState state;
-  double realintake;
+  degps_t pos_;
 };
 
 class IntakeSubsystem
@@ -34,11 +29,12 @@ public:
 
   bool VerifyHardware() override;
 
+  void ZeroEncoders();
+
 private:
+  funkit::control::HigherMotorController esc_;
+
   IntakeReadings ReadFromHardware() override;
 
   void WriteToHardware(IntakeTarget target) override;
-
-  funkit::control::HigherMotorController esc_;
-  funkit::control::HigherMotorController intesc_;
 };
