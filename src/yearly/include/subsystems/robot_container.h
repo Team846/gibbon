@@ -4,6 +4,9 @@
 #include "subsystems/abstract/control_input.h"
 #include "subsystems/abstract/gpd.h"
 #include "subsystems/hardware/DrivetrainConstructor.h"
+
+#include "subsystems/hardware/ictest.h"
+#include "subsystems/hardware/intake.h"
 #include "subsystems/hardware/hoptake/hoptake_ss.h"
 #include "subsystems/hardware/leds.h"
 #include "subsystems/hardware/scorer/scorer_ss.h"
@@ -24,12 +27,16 @@ public:
 
   HoptakeSuperstructure hoptake_ss_{};
 
+  ICTestSubsystem ictest_{};
+
   RobotContainer() {
     RegisterPreference("init_drivetrain", true);
     RegisterPreference("init_leds", true);
     RegisterPreference("init_gpd", true);
+
     RegisterPreference("init_shooter", true);
     RegisterPreference("init_intake", true);
+    RegisterPreference("init_ictest", true);
 
     bool drivetrain_init = (GetPreferenceValue_bool("init_drivetrain"));
     bool leds_init = (GetPreferenceValue_bool("init_leds"));
