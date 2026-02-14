@@ -42,7 +42,7 @@ TurretSubsystem::TurretSubsystem()
   cancoder_1_.GetAbsolutePosition().SetUpdateFrequency(20_Hz);
   cancoder_2_.GetAbsolutePosition().SetUpdateFrequency(20_Hz);
 
-  RegisterPreference("icnor/IPG", 0.1);
+  RegisterPreference("icnor/IPG", 0.5);
   RegisterPreference("icnor/friction_nm", 5.0_Nm_);
   RegisterPreference("encoder/offset1", 0.0_rot_);
   RegisterPreference("encoder/offset2", 0.0_rot_);
@@ -70,7 +70,6 @@ void TurretSubsystem::Setup() {
   DefBLDC def_bldc(motor_specs.stall_current, motor_specs.free_current,
       motor_specs.stall_torque, motor_specs.free_speed, 12_V_);
 
-  // TODO: Fix
   arm_sys_ = std::make_unique<DefArmSys>(
       def_bldc, 1, 58_rot_ / 16_rot_ * 90_rot_ / 10_rot_,
       [](radian_t, radps_t) -> nm_t { return nm_t{0.0}; },

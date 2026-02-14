@@ -46,8 +46,8 @@ void ScorerSuperstructure::Setup() {
 }
 
 ScorerSSTarget ScorerSuperstructure::ZeroTarget() const {
-  return ScorerSSTarget{
-      {0_deg_, 0_degps_}, 80_deg_, 0_fps_, TrackingState::kTrack, false};
+  return ScorerSSTarget{{0_deg_, 0_degps_}, {80_deg_, 0_degps_}, 0_fps_,
+      TrackingState::kTrack, false};
 }
 
 bool ScorerSuperstructure::VerifyHardware() {
@@ -81,7 +81,8 @@ void ScorerSuperstructure::ClearAdjustments() {
 void ScorerSuperstructure::WriteToHardware(ScorerSSTarget target) {
   if (target.tracking_state == TrackingState::kPointBlank) {
     hood.SetTarget(
-        {GetPreferenceValue_unit_type<degree_t>("point_blank/hood_angle")});
+        {GetPreferenceValue_unit_type<degree_t>("point_blank/hood_angle"),
+            0_degps_});
     turret.SetTarget(
         {GetPreferenceValue_unit_type<degree_t>("point_blank/turret_angle"),
             0_degps_});

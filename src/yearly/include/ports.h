@@ -51,6 +51,7 @@ struct ports {
   struct hood_ {
     static constexpr funkit::control::config::MotorConstructionParameters
         kHoodParams = {18, "", false};
+    static constexpr int kCANCoder_CANID = 54;
   };
 
   struct intake_ {

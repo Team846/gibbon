@@ -1,5 +1,6 @@
 #pragma once
 
+#include <ctre/phoenix6/CANcoder.hpp>
 #include <deque>
 #include <memory>
 
@@ -11,11 +12,13 @@
 
 struct HoodReadings {
   degree_t pos_;
+  degps_t vel_;
   bool in_position_;
 };
 
 struct HoodTarget {
   degree_t pos_;
+  degps_t vel_;
 };
 
 class HoodSubsystem
@@ -31,11 +34,17 @@ public:
   bool VerifyHardware() override;
 
   void ZeroEncoders();
+  void ZeroWithCANCoder();
 
 private:
+  HoodReadings ReadFromHardware() override;
+  void WriteToHardware(HoodTarget target) override;
+
   funkit::control::HigherMotorController esc_;
 
-  HoodReadings ReadFromHardware() override;
+  ctre::phoenix6::hardware::CANcoder cancoder_;
 
-  void WriteToHardware(HoodTarget target) override;
+  std::unique_ptr<pdcsu::control::ICNORPositionControl> icnor_controller_;
+  std::unique_ptr<pdcsu::util::DefArmSys> arm_sys_;
+  std::shared_ptr<pdcsu::control::ICNORLearner> icnor_learner_;
 };
