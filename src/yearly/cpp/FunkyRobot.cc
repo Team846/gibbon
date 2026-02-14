@@ -50,6 +50,14 @@ void FunkyRobot::OnInitialize() {
         container_.drivetrain_.SetPosition({inch_t{0}, inch_t{0}});
       }));
 
+  frc::SmartDashboard::PutData("zero_turret_encoders",
+      new funkit::wpilib::NTAction(
+          [this] { container_.ictest_.ZeroEncoders(); }));
+
+  frc::SmartDashboard::PutData("zero_turret_with_CRT",
+      new funkit::wpilib::NTAction(
+          [this] { container_.ictest_.ZeroWithCRT(); }));
+
   // Add path recording controls
   frc::SmartDashboard::PutData(
       "start_path_recording", new funkit::wpilib::NTAction([this] {
@@ -86,8 +94,8 @@ void FunkyRobot::OnEnable() {
         time_buffer, sizeof(time_buffer), "%m-%d-%Y_%H-%M-%S", tm_now);
     std::string filename = "pathlogs_" + std::string(time_buffer);
 
-    container_.drivetrain_.StartPathRecording(filename);
-    Log("Started recording auto path data to {}.csv", filename);
+    // container_.drivetrain_.StartPathRecording(filename);
+    // Log("Started recording auto path data to {}.csv", filename);
   }
 }
 
@@ -170,6 +178,8 @@ void FunkyRobot::OnPeriodic() {
   else if (coast_count_ > 0 && isDisabled)
     LEDsLogic::CoastingLEDs(&container_,
         (1.0 * coast_count_) / GetPreferenceValue_int("num_coasting_loops"));
+  else if (container_.ictest_.inpos && container_.drivetrain_.variance < 16.0)
+    LEDsLogic::SetLEDsState(&container_, kLEDsSequencing);
   else
     LEDsLogic::UpdateLEDs(&container_);
 }

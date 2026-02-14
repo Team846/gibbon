@@ -48,6 +48,8 @@ public:
     covar = Eigen::MatrixXd::Identity(N, N);
   }
 
+  void setState(mat setState) { state = setState; }
+
   mat getCoVar() { return covar; };
 
 protected:

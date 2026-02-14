@@ -58,7 +58,7 @@ void DriveCommand::Periodic() {
         ShootingCalculator::GetOutputs();
     if (shooting_outputs.is_valid) {
       target.angular_velocity = container_.drivetrain_.ApplyBearingPID(
-          shooting_outputs.aim_angle + 4_deg_,
+          shooting_outputs.aim_angle,
           shooting_outputs.vel_aim_compensation);
     }
   }
@@ -110,6 +110,29 @@ void DriveCommand::Periodic() {
   }
 
   container_.drivetrain_.SetTarget({target});
+
+  // TODO remove
+  auto err = (pdcsu::util::math::Vector2D{144.85_in_, 158.34_in_} -
+              container_.drivetrain_.GetReadings().estimated_pose.position);
+  auto rpos = pdcsu::util::math::Vector2D{3.0_in_, 0.0_in_}.rotate(
+      container_.drivetrain_.GetReadings().pose.bearing, true);
+  degree_t tbb =
+      container_.drivetrain_.GetReadings().pose.bearing - err.angle(true);
+  Graph("errangle", err.angle(true));
+  icpostarget = icposz + tbb;
+  if (icpostarget > 270_deg_) {
+    icposz -= 360_deg_;
+    icpostarget = icposz + tbb;
+  } else if (icpostarget < -270_deg_) {
+    icposz += 360_deg_;
+    icpostarget = icposz + tbb;
+  }
+  radps_t icposvel = container_.drivetrain_.GetReadings().yaw_rate * 1.5;
+  ICTestTarget ictarget{};
+  ictarget.pos = icpostarget;
+  ictarget.vel = icposvel;
+
+  container_.ictest_.SetTarget(ictarget);
 }
 
 void DriveCommand::OnEnd(bool interrupted) {}

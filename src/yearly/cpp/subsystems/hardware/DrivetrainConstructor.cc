@@ -51,6 +51,8 @@ struct UserSettableValues {
   } module_ports;
   std::vector<funkit::robot::calculators::AprilTagCameraConfig>
       april_camera_configs;
+  std::optional<funkit::robot::calculators::TurretTagCameraConfig>
+      turret_camera_config;
   std::map<size_t, funkit::robot::calculators::AprilTagData> april_locations;
 };
 
@@ -62,8 +64,8 @@ UserSettableValues GetUserSettableValues() {
       .imu_connection =
           swerve::NavXConnection{swerve::NavXConnectionType::kMXP},
       .wheel_diameter = inch_t{4},
-      .drive_gear_ratio = 6.75,
-      .steer_reduction = 150_rot_ / 7_rot_,
+      .drive_gear_ratio = 8.16,  // TODO fix
+      .steer_reduction = 12.8_rot_ / 1_rot_,
       .wheel_contact_radius = inch_t{0.4},
       .steer_inertia_coeff = 0.00285,
       .drive_friction = 0.02,
@@ -88,7 +90,8 @@ UserSettableValues GetUserSettableValues() {
           {3U, 5.0_in_, -3.0_in_}},
       .april_locations = {{1U, {25.38_in_, 183.58_in_}},
           {2U, {135.09_in_, 182.11_in_}}, {3U, {144.85_in_, 205.87_in_}},
-          {4U, {158.85_in_, 205.87_in_}}, {5U, {135.34_in_, 182.11_in_}},
+          {4U, {158.85_in_, 205.87_in_}},
+          {5U, {144.85_in_ - 83.5_in_, 158.34_in_ - 30.25_in_}},
           {6U, {25.37_in_, 183.58_in_}}, {7U, {292.32_in_, 180.63_in_}},
           {8U, {182.60_in_, 168.11_in_}}, {9U, {144.85_in_, 158.34_in_}},
           {10U, {158.85_in_, 158.34_in_}}, {11U, {135.09_in_, 168.11_in_}},
@@ -102,7 +105,9 @@ UserSettableValues GetUserSettableValues() {
           {26U, {158.85_in_, 492.88_in_}}, {27U, {182.60_in_, 483.11_in_}},
           {28U, {292.32_in_, 470.58_in_}}, {29U, {291.47_in_, 650.92_in_}},
           {30U, {274.47_in_, 650.92_in_}}, {31U, {170.22_in_, 650.90_in_}},
-          {32U, {153.22_in_, 650.90_in_}}}};  // TODO: Double check locations
+          {32U,
+              {144.85_in_ - 108.5_in_,
+                  158.34_in_ - 244.75_in_}}}};  // TODO: Double check locations
 }
 
 //--------------------------------------------------------
@@ -193,7 +198,7 @@ swerve::DrivetrainConfigs DrivetrainConstructor::getDrivetrainConfigs() {
 
   control_config::MotorConstructionParameters steer_params;
   steer_params.can_id = 999;
-  steer_params.inverted = false;
+  steer_params.inverted = true;
   steer_params.bus = "";
 
   using namespace pdcsu::units;
@@ -238,6 +243,7 @@ swerve::DrivetrainConfigs DrivetrainConstructor::getDrivetrainConfigs() {
       .max_speed = fps_t{0.0},
       .april_camera_configs = user_values.april_camera_configs,
       .april_locations = user_values.april_locations,
+      .turret_camera_config = user_values.turret_camera_config,
       .max_accel = fps2_t{max_accel_mps2.value() * 3.28084}};
 
   return configs;

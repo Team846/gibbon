@@ -57,13 +57,14 @@ DrivetrainSubsystem::DrivetrainSubsystem(DrivetrainConfigs configs)
   funkit::control::config::SubsystemGenomeHelper::CreateGenomePreferences(
       *this, "steer_genome", steer_genome_backup);
 
+  RegisterPreference("scalar_pigeon", 1.010101010101010101010101010101);
+
   RegisterPreference("bearing_gains/_kP", 9);
   RegisterPreference("bearing_gains/_kI", 0.0);
   RegisterPreference("bearing_gains/_kD", -0.6);
   RegisterPreference("bearing_gains/_kF", -0.3);
   RegisterPreference("bearing_gains/deadband", pdcsu::units::degps_t{3.0});
 
-  RegisterPreference("april_bearing_latency", pdcsu::units::ms_t{0});
   RegisterPreference("drive_latency", pdcsu::units::ms_t{0});
 
   RegisterPreference("max_speed", pdcsu::units::fps_t{15});
@@ -76,9 +77,6 @@ DrivetrainSubsystem::DrivetrainSubsystem(DrivetrainConfigs configs)
   RegisterPreference("steer_lag", pdcsu::units::second_t{0.05});
   RegisterPreference("bearing_latency", pdcsu::units::second_t{0.01});
 
-  RegisterPreference("pose_estimator/pose_variance", 0.1);
-  RegisterPreference("pose_estimator/velocity_variance", 1.0);
-  RegisterPreference("pose_estimator/accel_variance", 1.0);
   RegisterPreference("pose_estimator/override", false);
 
   RegisterPreference("april_tags/april_variance_coeff", 0.08);
@@ -110,8 +108,17 @@ DrivetrainSubsystem::DrivetrainSubsystem(DrivetrainConfigs configs)
         {config, nt::NetworkTableInstance::GetDefault().GetTable(
                      "AprilTagsCam" + std::to_string(config.camera_id))});
   }
-  tag_pos_calculator.setConstants(
-      {.tag_locations = configs.april_locations, .cameras = cameras});
+  std::optional<funkit::robot::calculators::TurretTagCamera> turret_tag_camera;
+  if (configs.turret_camera_config.has_value()) {
+    const auto& tc = configs.turret_camera_config.value();
+    turret_tag_camera.emplace(
+        funkit::robot::calculators::TurretTagCamera{.config = tc,
+            .table = nt::NetworkTableInstance::GetDefault().GetTable(
+                "AprilTagsCam" + std::to_string(tc.camera_id))});
+  }
+  tag_pos_calculator.setConstants({.tag_locations = configs.april_locations,
+      .cameras = cameras,
+      .turret_camera = turret_tag_camera});
 
 #ifndef _WIN32
   for (int i = 0; i < 20; i++) {
@@ -265,8 +272,10 @@ pdcsu::units::degps_t DrivetrainSubsystem::ApplyBearingPID(
 pdcsu::units::degree_t DrivetrainSubsystem::GetBearing() {
   if (pigeon_.has_value()) {
     auto bearing_wpi =
-        -1 * ctre::phoenix6::BaseStatusSignal::GetLatencyCompensatedValue(
-                 pigeon_->GetYaw(), pigeon_->GetAngularVelocityZWorld());
+        -1 *
+        ctre::phoenix6::BaseStatusSignal::GetLatencyCompensatedValue(
+            pigeon_->GetYaw(), pigeon_->GetAngularVelocityZWorld()) *
+        GetPreferenceValue_double("scalar_pigeon");
     return pdcsu::units::degree_t{bearing_wpi.to<double>()};
   } else if (navX_.has_value()) {
     return pdcsu::units::degree_t{navX_->GetAngle()};
@@ -320,14 +329,7 @@ DrivetrainSubsystem::GetAcceleration() {
 }
 
 DrivetrainReadings DrivetrainSubsystem::ReadFromHardware() {
-  cached_pose_variance_ =
-      GetPreferenceValue_double("pose_estimator/pose_variance");
-  cached_velocity_variance_ =
-      GetPreferenceValue_double("pose_estimator/velocity_variance");
-  cached_accel_variance_ =
-      GetPreferenceValue_double("pose_estimator/accel_variance");
-  pose_estimator.Update(
-      cached_pose_variance_, cached_velocity_variance_, cached_accel_variance_);
+  pose_estimator.Update();
 
   pdcsu::units::degree_t bearing = GetBearing();
   pdcsu::units::degps_t yaw_rate = GetYawRate();
@@ -411,13 +413,15 @@ DrivetrainReadings DrivetrainSubsystem::ReadFromHardware() {
             "april_tags/fudge_latency" + std::to_string(config.camera_id));
   }
 
-  cached_april_bearing_latency_ =
-      GetPreferenceValue_unit_type<pdcsu::units::ms_t>("april_bearing_latency");
-
+  funkit::robot::swerve::odometry::SwervePose odom_pose{
+      .position = odom_output.position,
+      .bearing = bearing,
+      .velocity = velocity,
+  };
   funkit::robot::calculators::ATCalculatorOutput tag_pos =
-      tag_pos_calculator.calculate({new_pose, GetReadings().pose, yaw_rate,
-          cached_april_variance_coeff_, cached_triangular_variance_coeff_,
-          cached_fudge_latencies_, cached_april_bearing_latency_});
+      tag_pos_calculator.calculate({new_pose, odom_pose,
+          yaw_rate, cached_april_variance_coeff_,
+          cached_triangular_variance_coeff_, cached_fudge_latencies_});
 
   if (tag_pos.variance >= 0) {
     pose_estimator.AddVisionMeasurement(
@@ -432,6 +436,8 @@ DrivetrainReadings DrivetrainSubsystem::ReadFromHardware() {
   Graph("april_tags/april_pos_x", tag_pos.pos[0]);
   Graph("april_tags/april_pos_y", tag_pos.pos[1]);
   Graph("april_tags/april_variance", tag_pos.variance);
+
+  Graph("pose_estimator/latency_est", pose_estimator.getLatency());
 
   if (first_loop) {
     pose_estimator.SetPoint(
@@ -461,6 +467,7 @@ DrivetrainReadings DrivetrainSubsystem::ReadFromHardware() {
   Graph("estimated_pose/velocity_x", estimated_pose.velocity[0]);
   Graph("estimated_pose/velocity_y", estimated_pose.velocity[1]);
   Graph("estimated_pose/variance", pose_estimator.getVariance());
+  variance = pose_estimator.getVariance();
 
   Graph("readings/position_x", new_pose.position[0]);
   Graph("readings/position_y", new_pose.position[1]);
@@ -472,8 +479,6 @@ DrivetrainReadings DrivetrainSubsystem::ReadFromHardware() {
   Graph("readings/accel_y", accl[1]);
 
   accl = accl.rotate(bearing_offset_);
-  pose_estimator.AddAccelerationMeasurement({accl[0].value(), accl[1].value()});
-
   pdcsu::units::fps2_t accel_mag{std::sqrt(
       accl[0].value() * accl[0].value() + accl[1].value() * accl[1].value())};
   // Graph("readings/accel_mag", accel_mag);

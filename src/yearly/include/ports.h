@@ -65,4 +65,9 @@ struct ports {
     static constexpr funkit::control::config::MotorConstructionParameters
         kPivotParams = {21, "", false};
   };
+  struct ictest_ {
+    static constexpr int kMotor1_CANID = 51;
+    static constexpr int kCANCoder1_CANID = 52;
+    static constexpr int kCANCoder2_CANID = 53;
+  };
 };
