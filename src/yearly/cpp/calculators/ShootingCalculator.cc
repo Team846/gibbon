@@ -1,8 +1,11 @@
 #include "calculators/ShootingCalculator.h"
 
+#include <frc/DriverStation.h>
+
 ShootingCalculatorOutputs ShootingCalculator::outputs_{
     0_deg_, 0_radps_, 0_fps_, false};
 std::optional<funkit::base::Loggable> ShootingCalculator::loggable_opt;
+pdcsu::util::math::Vector2D ShootingCalculator::target{0_in_, 0_in_};
 
 void ShootingCalculator::Setup() {
   if (loggable_opt.has_value()) { return; }
@@ -21,10 +24,8 @@ void ShootingCalculator::Calculate(const RobotContainer* container_) {
   auto& loggable = loggable_opt.value();
 
   using namespace pdcsu::util::math;
-
   using Vel2D = uVec<pdcsu::units::fps_t, 2>;
 
-  const Vector2D target{158.845_in_, 182.11_in_};  // TODO: Blue side flipping
   const inch_t pointblank_distance = 60_in_;
 
   auto drivetrain_readings = container_->drivetrain_.GetReadings();

@@ -24,6 +24,8 @@ public:
 
   static ShootingCalculatorOutputs GetOutputs() { return outputs_; };
 
+  static pdcsu::util::math::Vector2D target;
+
 private:
   static ShootingCalculatorOutputs outputs_;
   static std::optional<funkit::base::Loggable> loggable_opt;

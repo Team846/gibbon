@@ -14,9 +14,9 @@
 
 #include "autos/auton_seqs.h"
 #include "calculators/ShootingCalculator.h"
+#include "commands/general/intake_command.h"
 #include "commands/general/shooter_command.h"
 #include "commands/teleop/drive_command.h"
-#include "commands/teleop/intake_command.h"
 #include "control_triggers.h"
 #include "funkit/wpilib/NTAction.h"
 #include "rsighandler.h"

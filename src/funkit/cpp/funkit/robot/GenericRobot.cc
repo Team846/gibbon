@@ -185,11 +185,11 @@ void GenericRobot::StartCompetition() {
     // Update subsystem readings
     generic_robot_container_->UpdateReadings();
 
-    // Special-case periodic implemented in FunkyRobot
-    OnPeriodic();
-
     // Tick command scheduler
     frc2::CommandScheduler::GetInstance().Run();
+
+    // Special-case periodic implemented in FunkyRobot
+    OnPeriodic();
 
     // Update subsystem hardware
     generic_robot_container_->UpdateHardware();

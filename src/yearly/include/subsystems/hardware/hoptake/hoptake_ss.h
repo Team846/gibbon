@@ -12,15 +12,12 @@
 #include "subsystems/hardware/hoptake/intake.h"
 #include "subsystems/hardware/hoptake/pivot.h"
 
-enum class HoptakeState { kIntaking, kAgitate };
-
-enum class HoptakeOverrides { kNothing, kAgitate, kEvac };
+enum class HoptakeState { kIdle, kIntake, kAgitate, kEvac };
 
 struct HoptakeSSReadings {};
 
 struct HoptakeSSTarget {
-  funkit::robot::swerve::odometry::SwervePose pose;
-  HoptakeOverrides override_state = HoptakeOverrides::kNothing;
+  HoptakeState target_state;
 };
 
 class HoptakeSuperstructure

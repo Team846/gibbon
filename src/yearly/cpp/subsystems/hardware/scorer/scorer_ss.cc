@@ -12,33 +12,41 @@ ScorerSuperstructure::ScorerSuperstructure()
   RegisterPreference("init_shooter", true);
   RegisterPreference("init_dye_rotor", true);
 
-  RegisterPreference("dye_rotor_balless_thresh", 50);
-  RegisterPreference("turret_adjustment", 0_deg_);
+  RegisterPreference("passing/left_x", 0.0_in_);
+  RegisterPreference("passing/left_y", 0.0_in_);
+  RegisterPreference("passing/right_x", 0.0_in_);
+  RegisterPreference("passing/right_y", 0.0_in_);
+
+  RegisterPreference("point_blank/turret_angle", 0_deg_);
+  RegisterPreference("point_blank/hood_angle", 85_deg_);
+  RegisterPreference("point_blank/shooter_vel", 24_fps_);
+
+  RegisterPreference("rotor_reset_loops", 20);
 }
 
 ScorerSuperstructure::~ScorerSuperstructure() = default;
 
 void ScorerSuperstructure::Setup() {
   if (GetPreferenceValue_bool("init_turret")) {
-    turret.Init();
+    turret.InitByParent();
     turret.Setup();
   }
   if (GetPreferenceValue_bool("init_hood")) {
-    hood.Init();
+    hood.InitByParent();
     hood.Setup();
   }
   if (GetPreferenceValue_bool("init_shooter")) {
-    shooter.Init();
+    shooter.InitByParent();
     shooter.Setup();
   }
   if (GetPreferenceValue_bool("init_dye_rotor")) {
-    dye_rotor.Init();
+    dye_rotor.InitByParent();
     dye_rotor.Setup();
   }
 }
 
 ScorerSSTarget ScorerSuperstructure::ZeroTarget() const {
-  return ScorerSSTarget{};
+  return ScorerSSTarget{0_deg_, 80_deg_, 0_fps_, TrackingState::kTrack, false};
 }
 
 bool ScorerSuperstructure::VerifyHardware() {
@@ -48,29 +56,20 @@ bool ScorerSuperstructure::VerifyHardware() {
 
 ScorerSSReadings ScorerSuperstructure::ReadFromHardware() {
   ScorerSSReadings readings;
-  (!dye_rotor_dds_.Get()) ? dye_rotor_counter_++ : dye_rotor_counter_ = 0;
 
-  if (dye_rotor_counter_ > GetPreferenceValue_int("dye_rotor_balless_thresh")) {
-    readings.balls_feed_ = false;
-  } else {
-    readings.balls_feed_ = true;
-  }
+  readings.will_make_shot = turret.GetReadings().in_position_ &&
+                            hood.GetReadings().in_position_ &&
+                            shooter.GetReadings().is_spun_up;
 
   return readings;
 }
 
 void ScorerSuperstructure::AdjustTurret(bool cw) {
-  if (cw)
-    turret_adjustment_ -= 0.5_deg;
-  else
-    turret_adjustment_ += 0.5_deg;
+  (cw) ? turret_adjustment_ -= 0.5_deg_ : turret_adjustment_ += 0.5_deg_;
 }
 
 void ScorerSuperstructure::AdjustHood(bool up) {
-  if (up)
-    hood_adjustment_ += 0.5_deg;
-  else
-    hood_adjustment_ -= 0.5_deg;
+  (up) ? hood_adjustment_ += 0.5_deg_ : hood_adjustment_ -= 0.5_deg_;
 }
 
 void ScorerSuperstructure::ClearAdjustments() {
@@ -79,28 +78,38 @@ void ScorerSuperstructure::ClearAdjustments() {
 }
 
 void ScorerSuperstructure::WriteToHardware(ScorerSSTarget target) {
-  // check for overrides
-  if (target.override_state_ != ScorerOverrides::kNothing) {
-    if (target.override_state_ == ScorerOverrides::kTurretNoSpin) {
-      current_state_ = ScorerState::kWithDT;
-      // ignore turret assume drivetrain aligned
-      // hood.SetTarget({target.shooting_outputs_.hood_pos});
-      shooter.SetTarget({target.shooting_outputs_.shooter_vel});
-    } else if (target.override_state_ == ScorerOverrides::kDisabled) {
-      return;
-    }
-  } else {
-    if (target.shooting_outputs_.is_valid) {
-      turret.SetTarget(
-          {target.shooting_outputs_.aim_angle + turret_adjustment_});
-      hood.SetTarget({target.shooting_outputs_.hood_pos + hood_adjustment_});
-      shooter.SetTarget({target.shooting_outputs_.shooter_vel});
-      current_state_ = ScorerState::kFollowHub;
-    } else {
-      turret.SetTargetZero();
-      hood.SetTargetZero();
-      shooter.SetTargetZero();
-      current_state_ = ScorerState::kFollowHub;
-    }
+  if (target.tracking_state == TrackingState::kPointBlank) {
+    hood.SetTarget(
+        {GetPreferenceValue_unit_type<degree_t>("point_blank/hood_angle")});
+    turret.SetTarget(
+        {GetPreferenceValue_unit_type<degree_t>("point_blank/turret_angle")});
+    shooter.SetTarget(
+        {GetPreferenceValue_unit_type<fps_t>("point_blank/shooter_vel"), true});
+  } else if (target.tracking_state == TrackingState::kTrack) {
+    hood.SetTarget({target.hood_target});
+    turret.SetTarget({target.turret_target});
+    shooter.SetTarget({target.shooter_target, true});
+  } else if (target.tracking_state == TrackingState::kLockTurret) {
+    hood.SetTarget({target.hood_target});
+    shooter.SetTarget({target.shooter_target, true});
   }
+
+  if (last_shoot != target.shoot)
+    rotor_reset_ctr = GetPreferenceValue_int("rotor_reset_loops");
+
+  if (target.shoot) {
+    if (rotor_reset_ctr > 0) {
+      dye_rotor.SetTarget({DyeRotorState::kRotorReverse});
+      rotor_reset_ctr--;
+    } else {
+      dye_rotor.SetTarget({DyeRotorState::kRotor84bps});
+    }
+
+  } else if (target.reverse_rotor) {
+    dye_rotor.SetTarget({DyeRotorState::kRotorReverse});
+  } else {
+    dye_rotor.SetTarget({DyeRotorState::kRotorIdle});
+  }
+
+  last_shoot = target.shoot;
 }

@@ -30,7 +30,7 @@ void IntakeSubsystem::Setup() {
 
   // TODO: Fix
   DefArmSys intake_plant(
-      def_bldc, 2, 2_rot_ / 1_rot_,
+      def_bldc, 1, 2_rot_ / 1_rot_,
       [&](radian_t x, radps_t v) -> nm_t { return 0.0_Nm_; }, 0.001044_kgm2_,
       0.05_Nm_, 0.1_Nm_ / 1200_radps_, 20_ms_);
 
@@ -43,7 +43,7 @@ void IntakeSubsystem::Setup() {
 }
 
 IntakeTarget IntakeSubsystem::ZeroTarget() const {
-  return IntakeTarget{0_deg_};
+  return IntakeTarget{0_degps_};
 }
 
 bool IntakeSubsystem::VerifyHardware() {

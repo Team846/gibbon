@@ -15,14 +15,16 @@ void IntakeCommand::OnInit() {}
 
 void IntakeCommand::Periodic() {
   ControlInputReadings ci_readings_{container_.control_input_.GetReadings()};
-
   HoptakeSSTarget target;
-  target.intake_speed = ci_readings_.intake_speed;
 
-  if (ci_readings_.agitate) {
-    target.override_state = HoptakeOverrides::kAgitate;
+  if (ci_readings_.intake) {
+    target.target_state = HoptakeState::kIntake;
+  } else if (ci_readings_.agitate) {
+    target.target_state = HoptakeState::kAgitate;
   } else if (ci_readings_.evac_storage) {
-    target.override_state = HoptakeOverrides::kEvac;
+    target.target_state = HoptakeState::kEvac;
+  } else {
+    target.target_state = HoptakeState::kIdle;
   }
 
   container_.hoptake_ss_.SetTarget(target);

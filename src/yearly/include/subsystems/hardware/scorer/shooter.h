@@ -15,8 +15,8 @@ struct ShooterReadings {
 };
 
 struct ShooterTarget {
-  fps_t vel;
-  bool idle_ = true;
+  fps_t target_vel;
+  bool active_shooting;
 };
 
 class ShooterSubsystem
@@ -37,7 +37,7 @@ private:
   funkit::control::HigherMotorController esc_1_;
   funkit::control::HigherMotorController esc_2_;
 
-  static constexpr inch_t kWheelRadius{1.5};
+  static constexpr inch_t kWheelRadius{2.0};
 
   ShooterReadings ReadFromHardware() override;
 

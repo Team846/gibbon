@@ -13,7 +13,7 @@ struct ControlInputReadings {
 
   bool zero_bearing;
   bool diagonalize_bump;
-  double intake_speed;
+  double intake;
   bool climb_align;
   bool point_blank_shot;
 
@@ -21,14 +21,19 @@ struct ControlInputReadings {
   bool override_autoshoot;
   bool force_shoot;
   bool agitate;
-  double hood_trim;
-  double turret_trim;
+  bool hood_trim_cw;
+  bool hood_trim_ccw;
+  bool turret_trim_cw;
+  bool turret_trim_ccw;
   bool pass_mode;
   bool descend_l1;
   bool override_force_assist;
   bool evac_storage;
-  bool dye_rotor;
+  bool rev_dye_rotor;
   bool home;
+
+  // Operator Keyboard Overrides
+  bool turret_no_spin;
 };
 
 struct ControlInputTarget {

@@ -37,8 +37,8 @@ HoptakeSSReadings HoptakeSuperstructure::ReadFromHardware() {
 }
 
 void HoptakeSuperstructure::WriteToHardware(HoptakeSSTarget target) {
-  if (target.override_state == HoptakeOverrides::kAgitate) {
-  } else if (target.override_state == HoptakeOverrides::kEvac) {
-  } else {
-  }
+  // if (target.override_state == HoptakeOverrides::kAgitate) {
+  // } else if (target.override_state == HoptakeOverrides::kEvac) {
+  // } else {
+  // }
 }

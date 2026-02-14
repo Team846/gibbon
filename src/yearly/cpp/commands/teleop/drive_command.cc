@@ -53,7 +53,7 @@ void DriveCommand::Periodic() {
   target.angular_velocity = degps_t{rotation * max_omega.value()};
 
   /* For shooting while in motion */
-  if (container_.scorer_ss_.GetCurrState() == ScorerState::kWithDT) {
+  if (ci_readings_.turret_no_spin) {
     ShootingCalculatorOutputs shooting_outputs =
         ShootingCalculator::GetOutputs();
     if (shooting_outputs.is_valid) {

@@ -8,13 +8,31 @@ using namespace funkit::control::config;
 
 DyeRotorSubsystem::DyeRotorSubsystem()
     : GenericSubsystem("DyeRotor"),
-      esc_{base::TALON_FX_KRAKENX60, ports::dye_rotor_::kDyeRotorParams} {}
+      esc_{base::TALON_FX_KRAKENX60, ports::dye_rotor_::kDyeRotorParams} {
+  // Theoretical 375 RPM maximum speed
+  RegisterPreference("speed_84bps", 300_rpm_);
+  RegisterPreference("speed_slow_feed", 120_rpm_);
+  RegisterPreference("speed_reverse", -200_rpm_);
+  RegisterPreference("speed_idle", 0_rpm_);
+}
+
+radps_t DyeRotorSubsystem::getTargetRotorSpeed(DyeRotorState rotor_state) {
+  switch (rotor_state) {
+  case DyeRotorState::kRotor84bps:
+    return GetPreferenceValue_unit_type<rpm_t>("speed_84bps");
+  case DyeRotorState::kRotorSlowFeed:
+    return GetPreferenceValue_unit_type<rpm_t>("speed_slow_feed");
+  case DyeRotorState::kRotorReverse:
+    return GetPreferenceValue_unit_type<rpm_t>("speed_reverse");
+  default: return GetPreferenceValue_unit_type<rpm_t>("speed_idle");
+  }
+}
 
 DyeRotorSubsystem::~DyeRotorSubsystem() = default;
 
 void DyeRotorSubsystem::Setup() {
-  MotorGenome genome_backup{.motor_current_limit = 30_A_,
-      .smart_current_limit = 20_A_,
+  MotorGenome genome_backup{.motor_current_limit = 40_A_,
+      .smart_current_limit = 40_A_,
       .voltage_compensation = 12_V_,
       .brake_mode = true,
       .gains = {.kP = 0.0, .kI = 0.0, .kD = 0.0, .kF = 0.0}};
@@ -28,11 +46,10 @@ void DyeRotorSubsystem::Setup() {
   DefBLDC def_bldc(motor_specs.stall_current, motor_specs.free_current,
       motor_specs.stall_torque, motor_specs.free_speed, 12_V_);
 
-  // TODO: Fix
   DefArmSys DyeRotor_plant(
-      def_bldc, 2, 2_rot_ / 1_rot_,
-      [&](radian_t x, radps_t v) -> nm_t { return 0.0_Nm_; }, 0.001044_kgm2_,
-      0.05_Nm_, 0.1_Nm_ / 1200_radps_, 20_ms_);
+      def_bldc, 1, 16_rot_ / 1_rot_,
+      [&](radian_t x, radps_t v) -> nm_t { return 0.0_Nm_; },
+      3_lb_ * 7_in_ * 7_in_, 4.0_Nm_, 2.0_Nm_ / 628_radps_, 10_ms_);
 
   esc_.Setup(genome_backup, DyeRotor_plant);
 
@@ -44,7 +61,7 @@ void DyeRotorSubsystem::Setup() {
 }
 
 DyeRotorTarget DyeRotorSubsystem::ZeroTarget() const {
-  return DyeRotorTarget{0_deg_};
+  return DyeRotorTarget{DyeRotorState::kRotorIdle};
 }
 
 bool DyeRotorSubsystem::VerifyHardware() {
@@ -54,9 +71,10 @@ bool DyeRotorSubsystem::VerifyHardware() {
 }
 
 DyeRotorReadings DyeRotorSubsystem::ReadFromHardware() {
-  // esc_.GetPosition()
+  radps_t target_speed = getTargetRotorSpeed(current_state);
+  radps_t error = target_speed - esc_.GetVelocity<radps_t>();
 
-  return DyeRotorReadings{};
+  return DyeRotorReadings{error};
 }
 
 void DyeRotorSubsystem::WriteToHardware(DyeRotorTarget target) {
@@ -65,4 +83,7 @@ void DyeRotorSubsystem::WriteToHardware(DyeRotorTarget target) {
           *this, "genome");
 
   esc_.ModifyGenome(genome);
+
+  current_state = target.target_state;
+  esc_.WriteVelocity(getTargetRotorSpeed(current_state));
 }

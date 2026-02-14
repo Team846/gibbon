@@ -2,7 +2,6 @@
 
 #include <frc/DigitalInput.h>
 
-#include "calculators/ShootingCalculator.h"
 #include "calculators/TurretPositionCalculator.h"
 #include "funkit/control/HigherMotorController.h"
 #include "funkit/robot/GenericRobot.h"
@@ -14,30 +13,25 @@
 #include "subsystems/hardware/scorer/shooter.h"
 #include "subsystems/hardware/scorer/turret.h"
 
-enum class ScorerState {
-  kFollowHub,
-  kPassingLeft,
-  kPassingRight,
-  kWithDT,
-  kPointBlank
-};
-
-enum class ScorerOverrides {
-  kNothing,
-  kDisabled,
-  kTurretNoSpin,
-  kForceShoot,
-  kOverrideAutoShoot
+enum class TrackingState {
+  kTrack,
+  kPointBlank,
+  kLockTurret,
 };
 
 struct ScorerSSReadings {
-  bool balls_feed_;
+  bool will_make_shot;
 };
 
 struct ScorerSSTarget {
-  ShootingCalculatorOutputs shooting_outputs_;
-  ScorerOverrides override_state_ = ScorerOverrides::kNothing;
-  ScorerState state_ = ScorerState::kFollowHub;
+  degree_t turret_target;
+  degree_t hood_target;
+  fps_t shooter_target;
+  TrackingState tracking_state;
+  bool shoot;
+
+  // Overrides
+  bool reverse_rotor = false;
 };
 
 class ScorerSuperstructure
@@ -46,24 +40,18 @@ public:
   ScorerSuperstructure();
   ~ScorerSuperstructure();
 
-  void Setup() override;
-
-  ScorerSSTarget ZeroTarget() const override;
-
   TurretSubsystem turret;
   HoodSubsystem hood;
   ShooterSubsystem shooter;
   DyeRotorSubsystem dye_rotor;
 
-  bool HasReachedShooter(degps_t vel);
-  bool HasReachedHood(degree_t pos);
-  bool HasReachedTurret(degree_t pos);
+  void Setup() override;
 
-  void AdjustTurret(bool cw);
-  void AdjustHood(bool up);
+  ScorerSSTarget ZeroTarget() const override;
+
+  void AdjustTurret(bool cw = false);
+  void AdjustHood(bool up = false);
   void ClearAdjustments();
-
-  ScorerState GetCurrState() const { return current_state_; }
 
   bool VerifyHardware() override;
 
@@ -71,14 +59,12 @@ public:
 
 private:
   ScorerSSReadings ReadFromHardware() override;
+  void WriteToHardware(ScorerSSTarget target) override;
 
-  frc::DigitalInput dye_rotor_dds_{5};
-  int dye_rotor_counter_{0};
-
-  ScorerState current_state_{ScorerState::kFollowHub};
+  bool last_shoot = false;
 
   degree_t turret_adjustment_ = 0_deg_;
   degree_t hood_adjustment_ = 0_deg_;
 
-  void WriteToHardware(ScorerSSTarget target) override;
+  size_t rotor_reset_ctr = 0U;
 };

@@ -9,13 +9,18 @@
 #include "funkit/wpilib/time.h"
 #include "pdcsu_control.h"
 
+enum class DyeRotorState {
+  kRotor84bps,
+  kRotorSlowFeed,
+  kRotorReverse,
+  kRotorIdle,
+};
 struct DyeRotorReadings {
-  degree_t pos_;
-  bool has_balls_;
+  degps_t velocity_error;
 };
 
 struct DyeRotorTarget {
-  degree_t pos_;
+  DyeRotorState target_state;
 };
 
 class DyeRotorSubsystem
@@ -33,9 +38,12 @@ public:
   void ZeroEncoders();
 
 private:
+  radps_t getTargetRotorSpeed(DyeRotorState rotor_state);
+
   DyeRotorReadings ReadFromHardware() override;
+  void WriteToHardware(DyeRotorTarget target) override;
 
   funkit::control::HigherMotorController esc_;
 
-  void WriteToHardware(DyeRotorTarget target) override;
+  DyeRotorState current_state;
 };

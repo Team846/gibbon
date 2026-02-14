@@ -10,6 +10,8 @@
 
 class RobotContainer : public funkit::robot::GenericRobotContainer {
 public:
+  ControlInputSubsystem control_input_{&drivetrain_};
+
   LEDsSubsystem leds_{};
 
   DrivetrainConstructor drivetrain_constructor_{};
@@ -18,24 +20,17 @@ public:
 
   GPDSubsystem GPD_{&drivetrain_};
 
-  ControlInputSubsystem control_input_{&drivetrain_};
-
   ScorerSuperstructure scorer_ss_{};
-
   HoptakeSuperstructure hoptake_ss_{};
 
   RobotContainer() {
     RegisterPreference("init_drivetrain", true);
     RegisterPreference("init_leds", true);
     RegisterPreference("init_gpd", true);
-    RegisterPreference("init_shooter", true);
-    RegisterPreference("init_intake", true);
 
     bool drivetrain_init = (GetPreferenceValue_bool("init_drivetrain"));
     bool leds_init = (GetPreferenceValue_bool("init_leds"));
     bool gpd_init = (GetPreferenceValue_bool("init_gpd"));
-    bool scorer_ss_init = (GetPreferenceValue_bool("init_scorer_ss"));
-    bool hoptake_ss_init = (GetPreferenceValue_bool("init_hoptake_ss"));
 
     RegisterSubsystemGroupAB({{&control_input_, true}});
     RegisterSubsystemGroupA({{&leds_, leds_init}});
@@ -43,8 +38,13 @@ public:
     RegisterSubsystemGroupAB({{&drivetrain_, drivetrain_init}});
     RegisterSubsystemGroupAB({{&GPD_, gpd_init}});
 
-    // TODO: add intake_ss
+    RegisterPreference("init_scorer_ss", true);
+    RegisterPreference("init_hoptake_ss", true);
+
+    bool scorer_ss_init = (GetPreferenceValue_bool("init_scorer_ss"));
+    bool hoptake_ss_init = (GetPreferenceValue_bool("init_hoptake_ss"));
+
     RegisterSubsystemGroupAB({{&scorer_ss_, scorer_ss_init}});
-    RegisterSubsystemGroupAB({{&hoptake_ss_, hoptake_ss_init}});
+    RegisterSubsystemGroupB({{&hoptake_ss_, hoptake_ss_init}});
   }
 };

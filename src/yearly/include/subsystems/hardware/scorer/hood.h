@@ -11,6 +11,7 @@
 
 struct HoodReadings {
   degree_t pos_;
+  bool in_position_;
 };
 
 struct HoodTarget {
