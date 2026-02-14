@@ -165,12 +165,15 @@ ATCalculatorOutput AprilTagCalculator::calculate(ATCalculatorInput input) {
     pdcsu::units::second_t capture_time = now - effective_latency;
 
     std::vector<double> tags = cam_table->GetNumberArray("tags", {});
-    pdcsu::units::degree_t imuBearingAtCapture =
-        InterpolateRobotBearing(capture_time); //input.pose.bearing - input.angular_velocity * effective_latency;
+    pdcsu::units::degree_t imuBearingAtCapture = InterpolateRobotBearing(
+        capture_time);  // input.pose.bearing - input.angular_velocity *
+                        // effective_latency;
     pdcsu::units::degree_t bearingAtCapture;
     if (camera.equiv_turret) {
       bearingAtCapture =
-          imuBearingAtCapture + InterpolateTurretAngle(capture_time); //turret_angle + turret_vel * effective_latency;
+          imuBearingAtCapture +
+          InterpolateTurretAngle(
+              capture_time);  // turret_angle + turret_vel * effective_latency;
       view_full_turret_angle = bearingAtCapture;
     } else {
       bearingAtCapture = imuBearingAtCapture;

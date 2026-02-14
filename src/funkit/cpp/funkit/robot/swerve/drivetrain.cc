@@ -419,9 +419,9 @@ DrivetrainReadings DrivetrainSubsystem::ReadFromHardware() {
       .velocity = velocity,
   };
   funkit::robot::calculators::ATCalculatorOutput tag_pos =
-      tag_pos_calculator.calculate({new_pose, odom_pose,
-          yaw_rate, cached_april_variance_coeff_,
-          cached_triangular_variance_coeff_, cached_fudge_latencies_});
+      tag_pos_calculator.calculate(
+          {new_pose, odom_pose, yaw_rate, cached_april_variance_coeff_,
+              cached_triangular_variance_coeff_, cached_fudge_latencies_});
 
   if (tag_pos.variance >= 0) {
     pose_estimator.AddVisionMeasurement(

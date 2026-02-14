@@ -73,16 +73,12 @@ SwerveOdometryOutput SwerveOdometryCalculator::calculate(
       S_wy += wi * wy[i];
       S_theta += wi * (-r_y[i] * wx[i] + r_x[i] * wy[i]);
     }
-    if (W_d.value() < 1e-12) {
-      W_d = 1e-12_u_;
-    }
-    inch_sq_t denom =
-        W_r2 - (W_x * W_x + W_y * W_y) / W_d;
+    if (W_d.value() < 1e-12) { W_d = 1e-12_u_; }
+    inch_sq_t denom = W_r2 - (W_x * W_x + W_y * W_y) / W_d;
     if (pdcsu::units::u_abs(denom).value() < 1e-12) {
       denom = (denom >= 0_in_ * 1_in_) ? 1e-12_in_ * 1_in_ : -1e-12_in_ * 1_in_;
     }
-    scalar_t dtheta_ratio =
-        (S_theta + (W_y * S_wx - W_x * S_wy) / W_d) / denom;
+    scalar_t dtheta_ratio = (S_theta + (W_y * S_wx - W_x * S_wy) / W_d) / denom;
     dtheta = radian_t{dtheta_ratio.value()};
     dx = (S_wx + W_y * dtheta_ratio) / W_d;
     dy = (S_wy - W_x * dtheta_ratio) / W_d;
@@ -97,15 +93,10 @@ SwerveOdometryOutput SwerveOdometryCalculator::calculate(
     }
     std::array<inch_t, kNumWheels> res_sorted = res;
     std::sort(res_sorted.begin(), res_sorted.end(),
-              [](inch_t a, inch_t b) {
-                return a < b;
-              });
-    inch_t median_res =
-        (res_sorted[1] + res_sorted[2]) * 0.5;
+        [](inch_t a, inch_t b) { return a < b; });
+    inch_t median_res = (res_sorted[1] + res_sorted[2]) * 0.5;
     inch_t scale = median_res + kHuberScale;
-    if (scale < 1e-9_in_) {
-      scale = 1e-9_in_;
-    }
+    if (scale < 1e-9_in_) { scale = 1e-9_in_; }
     for (int i = 0; i < kNumWheels; i++) {
       scalar_t u = res[i] / scale;
       w[i] = (u <= 1.0_u_) ? 1.0_u_ : 1.0_u_ / u;
@@ -121,8 +112,8 @@ SwerveOdometryOutput SwerveOdometryCalculator::calculate(
     double sin_term = pdcsu::units::u_sin(dtheta) / dtheta_val;
     double cos_term = (1.0 - pdcsu::units::u_cos(dtheta)) / dtheta_val;
 
-    displacement = Vec2D{dx * sin_term - dy * cos_term,
-                         dx * cos_term + dy * sin_term};
+    displacement =
+        Vec2D{dx * sin_term - dy * cos_term, dx * cos_term + dy * sin_term};
   } else {
     displacement = Vec2D{dx, dy};
   }

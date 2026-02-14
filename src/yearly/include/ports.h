@@ -36,7 +36,9 @@ struct ports {
 
   struct turret_ {
     static constexpr funkit::control::config::MotorConstructionParameters
-        kTurretParams = {15, "", false};  // TODO: add to canivore
+        kTurretParams = {15, "", true};  // TODO: add to canivore
+    static constexpr int kCANCoder1_CANID = 52;
+    static constexpr int kCANCoder2_CANID = 53;
   };
 
   struct shooter_ {
@@ -64,10 +66,5 @@ struct ports {
   struct pivot_ {
     static constexpr funkit::control::config::MotorConstructionParameters
         kPivotParams = {21, "", false};
-  };
-  struct ictest_ {
-    static constexpr int kMotor1_CANID = 51;
-    static constexpr int kCANCoder1_CANID = 52;
-    static constexpr int kCANCoder2_CANID = 53;
   };
 };

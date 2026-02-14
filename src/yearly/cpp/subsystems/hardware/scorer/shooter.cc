@@ -53,7 +53,7 @@ void ShooterSubsystem::Setup() {
 }
 
 ShooterTarget ShooterSubsystem::ZeroTarget() const {
-  return ShooterTarget{0_fps_};
+  return ShooterTarget{0_fps_, true};
 }
 
 bool ShooterSubsystem::VerifyHardware() {

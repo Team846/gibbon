@@ -24,7 +24,7 @@ struct ScorerSSReadings {
 };
 
 struct ScorerSSTarget {
-  degree_t turret_target;
+  TurretTarget turret_target;
   degree_t hood_target;
   fps_t shooter_target;
   TrackingState tracking_state;

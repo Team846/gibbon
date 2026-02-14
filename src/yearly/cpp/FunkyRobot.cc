@@ -52,11 +52,11 @@ void FunkyRobot::OnInitialize() {
 
   frc::SmartDashboard::PutData("zero_turret_encoders",
       new funkit::wpilib::NTAction(
-          [this] { container_.ictest_.ZeroEncoders(); }));
+          [this] { container_.scorer_ss_.turret.ZeroEncoders(); }));
 
   frc::SmartDashboard::PutData("zero_turret_with_CRT",
       new funkit::wpilib::NTAction(
-          [this] { container_.ictest_.ZeroWithCRT(); }));
+          [this] { container_.scorer_ss_.turret.ZeroWithCRT(); }));
 
   // Add path recording controls
   frc::SmartDashboard::PutData(
@@ -82,31 +82,31 @@ void FunkyRobot::OnInitialize() {
 
 void FunkyRobot::OnEnable() {
   // Start path recording
-  if (container_.drivetrain_.IsPathRecording()) {
-    auto now = std::chrono::system_clock::now();
-    auto time_t_now = std::chrono::system_clock::to_time_t(now);
+  // if (container_.drivetrain_.IsPathRecording()) {
+  //   auto now = std::chrono::system_clock::now();
+  //   auto time_t_now = std::chrono::system_clock::to_time_t(now);
 
-    // Format time as month-day-year-hour-minute-second
-    std::tm* tm_now = std::localtime(&time_t_now);
+  //   // Format time as month-day-year-hour-minute-second
+  //   std::tm* tm_now = std::localtime(&time_t_now);
 
-    char time_buffer[64];
-    std::strftime(
-        time_buffer, sizeof(time_buffer), "%m-%d-%Y_%H-%M-%S", tm_now);
-    std::string filename = "pathlogs_" + std::string(time_buffer);
+  //   char time_buffer[64];
+  //   std::strftime(
+  //       time_buffer, sizeof(time_buffer), "%m-%d-%Y_%H-%M-%S", tm_now);
+  //   std::string filename = "pathlogs_" + std::string(time_buffer);
 
-    // container_.drivetrain_.StartPathRecording(filename);
-    // Log("Started recording auto path data to {}.csv", filename);
-  }
+  // container_.drivetrain_.StartPathRecording(filename);
+  // Log("Started recording auto path data to {}.csv", filename);
+  // }
 }
 
 void FunkyRobot::OnDisable() {
   // Stop path recording
-  bool success = container_.drivetrain_.StopPathRecording();
-  if (success) {
-    Log("Successfully stopped recording path data");
-  } else {
-    Warn("Failed to stop recording path data or no recording in progress");
-  }
+  // bool success = container_.drivetrain_.StopPathRecording();
+  // if (success) {
+  //   Log("Successfully stopped recording path data");
+  // } else {
+  //   Warn("Failed to stop recording path data or no recording in progress");
+  // }
 }
 
 void FunkyRobot::InitTeleop() {
@@ -178,7 +178,8 @@ void FunkyRobot::OnPeriodic() {
   else if (coast_count_ > 0 && isDisabled)
     LEDsLogic::CoastingLEDs(&container_,
         (1.0 * coast_count_) / GetPreferenceValue_int("num_coasting_loops"));
-  else if (container_.ictest_.inpos && container_.drivetrain_.variance < 16.0)
+  else if (container_.scorer_ss_.GetReadings().will_make_shot &&
+           container_.drivetrain_.variance < 16.0)
     LEDsLogic::SetLEDsState(&container_, kLEDsSequencing);
   else
     LEDsLogic::UpdateLEDs(&container_);
