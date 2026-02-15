@@ -17,37 +17,43 @@ void ShooterCommand::OnInit() {}
 
 void ShooterCommand::Periodic() {
   ControlInputReadings ci_readings_{container_.control_input_.GetReadings()};
-
   ScorerSSTarget target{};
-
   ShootingCalculatorOutputs shooting_outputs;
-  // target.shooting_outputs_ = ShootingCalculator::GetOutputs();
-
-  auto flip_vec =
-      [](pdcsu::util::math::Vector2D vec) -> pdcsu::util::math::Vector2D {
-    if (frc::DriverStation::GetAlliance() ==
-        frc::DriverStation::Alliance::kBlue) {
-      return pdcsu::util::math::Vector2D{
-          funkit::math::FieldPoint::field_size_x - vec[0],
-          funkit::math::FieldPoint::field_size_y - vec[1]};
-    } else {
-      return vec;
-    }
-  };
+  bool mirror_ =
+      frc::DriverStation::GetAlliance() == frc::DriverStation::Alliance::kBlue;
 
   if (container_.drivetrain_.GetReadings().estimated_pose.position[1] >
-      200.846_in_) {
-    if (container_.drivetrain_.GetReadings().estimated_pose.position[0] <
-        158.32_in_) {
-      ShootingCalculator::target = pdcsu::util::math::Vector2D{
-          container_.GetPreferenceValue_unit_type<inch_t>("passing/left_x"),
-          container_.GetPreferenceValue_unit_type<inch_t>("passing/left_y")};
+          195.846_in_ &&
+      container_.drivetrain_.GetReadings().estimated_pose.position[1] <
+          450.61_in_) {
+    if (!mirror_ &&
+        container_.drivetrain_.GetReadings().estimated_pose.position[0] <
+            158.32_in_) {
+      ShootingCalculator::target =
+          funkit::math::FieldPoint{
+              {container_.GetPreferenceValue_unit_type<inch_t>(
+                   "passing/left_x"),
+                  container_.GetPreferenceValue_unit_type<inch_t>(
+                      "passing/left_y")},
+              0_deg_, 0_fps_}
+              .mirror(mirror_)
+              .point;
     } else {
-      ShootingCalculator::target = pdcsu::util::math::Vector2D{
-          container_.GetPreferenceValue_unit_type<inch_t>("passing/right_x"),
-          container_.GetPreferenceValue_unit_type<inch_t>("passing/right_y")};
+      ShootingCalculator::target =
+          funkit::math::FieldPoint{
+              {container_.GetPreferenceValue_unit_type<inch_t>(
+                   "passing/right_x"),
+                  container_.GetPreferenceValue_unit_type<inch_t>(
+                      "passing/right_y")},
+              0_deg_, 0_fps_}
+              .mirror(mirror_)
+              .point;
     }
-    target.tracking_state = TrackingState::kTrack;
+  } else {
+    ShootingCalculator::target =
+        funkit::math::FieldPoint{{158.845_in_, 182.11_in_}, 0_deg_, 0_fps_}
+            .mirror(mirror_)
+            .point;
   }
 
   if (ci_readings_.turret_trim_cw) {
@@ -61,6 +67,23 @@ void ShooterCommand::Periodic() {
   } else if (ci_readings_.hood_trim_ccw) {
     container_.scorer_ss_.AdjustHood(false);
   }
+
+  if (ci_readings_.turret_no_spin) {
+    target.tracking_state = TrackingState::kLockTurret;
+  } else if (ci_readings_.point_blank_shot) {
+    target.tracking_state = TrackingState::kPointBlank;
+  } else {
+    target.tracking_state = TrackingState::kTrack;
+  }
+
+  if (ci_readings_.rev_dye_rotor) { target.reverse_rotor = true; }
+
+  shooting_outputs = ShootingCalculator::GetOutputs();
+
+  target.shooter_target = shooting_outputs.shooter_vel;
+  target.turret_target = {
+      shooting_outputs.aim_angle, shooting_outputs.vel_aim_compensation};
+  target.shoot = shooting_outputs.is_valid && !ci_readings_.override_autoshoot;
 
   container_.scorer_ss_.SetTarget(target);
 }

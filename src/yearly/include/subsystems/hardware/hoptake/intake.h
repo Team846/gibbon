@@ -9,12 +9,15 @@
 #include "funkit/wpilib/time.h"
 #include "pdcsu_control.h"
 
+enum class IntakeState { kIdle, kIntake, kEvac };
+
 struct IntakeReadings {
-  degps_t pos_;
+  fps_t vel_;
 };
 
 struct IntakeTarget {
-  degps_t pos_;
+  IntakeState target_state;
+  fps_t dt_vel_;
 };
 
 class IntakeSubsystem
@@ -33,6 +36,8 @@ public:
 
 private:
   funkit::control::HigherMotorController esc_;
+
+  fps_t trgt_vel_{0.0_fps_};
 
   IntakeReadings ReadFromHardware() override;
 

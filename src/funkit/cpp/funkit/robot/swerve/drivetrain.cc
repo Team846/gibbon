@@ -18,7 +18,7 @@ DrivetrainSubsystem::DrivetrainSubsystem(DrivetrainConfigs configs)
   if (std::holds_alternative<PigeonConnection>(configs_.imu_connection)) {
     const auto& pigeon_conn =
         std::get<PigeonConnection>(configs_.imu_connection);
-    pigeon_.emplace(pigeon_conn.canID, ctre::phoenix6::CANBus{""});
+    pigeon_.emplace(pigeon_conn.canID, configs.module_common_config.bus);
     pigeon_->OptimizeBusUtilization();
     pigeon_->GetYaw().SetUpdateFrequency(100_Hz);
     pigeon_->GetPitch().SetUpdateFrequency(100_Hz);

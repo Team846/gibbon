@@ -79,22 +79,27 @@ void ScorerSuperstructure::ClearAdjustments() {
 }
 
 void ScorerSuperstructure::WriteToHardware(ScorerSSTarget target) {
+  HoodTarget hood_trgt{0.0_deg_};
+  TurretTarget turret_trgt{0.0_deg_, 0.0_degps_};
+  ShooterTarget shooter_trgt{0.0_fps_};
+  DyeRotorTarget dye_rotor_trgt{DyeRotorState::kRotorIdle};
+
   if (target.tracking_state == TrackingState::kPointBlank) {
-    hood.SetTarget(
-        {GetPreferenceValue_unit_type<degree_t>("point_blank/hood_angle"),
-            0_degps_});
-    turret.SetTarget(
-        {GetPreferenceValue_unit_type<degree_t>("point_blank/turret_angle"),
-            0_degps_});
-    shooter.SetTarget(
-        {GetPreferenceValue_unit_type<fps_t>("point_blank/shooter_vel"), true});
+    hood_trgt = {
+        GetPreferenceValue_unit_type<degree_t>("point_blank/hood_angle"),
+        0_degps_};
+    turret_trgt = {
+        GetPreferenceValue_unit_type<degree_t>("point_blank/turret_angle"),
+        0_degps_};
+    shooter_trgt = {
+        GetPreferenceValue_unit_type<fps_t>("point_blank/shooter_vel"), true};
   } else if (target.tracking_state == TrackingState::kTrack) {
-    hood.SetTarget({target.hood_target});
-    turret.SetTarget(target.turret_target);
-    shooter.SetTarget({target.shooter_target, true});
+    hood_trgt = {target.hood_target};
+    turret_trgt = target.turret_target;
+    shooter_trgt = {target.shooter_target, true};
   } else if (target.tracking_state == TrackingState::kLockTurret) {
-    hood.SetTarget({target.hood_target});
-    shooter.SetTarget({target.shooter_target, true});
+    hood_trgt = {target.hood_target};
+    shooter_trgt = {target.shooter_target, true};
   }
 
   if (last_shoot != target.shoot)
@@ -102,17 +107,22 @@ void ScorerSuperstructure::WriteToHardware(ScorerSSTarget target) {
 
   if (target.shoot) {
     if (rotor_reset_ctr > 0) {
-      dye_rotor.SetTarget({DyeRotorState::kRotorReverse});
+      dye_rotor_trgt = {DyeRotorState::kRotorReverse};
       rotor_reset_ctr--;
     } else {
-      dye_rotor.SetTarget({DyeRotorState::kRotor84bps});
+      dye_rotor_trgt = {DyeRotorState::kRotor84bps};
     }
 
   } else if (target.reverse_rotor) {
-    dye_rotor.SetTarget({DyeRotorState::kRotorReverse});
+    dye_rotor_trgt = {DyeRotorState::kRotorReverse};
   } else {
-    dye_rotor.SetTarget({DyeRotorState::kRotorIdle});
+    dye_rotor_trgt = {DyeRotorState::kRotorIdle};
   }
+
+  hood.SetTarget(hood_trgt);
+  turret.SetTarget(turret_trgt);
+  shooter.SetTarget(shooter_trgt);
+  dye_rotor.SetTarget(dye_rotor_trgt);
 
   last_shoot = target.shoot;
 }

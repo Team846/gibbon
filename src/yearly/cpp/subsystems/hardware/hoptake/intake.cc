@@ -8,13 +8,17 @@ using namespace funkit::control::config;
 
 IntakeSubsystem::IntakeSubsystem()
     : GenericSubsystem("Intake"),
-      esc_{base::TALON_FX_KRAKENX44, ports::intake_::kIntakeParams} {}
+      esc_{base::TALON_FX_KRAKENX44, ports::intake_::kIntakeParams} {
+  RegisterPreference("speed_idle", 0.0_fps_);
+  RegisterPreference("speed_intake", 25.0_fps_);
+  RegisterPreference("speed_evac", -25.0_fps_);
+}
 
 IntakeSubsystem::~IntakeSubsystem() = default;
 
 void IntakeSubsystem::Setup() {
-  MotorGenome genome_backup{.motor_current_limit = 30_A_,
-      .smart_current_limit = 20_A_,
+  MotorGenome genome_backup{.motor_current_limit = 40_A_,
+      .smart_current_limit = 40_A_,
       .voltage_compensation = 12_V_,
       .brake_mode = true,
       .gains = {.kP = 0.0, .kI = 0.0, .kD = 0.0, .kF = 0.0}};
@@ -28,11 +32,9 @@ void IntakeSubsystem::Setup() {
   DefBLDC def_bldc(motor_specs.stall_current, motor_specs.free_current,
       motor_specs.stall_torque, motor_specs.free_speed, 12_V_);
 
-  // TODO: Fix
-  DefArmSys intake_plant(
-      def_bldc, 1, 2_rot_ / 1_rot_,
-      [&](radian_t x, radps_t v) -> nm_t { return 0.0_Nm_; }, 0.001044_kgm2_,
-      0.05_Nm_, 0.1_Nm_ / 1200_radps_, 20_ms_);
+  // TODO: Fix error
+  DefLinearSys intake_plant(def_bldc, 1, 20_in_ / 12_rot_, 0.0_mps2_, 1.0_kg_,
+      0.5_N_, 0.5_Nm_ / 700_radps_, 20_ms_);
 
   esc_.Setup(genome_backup, intake_plant);
 
@@ -43,7 +45,7 @@ void IntakeSubsystem::Setup() {
 }
 
 IntakeTarget IntakeSubsystem::ZeroTarget() const {
-  return IntakeTarget{0_degps_};
+  return IntakeTarget{IntakeState::kIdle, 0.0_fps_};
 }
 
 bool IntakeSubsystem::VerifyHardware() {
@@ -53,9 +55,11 @@ bool IntakeSubsystem::VerifyHardware() {
 }
 
 IntakeReadings IntakeSubsystem::ReadFromHardware() {
-  // esc_.GetPosition()
+  fps_t velocity_ = esc_.GetVelocity<fps_t>();
 
-  return IntakeReadings{};
+  Graph("error", trgt_vel_ - velocity_);
+
+  return IntakeReadings{velocity_};
 }
 
 void IntakeSubsystem::WriteToHardware(IntakeTarget target) {
@@ -64,4 +68,15 @@ void IntakeSubsystem::WriteToHardware(IntakeTarget target) {
           *this, "genome");
 
   esc_.ModifyGenome(genome);
+
+  if (target.target_state == IntakeState::kIntake) {
+    trgt_vel_ =
+        GetPreferenceValue_unit_type<fps_t>("speed_intake") + target.dt_vel_;
+  } else if (target.target_state == IntakeState::kEvac) {
+    trgt_vel_ = GetPreferenceValue_unit_type<fps_t>("speed_evac");
+  } else {
+    trgt_vel_ = GetPreferenceValue_unit_type<fps_t>("speed_idle");
+  }
+
+  esc_.WriteVelocity(trgt_vel_);
 }

@@ -62,9 +62,9 @@ struct UserSettableValues {
 UserSettableValues GetUserSettableValues() {
   return UserSettableValues{
       .imu_connection =
-          swerve::NavXConnection{swerve::NavXConnectionType::kMXP},
+          swerve::PigeonConnection{ports::drivetrain_::kPIGEON_CANID},
       .wheel_diameter = inch_t{4},
-      .drive_gear_ratio = 8.16,  // TODO fix
+      .drive_gear_ratio = 6.03,
       .steer_reduction = 12.8_rot_ / 1_rot_,
       .wheel_contact_radius = inch_t{0.4},
       .steer_inertia_coeff = 0.00285,
@@ -194,12 +194,12 @@ swerve::DrivetrainConfigs DrivetrainConstructor::getDrivetrainConfigs() {
   control_config::MotorConstructionParameters drive_params;
   drive_params.can_id = 999;
   drive_params.inverted = false;
-  drive_params.bus = "";
+  drive_params.bus = "thalamus";
 
   control_config::MotorConstructionParameters steer_params;
   steer_params.can_id = 999;
   steer_params.inverted = true;
-  steer_params.bus = "";
+  steer_params.bus = "thalamus";
 
   using namespace pdcsu::units;
   using namespace pdcsu::util;
@@ -232,7 +232,7 @@ swerve::DrivetrainConfigs DrivetrainConstructor::getDrivetrainConfigs() {
       .steer_load_factor = steer_load_factor,
       .drive_plant = drive_plant,
       .steer_plant = steer_plant,
-      .bus = ""};
+      .bus = drive_params.bus};
 
   swerve::DrivetrainConfigs configs{
       .imu_connection = user_values.imu_connection,

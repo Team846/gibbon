@@ -9,12 +9,15 @@
 #include "funkit/wpilib/time.h"
 #include "pdcsu_control.h"
 
+enum class PivotState { kStow, kIntake, kAgitate };
+
 struct PivotReadings {
   degree_t pos_;
+  bool in_position_;
 };
 
 struct PivotTarget {
-  degree_t pos_;
+  PivotState target_state;
 };
 
 class PivotSubsystem
@@ -33,6 +36,8 @@ public:
 
 private:
   funkit::control::HigherMotorController esc_;
+
+  degree_t trgt_pos_{0_deg_};
 
   PivotReadings ReadFromHardware() override;
 

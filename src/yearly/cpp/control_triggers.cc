@@ -4,6 +4,8 @@
 #include <frc2/command/WaitCommand.h>
 #include <frc2/command/button/Trigger.h>
 
+#include "commands/teleop/climb_align_command.h"
+
 void ControlTriggerInitializer::InitTeleopTriggers(RobotContainer& container) {
   frc2::Trigger drivetrain_zero_bearing_trigger{[&] {
     return container.control_input_.GetReadings().zero_bearing;

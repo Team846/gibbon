@@ -18,6 +18,7 @@ struct HoptakeSSReadings {};
 
 struct HoptakeSSTarget {
   HoptakeState target_state;
+  fps_t drivetrain_vel;
 };
 
 class HoptakeSuperstructure
@@ -50,4 +51,6 @@ private:
   HoptakeSSReadings ReadFromHardware() override;
 
   void WriteToHardware(HoptakeSSTarget target) override;
+
+  bool agitate_reached_ = false;
 };

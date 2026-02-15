@@ -1,21 +1,15 @@
-// #pragma once
+#pragma once
 
-// #include <frc/DriverStation.h>
+#include "commands/teleop/drive_to_climb_command.h"
+#include "funkit/robot/GenericCommand.h"
+#include "subsystems/robot_container.h"
 
-// #include "funkit/math/fieldpoints.h"
-// #include "funkit/robot/swerve/drive_to_point_command.h"
-// #include "subsystems/robot_container.h"
-
-// class ClimbAlignCommand : public funkit::robot::swerve::DriveToPointCommand {
-// public:
-//   ClimbAlignCommand(RobotContainer& container, funkit::math::FieldPoint
-//   target,
-//       pdcsu::units::fps_t max_speed, pdcsu::units::fps2_t max_acceleration,
-//       pdcsu::units::fps2_t max_deceleration,
-//       funkit::robot::swerve::DriveToPointFlags flags);
-
-// protected:
-//   std::pair<funkit::math::FieldPoint, bool> GetTargetPoint() override;
-
-// private:
-// };
+class ClimbAlignCommand
+    : public funkit::robot::GenericCommandGroup<RobotContainer,
+          ClimbAlignCommand, DriveToClimbCommand> {
+public:
+  ClimbAlignCommand(RobotContainer& container, pdcsu::units::fps_t max_speed,
+      pdcsu::units::fps_t lower_max_speed,
+      pdcsu::units::fps2_t max_acceleration,
+      pdcsu::units::fps2_t max_deceleration);
+};

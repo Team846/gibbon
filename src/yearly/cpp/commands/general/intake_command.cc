@@ -27,6 +27,9 @@ void IntakeCommand::Periodic() {
     target.target_state = HoptakeState::kIdle;
   }
 
+  target.drivetrain_vel =
+      container_.drivetrain_.GetReadings().estimated_pose.velocity.magnitude();
+
   container_.hoptake_ss_.SetTarget(target);
 }
 

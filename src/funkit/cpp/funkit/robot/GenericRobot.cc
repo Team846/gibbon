@@ -13,6 +13,8 @@
 #include <hal/Notifier.h>
 #include <units/time.h>
 
+#include <ctre/phoenix6/SignalLogger.hpp>
+
 #include "frc2/command/ParallelDeadlineGroup.h"
 #include "frc2/command/WaitCommand.h"
 #include "funkit/base/Loggable.h"
@@ -87,6 +89,9 @@ void GenericRobot::StartCompetition() {
   VerifyHardware();
 
   OnInitialize();
+
+  // Disable Phoenix Signal Logger
+  ctre::phoenix6::SignalLogger::Stop();
 
   // Report to driver station that robot is ready
   Log("\n********** Robot initialized **********\n");

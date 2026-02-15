@@ -17,5 +17,5 @@ public:
   bool IsFinished() override;
 
 private:
-  pdcsu::util::math::Vector2D target_position{0_in_, 0_in_};
+  funkit::math::FieldPoint target_position{{0_in_, 0_in_}, 0_deg_, 0_fps_};
 };
