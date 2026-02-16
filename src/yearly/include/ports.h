@@ -68,4 +68,16 @@ struct ports {
     static constexpr funkit::control::config::MotorConstructionParameters
         kDyeRotorParams = {27, "", false};
   };
+
+  struct climber_ {
+    static constexpr funkit::control::config::MotorConstructionParameters
+        kClimber1Params = {28, "", false};
+    static constexpr funkit::control::config::MotorConstructionParameters
+        kClimber2Params = {29, "", true};
+  };
+
+  struct telescope_ {
+    static constexpr funkit::control::config::MotorConstructionParameters
+        kTelescopeParams = {30, "", false};
+  }
 };

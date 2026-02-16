@@ -1,14 +1,8 @@
 #pragma once
 
-#include <deque>
-#include <memory>
-
-#include "calculators/TurretPositionCalculator.h"
 #include "funkit/control/HigherMotorController.h"
 #include "funkit/robot/GenericRobot.h"
 #include "funkit/robot/GenericSubsystem.h"
-#include "funkit/robot/swerve/drivetrain.h"
-#include "funkit/wpilib/time.h"
 #include "subsystems/hardware/hoptake/intake.h"
 #include "subsystems/hardware/hoptake/pivot.h"
 

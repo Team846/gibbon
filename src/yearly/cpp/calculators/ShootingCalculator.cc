@@ -116,12 +116,7 @@ void ShootingCalculator::Calculate(const RobotContainer* container_) {
   outputs_.vel_aim_compensation =
       u_clamp(1_rad_ * (cross_product / distance_squared), -300_degps_,
           300_degps_);  // TODO: use max omega
-
-  Vector2D proj_vel =
-      projectFwd +
-      Vector2D{1_in_, aim_angle + drivetrain_readings.pose.bearing, true}
-          .resize(u_abs(vel_perp) * projectMultFac / 1_ft_ * 1_in_);
-          foot_t d = (target - proj_vel).magnitude();
-  loggable_opt->Graph("distance_vel", d);
+  foot_t d = (target - projectFwd).magnitude();
+  loggable_opt->Graph("distance_vel", u_abs(d));
   outputs_.is_valid = d >= pointblank_distance && d <= 235.0_in_;
 }
