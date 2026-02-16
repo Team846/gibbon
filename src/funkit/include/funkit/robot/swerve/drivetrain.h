@@ -200,6 +200,9 @@ private:
 
   degree_t zero_pitch;
   degree_t zero_roll;
+
+  pdcsu::units::degree_t prev_odom_bearing_{0};
+  second_t prev_odom_bearing_time_{-1};
 };
 
 }  // namespace funkit::robot::swerve

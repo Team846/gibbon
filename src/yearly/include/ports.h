@@ -36,36 +36,36 @@ struct ports {
 
   struct turret_ {
     static constexpr funkit::control::config::MotorConstructionParameters
-        kTurretParams = {15, "", true};  // TODO: add to canivore
+        kTurretParams = {16, "", true};  // TODO: add to canivore
     static constexpr int kCANCoder1_CANID = 52;
     static constexpr int kCANCoder2_CANID = 53;
   };
 
   struct shooter_ {
     static constexpr funkit::control::config::MotorConstructionParameters
-        kShooter1Params = {16, "", false};
+        kShooter1Params = {18, "", false};
     static constexpr funkit::control::config::MotorConstructionParameters
-        kShooter2Params = {17, "", true};
+        kShooter2Params = {19, "", true};
   };
 
   struct hood_ {
     static constexpr funkit::control::config::MotorConstructionParameters
-        kHoodParams = {18, "", false};
+        kHoodParams = {20, "", false};
     static constexpr int kCANCoder_CANID = 54;
   };
 
   struct intake_ {
     static constexpr funkit::control::config::MotorConstructionParameters
-        kIntakeParams = {19, "", false};
-  };
-
-  struct dye_rotor_ {
-    static constexpr funkit::control::config::MotorConstructionParameters
-        kDyeRotorParams = {20, "", false};
+        kIntakeParams = {24, "", false};
   };
 
   struct pivot_ {
     static constexpr funkit::control::config::MotorConstructionParameters
-        kPivotParams = {21, "", false};
+        kPivotParams = {25, "", false};
+  };
+
+  struct dye_rotor_ {
+    static constexpr funkit::control::config::MotorConstructionParameters
+        kDyeRotorParams = {27, "", false};
   };
 };

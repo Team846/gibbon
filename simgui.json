@@ -4,6 +4,20 @@
       "window": {
         "visible": false
       }
+    },
+    "RoboRIO": {
+      "3.3V Rail": {
+        "open": true
+      },
+      "5V Rail": {
+        "open": true
+      },
+      "6V Rail": {
+        "open": true
+      },
+      "RoboRIO Input": {
+        "open": true
+      }
     }
   },
   "NTProvider": {
@@ -24,7 +38,8 @@
       "/SmartDashboard/zero_bearing": "Command",
       "/SmartDashboard/zero_coral_wrist": "Command",
       "/SmartDashboard/zero_odometry": "Command",
-      "/SmartDashboard/zero_turret_encoders": "Command"
+      "/SmartDashboard/zero_turret_encoders": "Command",
+      "/SmartDashboard/zero_turret_with_CRT": "Command"
     },
     "windows": {
       "/SmartDashboard/GPDField": {
@@ -208,7 +223,7 @@
             0.0,
             0.8500000238418579
           ],
-          "height": 0
+          "height": 252
         }
       ]
     }

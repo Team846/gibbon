@@ -26,7 +26,7 @@ void ShootingCalculator::Calculate(const RobotContainer* container_) {
   using namespace pdcsu::util::math;
   using Vel2D = uVec<pdcsu::units::fps_t, 2>;
 
-  const inch_t pointblank_distance = 60_in_;
+  const inch_t pointblank_distance = 48_in_;
 
   auto drivetrain_readings = container_->drivetrain_.GetReadings();
 
@@ -83,15 +83,13 @@ void ShootingCalculator::Calculate(const RobotContainer* container_) {
                             0.01 * kAdditive * kAdditive * fwdErrorMag *
                                 fwdErrorMag / 1.0_s_ / 1.0_ft_;
 
-  //   outputs_.shooter_vel = shooter_vel;
+    outputs_.shooter_vel = shooter_vel;
 
   /*
   Calculate drivetrain angles
   */
 
-  degree_t aim_angle =
-      drivetrain_readings.estimated_pose.position.angleAimTowards(
-          target, true);  // <-- Use delta.angle() with turret
+  degree_t aim_angle = delta.angle(true);
 
   const double robot_proj_vel_ratio = vel_perp.value() / shooter_vel.value();
   const degree_t twist = u_asin(
@@ -109,17 +107,21 @@ void ShootingCalculator::Calculate(const RobotContainer* container_) {
                                     "swim/twistVelCompensation")),
           3.14159265358979323846_rad_ / 2.0));
 
-  outputs_.aim_angle = aim_angle + 180_deg_;
+  outputs_.aim_angle = aim_angle;
 
   auto cross_product =
       delta[0] * vel_at_shooter[1] - delta[1] * vel_at_shooter[0];
   auto distance_squared = delta_mag * delta_mag;
 
   outputs_.vel_aim_compensation =
-      u_clamp(-1_rad_ * (cross_product / distance_squared), -300_degps_,
-          300_degps_);  // <-- TODO: use max omega
+      u_clamp(1_rad_ * (cross_product / distance_squared), -300_degps_,
+          300_degps_);  // TODO: use max omega
 
-  /* Determine if the shot is valid */
-  outputs_.is_valid =
-      delta_mag >= 36_in_ && delta_mag <= 400_in_;  // TODO: verify distances
+  Vector2D proj_vel =
+      projectFwd +
+      Vector2D{1_in_, aim_angle + drivetrain_readings.pose.bearing, true}
+          .resize(u_abs(vel_perp) * projectMultFac / 1_ft_ * 1_in_);
+          foot_t d = (target - proj_vel).magnitude();
+  loggable_opt->Graph("distance_vel", d);
+  outputs_.is_valid = d >= pointblank_distance && d <= 235.0_in_;
 }

@@ -26,7 +26,7 @@ void SetupEsc(HigherMotorController& esc, const MotorGenome& genome,
         {StatusFrame::kFaultFrame, StatusFrame::kCurrentFrame}, ms_t{20},
         ms_t{5}, ms_t{5}, ms_t{20});
   }
-  esc.SetPosition(0_deg_);
+  esc.SetPosition(radian_t{0});
 }
 
 }  // namespace

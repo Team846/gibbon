@@ -52,6 +52,8 @@ void DriveCommand::Periodic() {
 
   target.angular_velocity = degps_t{rotation * max_omega.value()};
 
+  Graph("target_angular_velocity", target.angular_velocity);
+
   /* For shooting while in motion */
   if (ci_readings_.turret_no_spin) {
     ShootingCalculatorOutputs shooting_outputs =

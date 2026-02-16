@@ -13,7 +13,6 @@ enum class PivotState { kStow, kIntake, kAgitate };
 
 struct PivotReadings {
   degree_t pos_;
-  bool in_position_;
 };
 
 struct PivotTarget {
@@ -35,11 +34,13 @@ public:
   void ZeroEncoders();
 
 private:
+  PivotReadings ReadFromHardware() override;
+
+  void WriteToHardware(PivotTarget target) override;
+
   funkit::control::HigherMotorController esc_;
 
   degree_t trgt_pos_{0_deg_};
 
-  PivotReadings ReadFromHardware() override;
-
-  void WriteToHardware(PivotTarget target) override;
+  int ctr_agitate = 0;
 };

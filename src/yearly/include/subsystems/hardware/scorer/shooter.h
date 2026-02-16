@@ -16,7 +16,7 @@ struct ShooterReadings {
 
 struct ShooterTarget {
   fps_t target_vel;
-  bool active_shooting;
+  bool active_shooting = true;
 };
 
 class ShooterSubsystem

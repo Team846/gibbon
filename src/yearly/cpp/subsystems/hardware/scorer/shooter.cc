@@ -48,8 +48,8 @@ void ShooterSubsystem::Setup() {
   esc_2_.EnableStatusFrames(
       {StatusFrame::kPositionFrame, StatusFrame::kVelocityFrame}, ms_t{20},
       ms_t{5}, ms_t{5}, ms_t{20});
-  esc_1_.SetPosition(radian_t{0});
-  esc_2_.SetPosition(radian_t{0});
+  esc_1_.SetPosition(meter_t{0});
+  esc_2_.SetPosition(meter_t{0});
 }
 
 ShooterTarget ShooterSubsystem::ZeroTarget() const {

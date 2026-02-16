@@ -71,7 +71,7 @@ SwerveOdometryOutput SwerveOdometryCalculator::calculate(
       W_r2 += wi * (r_x[i] * r_x[i] + r_y[i] * r_y[i]);
       S_wx += wi * wx[i];
       S_wy += wi * wy[i];
-      S_theta += wi * (-r_y[i] * wx[i] + r_x[i] * wy[i]);
+      S_theta += wi * (r_y[i] * wx[i] - r_x[i] * wy[i]);
     }
     if (W_d.value() < 1e-12) { W_d = 1e-12_u_; }
     inch_sq_t denom = W_r2 - (W_x * W_x + W_y * W_y) / W_d;

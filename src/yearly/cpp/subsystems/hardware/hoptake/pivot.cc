@@ -9,10 +9,12 @@ using namespace funkit::control::config;
 PivotSubsystem::PivotSubsystem()
     : GenericSubsystem("pivot"),
       esc_{base::TALON_FX_KRAKENX60, ports::pivot_::kPivotParams} {
-  RegisterPreference("stow_pos", 0.0_deg_);
-  RegisterPreference("agitate_pos", 80.0_deg_);
-  RegisterPreference("intake_pos", 90.0_deg_);
-  RegisterPreference("position_tolerance", 3.0_deg_);
+  RegisterPreference("pos_stow", 0.0_deg_);
+  RegisterPreference("pos_agitate", 80.0_deg_);
+  RegisterPreference("pos_intake", 90.0_deg_);
+
+  RegisterPreference("agigtate/on_loop_count", 10);
+  RegisterPreference("agigtate/off_loop_count", 20);
 }
 
 PivotSubsystem::~PivotSubsystem() = default;
@@ -59,15 +61,12 @@ bool PivotSubsystem::VerifyHardware() {
 }
 
 PivotReadings PivotSubsystem::ReadFromHardware() {
-  degree_t current_pos = esc_.GetPosition<degree_t>();
+  degree_t current_pos = esc_.GetPosition<radian_t>();
 
   degree_t error = trgt_pos_ - current_pos;
   Graph("error", error);
 
-  bool in_position = u_abs(error) < GetPreferenceValue_unit_type<degree_t>(
-                                        "position_tolerance");
-
-  return PivotReadings{current_pos, in_position};
+  return PivotReadings{current_pos};
 }
 
 void PivotSubsystem::WriteToHardware(PivotTarget target) {
@@ -77,11 +76,21 @@ void PivotSubsystem::WriteToHardware(PivotTarget target) {
   esc_.ModifyGenome(genome);
 
   if (target.target_state == PivotState::kStow) {
-    trgt_pos_ = GetPreferenceValue_unit_type<degree_t>("stow_pos");
+    trgt_pos_ = GetPreferenceValue_unit_type<degree_t>("pos_stow");
   } else if (target.target_state == PivotState::kIntake) {
-    trgt_pos_ = GetPreferenceValue_unit_type<degree_t>("intake_pos");
+    trgt_pos_ = GetPreferenceValue_unit_type<degree_t>("pos_intake");
   } else if (target.target_state == PivotState::kAgitate) {
-    trgt_pos_ = GetPreferenceValue_unit_type<degree_t>("agitate_pos");
+    if (ctr_agitate < GetPreferenceValue_int("agigtate/on_loop_count")) {
+      trgt_pos_ = GetPreferenceValue_unit_type<degree_t>("pos_agitate");
+    } else {
+      trgt_pos_ = GetPreferenceValue_unit_type<degree_t>("pos_intake");
+    }
+    if (ctr_agitate >= GetPreferenceValue_int("agigtate/off_loop_count") +
+                           GetPreferenceValue_int("agigtate/on_loop_count")) {
+      ctr_agitate = 0;
+    } else {
+      ctr_agitate++;
+    }
   }
 
   esc_.WritePosition(trgt_pos_);

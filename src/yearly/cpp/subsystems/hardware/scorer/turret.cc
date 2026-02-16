@@ -1,6 +1,7 @@
 #include "subsystems/hardware/scorer/turret.h"
 
 #include <frc/Filesystem.h>
+#include <frc/RobotBase.h>
 
 #include "funkit/control/config/genome.h"
 #include "ports.h"
@@ -44,6 +45,7 @@ TurretSubsystem::TurretSubsystem()
 
   RegisterPreference("icnor/IPG", 0.5);
   RegisterPreference("icnor/friction_nm", 5.0_Nm_);
+  RegisterPreference("icnor/agvel_compensation", 2.5);
   RegisterPreference("encoder/offset1", 0.0_rot_);
   RegisterPreference("encoder/offset2", 0.0_rot_);
   RegisterPreference("encoder/min_rots", -3.0_rot_);
@@ -93,8 +95,7 @@ void TurretSubsystem::Setup() {
   std::string learner_path =
       frc::filesystem::GetDeployDirectory() + "/ictest.iclearn";
   icnor_controller_->attachLearner(learner_path);
-
-  ZeroWithCRT();
+  if (!frc::RobotBase::IsSimulation()) { ZeroWithCRT(); }
 }
 
 TurretTarget TurretSubsystem::ZeroTarget() const {
@@ -169,6 +170,9 @@ void TurretSubsystem::WriteToHardware(TurretTarget target) {
   auto genome = SubsystemGenomeHelper::LoadGenomePreferences(*this, "genome");
   esc_.ModifyGenome(genome);
 
+  Graph("target/pos", target.pos_);
+  Graph("target/vel", target.vel_);
+
   if (!icnor_controller_ || !arm_sys_) { return; }
 
   radian_t current_pos_real = esc_.GetPosition<radian_t>();
@@ -178,6 +182,8 @@ void TurretSubsystem::WriteToHardware(TurretTarget target) {
 
   radian_t target_pos_native = arm_sys_->toNative(target.pos_);
   radps_t target_vel_native = arm_sys_->toNative(target.vel_);
+
+  target_vel_native = GetPreferenceValue_double("icnor/agvel_compensation") * target_vel_native;
 
   double output = icnor_controller_->getOutput(target_pos_native,
       target_vel_native, current_pos_native, current_vel_native);

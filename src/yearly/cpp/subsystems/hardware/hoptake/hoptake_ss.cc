@@ -15,11 +15,11 @@ HoptakeSuperstructure::~HoptakeSuperstructure() = default;
 
 void HoptakeSuperstructure::Setup() {
   if (GetPreferenceValue_bool("init_intake")) {
-    intake.Init();
+    intake.InitByParent();
     intake.Setup();
   }
   if (GetPreferenceValue_bool("init_pivot")) {
-    pivot.Init();
+    pivot.InitByParent();
     pivot.Setup();
   }
 }
@@ -33,6 +33,8 @@ bool HoptakeSuperstructure::VerifyHardware() {
 }
 
 HoptakeSSReadings HoptakeSuperstructure::ReadFromHardware() {
+  intake.UpdateReadings();
+  pivot.UpdateReadings();
   return HoptakeSSReadings{};
 }
 
@@ -41,23 +43,24 @@ void HoptakeSuperstructure::WriteToHardware(HoptakeSSTarget target) {
   PivotTarget pivot_trgt{PivotState::kStow};
 
   if (target.target_state == HoptakeState::kAgitate) {
-    if (!agitate_reached_) {
-      pivot_trgt.target_state = PivotState::kAgitate;
-      if (pivot.GetReadings().in_position_) { agitate_reached_ = true; }
-    } else {
-      pivot_trgt.target_state = PivotState::kIntake;
-      if (pivot.GetReadings().in_position_) { agitate_reached_ = false; }
-    }
+    pivot_trgt.target_state = PivotState::kAgitate;
+    intake_trgt.target_state = IntakeState::kIntake;
   } else if (target.target_state == HoptakeState::kEvac) {
     pivot_trgt.target_state = PivotState::kIntake;
+    intake_trgt.target_state = IntakeState::kEvac;
   } else if (target.target_state == HoptakeState::kIntake) {
     pivot_trgt.target_state = PivotState::kIntake;
+    intake_trgt.target_state = IntakeState::kIntake;
   } else {
     pivot_trgt.target_state = PivotState::kStow;
+    intake_trgt.target_state = IntakeState::kIdle;
   }
 
   intake_trgt.dt_vel_ = target.drivetrain_vel;
 
   intake.SetTarget(intake_trgt);
   pivot.SetTarget(pivot_trgt);
+
+  intake.UpdateHardware();
+  pivot.UpdateHardware();
 }

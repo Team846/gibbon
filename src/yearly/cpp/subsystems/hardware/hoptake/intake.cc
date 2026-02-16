@@ -33,15 +33,15 @@ void IntakeSubsystem::Setup() {
       motor_specs.stall_torque, motor_specs.free_speed, 12_V_);
 
   // TODO: Fix error
-  DefLinearSys intake_plant(def_bldc, 1, 20_in_ / 12_rot_, 0.0_mps2_, 1.0_kg_,
-      0.5_N_, 0.5_Nm_ / 700_radps_, 20_ms_);
+  DefLinearSys intake_plant(def_bldc, 1, 12_rot_ / 20_in_, 0.0_mps2_, 1.0_kg_,
+      0.5_N_, 0.5_N_ / 700_radps_, 20_ms_);
 
   esc_.Setup(genome_backup, intake_plant);
 
   esc_.EnableStatusFrames(
       {StatusFrame::kPositionFrame, StatusFrame::kVelocityFrame}, ms_t{20},
       ms_t{5}, ms_t{5}, ms_t{20});
-  esc_.SetPosition(radian_t{0});
+  esc_.SetPosition(meter_t{0});
 }
 
 IntakeTarget IntakeSubsystem::ZeroTarget() const {
@@ -55,7 +55,7 @@ bool IntakeSubsystem::VerifyHardware() {
 }
 
 IntakeReadings IntakeSubsystem::ReadFromHardware() {
-  fps_t velocity_ = esc_.GetVelocity<fps_t>();
+  fps_t velocity_ = esc_.GetVelocity<mps_t>();
 
   Graph("error", trgt_vel_ - velocity_);
 
@@ -77,6 +77,8 @@ void IntakeSubsystem::WriteToHardware(IntakeTarget target) {
   } else {
     trgt_vel_ = GetPreferenceValue_unit_type<fps_t>("speed_idle");
   }
+
+  Graph("target_velocity", trgt_vel_);
 
   esc_.WriteVelocity(trgt_vel_);
 }

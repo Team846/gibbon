@@ -12,10 +12,10 @@ ScorerSuperstructure::ScorerSuperstructure()
   RegisterPreference("init_shooter", true);
   RegisterPreference("init_dye_rotor", true);
 
-  RegisterPreference("passing/left_x", 0.0_in_);
-  RegisterPreference("passing/left_y", 0.0_in_);
-  RegisterPreference("passing/right_x", 0.0_in_);
-  RegisterPreference("passing/right_y", 0.0_in_);
+  RegisterPreference("passing/left_x", 70.0_in_);
+  RegisterPreference("passing/left_y", 70.0_in_);
+  RegisterPreference("passing/right_x", 247.8_in_);
+  RegisterPreference("passing/right_y", 70.0_in_);
 
   RegisterPreference("point_blank/turret_angle", 0_deg_);
   RegisterPreference("point_blank/hood_angle", 85_deg_);
@@ -58,6 +58,11 @@ bool ScorerSuperstructure::VerifyHardware() {
 ScorerSSReadings ScorerSuperstructure::ReadFromHardware() {
   ScorerSSReadings readings;
 
+  turret.UpdateReadings();
+  hood.UpdateReadings();
+  shooter.UpdateReadings();
+  dye_rotor.UpdateReadings();
+
   readings.will_make_shot = turret.GetReadings().in_position_ &&
                             hood.GetReadings().in_position_ &&
                             shooter.GetReadings().is_spun_up;
@@ -79,7 +84,7 @@ void ScorerSuperstructure::ClearAdjustments() {
 }
 
 void ScorerSuperstructure::WriteToHardware(ScorerSSTarget target) {
-  HoodTarget hood_trgt{0.0_deg_};
+  HoodTarget hood_trgt{0.0_deg_, 0.0_degps_};
   TurretTarget turret_trgt{0.0_deg_, 0.0_degps_};
   ShooterTarget shooter_trgt{0.0_fps_};
   DyeRotorTarget dye_rotor_trgt{DyeRotorState::kRotorIdle};
@@ -94,11 +99,11 @@ void ScorerSuperstructure::WriteToHardware(ScorerSSTarget target) {
     shooter_trgt = {
         GetPreferenceValue_unit_type<fps_t>("point_blank/shooter_vel"), true};
   } else if (target.tracking_state == TrackingState::kTrack) {
-    hood_trgt = {target.hood_target};
+    hood_trgt = target.hood_target;
     turret_trgt = target.turret_target;
     shooter_trgt = {target.shooter_target, true};
   } else if (target.tracking_state == TrackingState::kLockTurret) {
-    hood_trgt = {target.hood_target};
+    hood_trgt = target.hood_target;
     shooter_trgt = {target.shooter_target, true};
   }
 
@@ -123,6 +128,11 @@ void ScorerSuperstructure::WriteToHardware(ScorerSSTarget target) {
   turret.SetTarget(turret_trgt);
   shooter.SetTarget(shooter_trgt);
   dye_rotor.SetTarget(dye_rotor_trgt);
+
+  hood.UpdateHardware();
+  turret.UpdateHardware();
+  shooter.UpdateHardware();
+  dye_rotor.UpdateHardware();
 
   last_shoot = target.shoot;
 }

@@ -14,9 +14,9 @@
 
 #include "autos/auton_seqs.h"
 #include "calculators/ShootingCalculator.h"
-#include "commands/general/intake_command.h"
-#include "commands/general/shooter_command.h"
 #include "commands/teleop/drive_command.h"
+#include "commands/teleop/hoptake_command.h"
+#include "commands/teleop/scorer_command.h"
 #include "control_triggers.h"
 #include "funkit/wpilib/NTAction.h"
 #include "rsighandler.h"
@@ -111,6 +111,8 @@ void FunkyRobot::OnDisable() {
 
 void FunkyRobot::InitTeleop() {
   container_.drivetrain_.SetDefaultCommand(DriveCommand{container_});
+  container_.scorer_ss_.SetDefaultCommand(ScorerCommand{container_});
+  container_.hoptake_ss_.SetDefaultCommand(HoptakeCommand{container_});
   ControlTriggerInitializer::InitTeleopTriggers(container_);
 }
 
@@ -149,6 +151,14 @@ void FunkyRobot::OnPeriodic() {
       }
       frc::sim::DriverStationSim::NotifyNewData();
     }
+  }
+
+  if (container_.scorer_ss_.turret.is_initialized() &&
+      container_.drivetrain_.is_initialized()) {
+    container_.drivetrain_.SetFieldObjectPose("turret",
+        container_.drivetrain_.GetReadings().estimated_pose.position,
+        container_.scorer_ss_.turret.GetReadings().pos_ +
+            container_.drivetrain_.GetReadings().pose.bearing);
   }
 
   if (!gyro_switch_.Get() && !IsEnabled()) {
