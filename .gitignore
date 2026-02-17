@@ -182,3 +182,7 @@ ctre_sim/
 
 # PDCSU
 src/pdcsu*/
+
+# InteliSense on other IDEs
+*.idx
+compile_commands.json

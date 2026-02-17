@@ -4,8 +4,8 @@
 
 namespace funkit::robot {
 
-bool XboxReadingsFromSimDS(nt::NetworkTable* xbox_table, double trigger_threshold,
-                          XboxReadings* out) {
+bool XboxReadingsFromSimDS(
+    nt::NetworkTable* xbox_table, double trigger_threshold, XboxReadings* out) {
   if (xbox_table == nullptr || out == nullptr) return false;
   if (!xbox_table->GetEntry("left_stick_x").Exists()) return false;
   out->left_stick_x = xbox_table->GetEntry("left_stick_x").GetDouble(0.0);

@@ -79,5 +79,5 @@ struct ports {
   struct telescope_ {
     static constexpr funkit::control::config::MotorConstructionParameters
         kTelescopeParams = {30, "", false};
-  }
+  };
 };

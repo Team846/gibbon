@@ -26,16 +26,14 @@ void TelescopeSubsystem::Setup() {
   funkit::control::config::SubsystemGenomeHelper::CreateGenomePreferences(
       *this, "genome", genome_backup);
 
-  auto motor_specs =
-      base::MotorSpecificationPresets::get(base::SPARK_MAX_NEO);
+  auto motor_specs = base::MotorSpecificationPresets::get(base::SPARK_MAX_NEO);
 
   DefBLDC def_bldc(motor_specs.stall_current, motor_specs.free_current,
       motor_specs.stall_torque, motor_specs.free_speed, 12_V_);
 
   // TODO: Fix
-  DefLinearSys telescope_plant(
-      def_bldc, 1, 12_rot_ / 20_in_, 0.0_mps2_, 1.0_kg_,
-      0.5_N_, 0.5_N_ / 700_radps_, 20_ms_);
+  DefLinearSys telescope_plant(def_bldc, 1, 12_rot_ / 20_in_, 0.0_mps2_,
+      1.0_kg_, 0.5_N_, 0.5_N_ / 700_radps_, 20_ms_);
 
   esc_.Setup(genome_backup, telescope_plant);
 
@@ -57,12 +55,13 @@ bool TelescopeSubsystem::VerifyHardware() {
 }
 
 TelescopeReadings TelescopeSubsystem::ReadFromHardware() {
-  inch_t curr_pos = esc_.GetPosition<inch_t>();
-  
+  inch_t curr_pos = esc_.GetPosition<meter_t>();
+
   inch_t error = trgt_pos_ - curr_pos;
   Graph("error", error);
-  
-  bool in_pos = u_abs(error) < GetPreferenceValue_unit_type<inch_t>("pos_tolerance");
+
+  bool in_pos =
+      u_abs(error) < GetPreferenceValue_unit_type<inch_t>("pos_tolerance");
 
   return TelescopeReadings{curr_pos, in_pos};
 }

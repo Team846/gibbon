@@ -11,7 +11,6 @@
 #include "funkit/math/fieldpoints.h"
 #include "funkit/robot/swerve/control/swerve_ol_calculator.h"
 #include "funkit/robot/swerve/swerve_module.h"
-
 #include "funkit/wpilib/time.h"
 
 namespace funkit::robot::swerve {

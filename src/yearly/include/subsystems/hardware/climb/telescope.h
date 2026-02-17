@@ -17,7 +17,8 @@ struct TelescopeTarget {
 };
 
 class TelescopeSubsystem
-    : public funkit::robot::GenericSubsystem<TelescopeReadings, TelescopeTarget> {
+    : public funkit::robot::GenericSubsystem<TelescopeReadings,
+          TelescopeTarget> {
 public:
   TelescopeSubsystem();
   ~TelescopeSubsystem();

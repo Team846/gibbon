@@ -3,8 +3,8 @@
 #include "funkit/control/HigherMotorController.h"
 #include "funkit/robot/GenericRobot.h"
 #include "funkit/robot/GenericSubsystem.h"
-#include "subsystems/hardware/climb/telescope.h"
 #include "subsystems/hardware/climb/climber.h"
+#include "subsystems/hardware/climb/telescope.h"
 
 enum class ClimbState { kIdle, kIntake, kAgitate, kEvac };
 
@@ -16,8 +16,7 @@ struct ClimbSSTarget {
 };
 
 class ClimbSuperstructure
-    : public funkit::robot::GenericSubsystem<ClimbSSReadings,
-          ClimbSSTarget> {
+    : public funkit::robot::GenericSubsystem<ClimbSSReadings, ClimbSSTarget> {
 public:
   ClimbSuperstructure();
   ~ClimbSuperstructure();

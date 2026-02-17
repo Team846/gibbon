@@ -1,8 +1,9 @@
 #include "subsystems/hardware/scorer/turret.h"
 
-#include <cmath>
 #include <frc/Filesystem.h>
 #include <frc/RobotBase.h>
+
+#include <cmath>
 
 #include "funkit/control/config/genome.h"
 #include "ports.h"

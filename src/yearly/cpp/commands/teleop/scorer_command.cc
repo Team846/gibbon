@@ -22,10 +22,7 @@ void ScorerCommand::Periodic() {
   bool mirror_ =
       frc::DriverStation::GetAlliance() == frc::DriverStation::Alliance::kBlue;
 
-  bool isPassing = false;
-
   if (ci_readings_.pass_mode) {
-    isPassing = true;
     pdcsu::util::math::Vector2D pass_point{-1000_in_, -1000_in_};
     if (container_.drivetrain_.GetReadings().estimated_pose.position[0] <
         138.32_in_) {
@@ -42,7 +39,6 @@ void ScorerCommand::Periodic() {
               "passing/right_y")};
       Graph("right", true);
     } else {
-      isPassing = false;
       Graph("left", false);
       Graph("right", false);
     }
@@ -94,9 +90,6 @@ void ScorerCommand::Periodic() {
   if (ci_readings_.rev_dye_rotor) { target.reverse_rotor = true; }
 
   shooting_outputs = ShootingCalculator::GetOutputs();
-
-  bool isRed =
-      frc::DriverStation::GetAlliance() == frc::DriverStation::Alliance::kRed;
 
   if (!ci_readings_.pass_mode) {
     if (!mirror_ &&
