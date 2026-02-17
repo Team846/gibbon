@@ -14,6 +14,10 @@ struct ShootingCalculatorOutputs {
 
   /* General */
   bool is_valid;
+
+  /* For trajectory simulation */
+  pdcsu::util::math::Vector2D start_traj;
+  pdcsu::util::math::Vector2D term_traj;
 };
 
 class ShootingCalculator {
@@ -23,6 +27,7 @@ public:
   static void Calculate(const RobotContainer* container_);
 
   static ShootingCalculatorOutputs GetOutputs() { return outputs_; };
+  static pdcsu::util::math::Vector2D SimulateTrajectory(const RobotContainer* container_);
 
   static pdcsu::util::math::Vector2D target;
 

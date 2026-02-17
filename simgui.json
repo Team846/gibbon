@@ -72,6 +72,16 @@
             },
             "open": true
           }
+        }
+      }
+    },
+    "retained": {
+      "FunkyFMS": {
+        "SimDS": {
+          "open": true,
+          "xbox0": {
+            "open": true
+          }
         },
         "open": true
       }

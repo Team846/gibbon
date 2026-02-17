@@ -47,11 +47,11 @@ void VirtualMonkey::Tick() {
     target_vel = (*dc) * free_speed_rad_s_;
   } else if (pdcsu::units::radps_t* vel =
                  std::get_if<pdcsu::units::radps_t>(&last_command_)) {
-    target_vel = vel->value();
+    target_vel = vel->value() + gains_.kP * (vel->value() - velocity_rad_s_);
   } else if (pdcsu::units::radian_t* pos =
                  std::get_if<pdcsu::units::radian_t>(&last_command_)) {
     double error = pos->value() - position_rad_;
-    target_vel = gains_.kP * error;
+    target_vel = gains_.kP * error - gains_.kD * velocity_rad_s_;
   }
   target_vel = std::clamp(target_vel, -free_speed_rad_s_, free_speed_rad_s_);
 

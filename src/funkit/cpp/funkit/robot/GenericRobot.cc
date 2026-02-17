@@ -148,6 +148,7 @@ void GenericRobot::StartCompetition() {
         frc2::CommandScheduler::GetInstance().CancelAll();
         frc::EventLoop loop;
         loop.Clear();
+        ClearDefaultCommands();
       } else if (mode == Mode::kAutonomous) {
         // Get and run selected auto command
         OnEnable();

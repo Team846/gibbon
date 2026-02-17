@@ -12,7 +12,7 @@
 #include "subsystems/hardware/hoptake/intake.h"
 #include "subsystems/hardware/hoptake/pivot.h"
 
-enum class HoptakeState { kIdle, kIntake, kAgitate, kEvac };
+enum class HoptakeState { kIdle, kBump, kIntake, kAgitate, kEvac };
 
 struct HoptakeSSReadings {};
 

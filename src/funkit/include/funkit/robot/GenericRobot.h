@@ -37,6 +37,8 @@ public:
   virtual void InitTeleop() = 0;
   virtual void InitTest() = 0;
 
+  virtual void ClearDefaultCommands() = 0;
+
   void VerifyHardware();
 
   void AddAuto(std::string name, frc2::Command* command);

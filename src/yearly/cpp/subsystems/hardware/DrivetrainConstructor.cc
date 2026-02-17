@@ -214,8 +214,7 @@ swerve::DrivetrainConfigs DrivetrainConstructor::getDrivetrainConfigs() {
       1.0_mps2_, kg_t{0.0}, newton_t{user_values.drive_friction},
       UnitDivision<newton_t, rpm_t>{0.0}, ms_t{20.0}, avg_resistance};
 
-  scalar_t steer_gear_ratio{user_values.steer_reduction.value()};
-  pdcsu::util::DefArmSys steer_plant{def_bldc, 1, steer_gear_ratio,
+  pdcsu::util::DefArmSys steer_plant{def_bldc, 1, user_values.steer_reduction,
       [](radian_t, radps_t) -> nm_t { return nm_t{0.0}; },
       relative_steer_inertia,
       nm_t{user_values.steer_friction * motor_specs.stall_torque.value()},

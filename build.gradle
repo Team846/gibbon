@@ -82,8 +82,8 @@ def includeDesktopSupport = gradle.startParameter.taskNames.any { task ->
 // Set to true to run simulation in debug mode
 wpi.cpp.debugSimulation = true
 
-// Default enable simgui
-wpi.sim.addGui().defaultEnabled = true
+// Default disable simgui
+wpi.sim.addGui().defaultEnabled = false
 // Enable DS but not by default
 wpi.sim.addDriverstation()
 

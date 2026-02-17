@@ -70,7 +70,7 @@ DrivetrainSubsystem::DrivetrainSubsystem(DrivetrainConfigs configs)
 
   RegisterPreference("drive_latency", pdcsu::units::ms_t{0});
 
-  RegisterPreference("max_speed", pdcsu::units::fps_t{15});
+  RegisterPreference("max_speed", pdcsu::units::fps_t{17.4});
   RegisterPreference("max_omega", pdcsu::units::degps_t{180});
   RegisterPreference("max_omega_cut", pdcsu::units::degps_t{40});
 
@@ -644,6 +644,10 @@ void DrivetrainSubsystem::SetFieldObjectPose(const std::string& name,
     mainfield_object->SetPose(pos_y_wpi, pos_x_wpi, rotation_wpi);
   }
   // #endif
+}
+void DrivetrainSubsystem::SetFieldTrajectory(Vector2D A, Vector2D B) {
+  SetFieldObjectPose("trajA", A, 0_deg_);
+  SetFieldObjectPose("trajB", B, 0_deg_);
 }
 
 }  // namespace funkit::robot::swerve

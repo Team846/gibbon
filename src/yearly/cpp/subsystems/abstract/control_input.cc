@@ -1,5 +1,8 @@
 #include "subsystems/abstract/control_input.h"
 
+#include <frc/RobotBase.h>
+#include <networktables/NetworkTableInstance.h>
+
 ControlInputSubsystem::ControlInputSubsystem(
     funkit::robot::swerve::DrivetrainSubsystem* drivetrain_ss)
     : funkit::robot::GenericSubsystem<ControlInputReadings,
@@ -50,7 +53,19 @@ void ControlInputSubsystem::WriteToHardware(ControlInputTarget target) {
 ControlInputReadings ControlInputSubsystem::UpdateWithInput() {
   ControlInputReadings ci_readings_{};
   auto trigger_threshold = GetPreferenceValue_double("trigger_threshold");
-  funkit::robot::XboxReadings dr_readings{driver_, trigger_threshold};
+  funkit::robot::XboxReadings dr_readings;
+  if (frc::RobotBase::IsSimulation()) {
+    auto instance = nt::NetworkTableInstance::GetDefault();
+    auto funkyFMS = instance.GetTable("FunkyFMS");
+    auto simDS = funkyFMS->GetSubTable("SimDS");
+    auto xbox0 = simDS->GetSubTable("xbox0");
+    if (!funkit::robot::XboxReadingsFromSimDS(xbox0.get(), trigger_threshold,
+                                             &dr_readings)) {
+      dr_readings = funkit::robot::XboxReadings{driver_, trigger_threshold};
+    }
+  } else {
+    dr_readings = funkit::robot::XboxReadings{driver_, trigger_threshold};
+  }
   funkit::robot::XboxReadings op_readings{operator_, trigger_threshold};
   funkit::robot::GenericControllerReadings op_keyboard_readings{
       operator_keyboard_};

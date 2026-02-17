@@ -23,6 +23,8 @@ public:
   void InitTeleop() override;
   void InitTest() override;
 
+  void ClearDefaultCommands() override;
+
 private:
   RobotContainer container_;
 

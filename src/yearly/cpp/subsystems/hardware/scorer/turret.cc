@@ -1,5 +1,6 @@
 #include "subsystems/hardware/scorer/turret.h"
 
+#include <cmath>
 #include <frc/Filesystem.h>
 #include <frc/RobotBase.h>
 
@@ -52,6 +53,9 @@ TurretSubsystem::TurretSubsystem()
   RegisterPreference("encoder/max_rots", 3.0_rot_);
   RegisterPreference("encoder/max_tolerance", 0.025_rot_);
   RegisterPreference("tolerance", 2_deg_);
+
+  RegisterPreference("wrap/positive", 260_deg_);
+  RegisterPreference("wrap/negative", -260_deg_);
 }
 
 TurretSubsystem::~TurretSubsystem() = default;
@@ -170,10 +174,30 @@ void TurretSubsystem::WriteToHardware(TurretTarget target) {
   auto genome = SubsystemGenomeHelper::LoadGenomePreferences(*this, "genome");
   esc_.ModifyGenome(genome);
 
+  if (!icnor_controller_ || !arm_sys_) { return; }
+
+  degree_t wrap_positive =
+      GetPreferenceValue_unit_type<degree_t>("wrap/positive");
+  degree_t wrap_negative =
+      GetPreferenceValue_unit_type<degree_t>("wrap/negative");
+  if (target.pos_ > wrap_positive) {
+    double n = std::floor((target.pos_ - wrap_positive).value() / 360.0);
+    target.pos_ -= degree_t{360.0 * n};
+  }
+  if (target.pos_ < wrap_negative) {
+    double n = std::floor((wrap_negative - target.pos_).value() / 360.0);
+    target.pos_ += degree_t{360.0 * n};
+  }
+
+  while (target.pos_ > wrap_positive) {
+    target.pos_ -= 360_deg_;
+  }
+  while (target.pos_ < wrap_negative) {
+    target.pos_ += 360_deg_;
+  }
+
   Graph("target/pos", target.pos_);
   Graph("target/vel", target.vel_);
-
-  if (!icnor_controller_ || !arm_sys_) { return; }
 
   radian_t current_pos_real = esc_.GetPosition<radian_t>();
   radps_t current_vel_real = esc_.GetVelocity<radps_t>();
@@ -183,7 +207,8 @@ void TurretSubsystem::WriteToHardware(TurretTarget target) {
   radian_t target_pos_native = arm_sys_->toNative(target.pos_);
   radps_t target_vel_native = arm_sys_->toNative(target.vel_);
 
-  target_vel_native = GetPreferenceValue_double("icnor/agvel_compensation") * target_vel_native;
+  target_vel_native =
+      GetPreferenceValue_double("icnor/agvel_compensation") * target_vel_native;
 
   double output = icnor_controller_->getOutput(target_pos_native,
       target_vel_native, current_pos_native, current_vel_native);

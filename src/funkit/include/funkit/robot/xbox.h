@@ -2,6 +2,10 @@
 
 #include <frc/XboxController.h>
 
+namespace nt {
+class NetworkTable;
+}
+
 namespace funkit::robot {
 enum class XboxPOV : int {
   kNone = -1,
@@ -41,5 +45,8 @@ struct XboxReadings {
   XboxReadings() = default;
   XboxReadings(frc::XboxController& xbox, double trigger_threshold);
 };
+
+bool XboxReadingsFromSimDS(nt::NetworkTable* xbox_table, double trigger_threshold,
+                          XboxReadings* out);
 
 }  // namespace funkit::robot

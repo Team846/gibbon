@@ -116,9 +116,15 @@ void ScorerCommand::Periodic() {
         "shoot_point", {-1000_in_, -1000_in_}, 0.0_deg_);
     container_.drivetrain_.SetFieldObjectPose(
         "pass_point", {-1000_in_, -1000_in_}, 0.0_deg_);
+    container_.drivetrain_.SetFieldTrajectory(
+        {-1000_in_, -1000_in_}, {-1100_in_, -1100_in_});
+  } else {
+    container_.drivetrain_.SetFieldTrajectory(
+        shooting_outputs.start_traj, shooting_outputs.term_traj);
   }
 
   target.shooter_target = shooting_outputs.shooter_vel;
+  target.hood_target = {60_deg_, 0_radps_};
   target.turret_target = {shooting_outputs.aim_angle -
                               container_.drivetrain_.GetReadings().pose.bearing,
       shooting_outputs.vel_aim_compensation -

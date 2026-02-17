@@ -40,6 +40,8 @@ void ShootingCalculator::Calculate(const RobotContainer* container_) {
   const Vector2D shooter_pos =
       drivetrain_readings.estimated_pose.position + robot_to_shooter;
 
+  outputs_.start_traj = shooter_pos;
+
   const auto tangential_speed =
       robot_to_shooter.magnitude() *
       pdcsu::units::radps_t{drivetrain_readings.yaw_rate} / 1_rad_;
@@ -83,7 +85,7 @@ void ShootingCalculator::Calculate(const RobotContainer* container_) {
                             0.01 * kAdditive * kAdditive * fwdErrorMag *
                                 fwdErrorMag / 1.0_s_ / 1.0_ft_;
 
-    outputs_.shooter_vel = shooter_vel;
+  outputs_.shooter_vel = shooter_vel;
 
   /*
   Calculate drivetrain angles
@@ -121,7 +123,40 @@ void ShootingCalculator::Calculate(const RobotContainer* container_) {
       projectFwd +
       Vector2D{1_in_, aim_angle + drivetrain_readings.pose.bearing, true}
           .resize(u_abs(vel_perp) * projectMultFac / 1_ft_ * 1_in_);
-          foot_t d = (target - proj_vel).magnitude();
+  foot_t d = (target - proj_vel).magnitude();
   loggable_opt->Graph("distance_vel", d);
   outputs_.is_valid = d >= pointblank_distance && d <= 235.0_in_;
+
+  outputs_.term_traj = SimulateTrajectory(container_) + outputs_.start_traj;
+}
+
+pdcsu::util::math::Vector2D ShootingCalculator::SimulateTrajectory(
+    const RobotContainer* container_) {
+  fps_t effective_launch_speed =
+      container_->scorer_ss_.shooter.GetReadings().vel *
+      0.92;  // Roughly 8% drop in speed when shot passes through
+
+  fps_t shot_speed = effective_launch_speed *
+                     u_cos(container_->scorer_ss_.hood.GetReadings().pos_);
+  degree_t shot_dir = container_->drivetrain_.GetReadings().pose.bearing +
+                      container_->scorer_ss_.turret.GetReadings().pos_;
+  pdcsu::util::math::uVec<pdcsu::units::fps_t, 2> shot_vel{
+      shot_speed, shot_dir, true};
+
+  pdcsu::util::math::uVec<pdcsu::units::fps_t, 2> compl_vel =
+      shot_vel + container_->drivetrain_.GetReadings().estimated_pose.velocity;
+
+  fps_t vertical_vel = effective_launch_speed *
+                       u_sin(container_->scorer_ss_.hood.GetReadings().pos_);
+  second_t time_to_apex = vertical_vel / 32.2_fps2_;
+  foot_t height_at_apex = vertical_vel / 2.0 * time_to_apex;
+
+  const foot_t target_height =
+      38.5_in_;  // Roughly the delta between target height and shooter
+
+  second_t time_apex_to_target =
+      u_sqrt(2 * u_max(0_in_, height_at_apex - target_height) / 32.2_fps2_);
+
+  return {compl_vel[0] * u_max(0.25_s_, time_apex_to_target + time_to_apex),
+      compl_vel[1] * u_max(0.25_s_, time_apex_to_target + time_to_apex)};
 }

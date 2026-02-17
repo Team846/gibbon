@@ -116,6 +116,12 @@ void FunkyRobot::InitTeleop() {
   ControlTriggerInitializer::InitTeleopTriggers(container_);
 }
 
+void FunkyRobot::ClearDefaultCommands() {
+  container_.drivetrain_.RemoveDefaultCommand();
+  container_.scorer_ss_.RemoveDefaultCommand();
+  container_.hoptake_ss_.RemoveDefaultCommand();
+}
+
 void FunkyRobot::OnPeriodic() {
   ShootingCalculator::Calculate(&container_);
 

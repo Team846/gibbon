@@ -139,6 +139,9 @@ public:
       pdcsu::util::math::uVec<pdcsu::units::inch_t, 2> position,
       pdcsu::units::degree_t rotation);
 
+
+  void SetFieldTrajectory(Vector2D A, Vector2D B);
+
   double variance = 1000.0;
 
 private:
