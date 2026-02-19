@@ -13,6 +13,7 @@
 #include <networktables/NetworkTableInstance.h>
 
 #include "autos/auton_seqs.h"
+#include "calculators/ForceFieldCalculator.h"
 #include "calculators/ShootingCalculator.h"
 #include "commands/teleop/drive_command.h"
 #include "commands/teleop/intake_command.h"
@@ -34,6 +35,7 @@ FunkyRobot::FunkyRobot() : GenericRobot{&container_} {
 
 void FunkyRobot::OnInitialize() {
   ShootingCalculator::Setup();
+  ForceFieldCalculator::Setup();
 
   ADD_AUTO_VARIANTS(CS2Auto, "CS2");
 

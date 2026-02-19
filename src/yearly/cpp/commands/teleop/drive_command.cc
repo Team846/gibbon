@@ -1,11 +1,15 @@
 #include "commands/teleop/drive_command.h"
 
+#include <algorithm>
+#include <cmath>
+#include <fstream>
 #include <utility>
 
+#include "calculators/ForceFieldCalculator.h"
 #include "calculators/ShootingCalculator.h"
 #include "funkit/math/fieldpoints.h"
 
-DriveCommand::DriveCommand(RobotContainer &container)
+DriveCommand::DriveCommand(RobotContainer& container)
     : funkit::robot::GenericCommand<RobotContainer, DriveCommand>{
           container, "drive_command"} {
   AddRequirements({&container_.drivetrain_});
@@ -107,6 +111,18 @@ void DriveCommand::Periodic() {
   } else {
     ema_comp_gpd_ = 0.0_fps_;
   }
+
+  auto dt_readings = container_.drivetrain_.GetReadings();
+  foot_t robot_x = dt_readings.estimated_pose.position[0];
+  foot_t robot_y = dt_readings.estimated_pose.position[1];
+
+  // TODO: replace robot_x and robot_y with dt readings
+  // TODO: use constistent units
+  target.velocity =
+      ForceFieldCalculator::ApplyForceFields(target.velocity, &container_);
+
+  Graph("ff_output_vel_x", target.velocity[0]);
+  Graph("ff_output_vel_y", target.velocity[1]);
 
   container_.drivetrain_.SetTarget({target});
 }
