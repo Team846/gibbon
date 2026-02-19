@@ -13,6 +13,7 @@
 #include <networktables/NetworkTableInstance.h>
 
 #include "autos/auton_seqs.h"
+#include "calculators/AllianceShiftCalculator.h"
 #include "calculators/ShootingCalculator.h"
 #include "commands/teleop/drive_command.h"
 #include "commands/teleop/hoptake_command.h"
@@ -186,6 +187,15 @@ void FunkyRobot::OnPeriodic() {
   if (homing_count_gyro > 0) homing_count_gyro--;
 
   bool isDisabled = frc::DriverStation::IsDisabled();
+
+  if (!isDisabled) {
+    auto shift_data = AllianceShiftCalculator::Calculate();
+    Graph("our_hub_active", shift_data.our_hub_active);
+    Graph("won_auto", shift_data.won_auto);
+    Graph("shift", shift_data.shift);
+    Graph("until_flip", shift_data.until_flip);
+    Graph("our_time_left", shift_data.our_time_left);
+  }
 
   if (homing_count_ > 0 && isDisabled)
     LEDsLogic::SetLEDsState(&container_, kLEDsHoming);
