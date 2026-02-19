@@ -71,6 +71,10 @@ funkit::control::hardware::IntermediateController*
 
 config::MotorGenome MonkeyMaster::genome_registry[CONTROLLER_REGISTRY_SIZE]{};
 
+bool MonkeyMaster::reset_registry[CONTROLLER_REGISTRY_SIZE]{};
+size_t MonkeyMaster::consecutive_reset_counts[CONTROLLER_REGISTRY_SIZE]{};
+size_t MonkeyMaster::reset_skip_counters[CONTROLLER_REGISTRY_SIZE]{};
+
 pdcsu::units::nm_t MonkeyMaster::load_registry[CONTROLLER_REGISTRY_SIZE]{};
 
 std::optional<pdcsu::util::BasePlant>
@@ -425,11 +429,24 @@ std::string_view MonkeyMaster::parseError(
 void MonkeyMaster::CheckForResets() {
   for (size_t i = 1; i <= slot_counter_; i++) {
     if (controller_registry[i] != nullptr) {
+      if (reset_skip_counters[i] > 0) {
+        reset_skip_counters[i]--;
+        continue;
+      }
       if (controller_registry[i]->Read(hardware::ReadType::kRestFault) > 0.5) {
-        loggable_.Warn(
-            "Reset detected on Motor Controller Slot ID {}. Reconfiguring...",
-            i);
-        SetGenome(i, genome_registry[i], true);
+        if (reset_registry[i]) {
+          loggable_.Warn(
+              "Reset detected on Motor Controller Slot ID {}. Reconfiguring "
+              "(Attempt {})...",
+              i, consecutive_reset_counts[i] + 1);
+          SetGenome(i, genome_registry[i], true);
+          consecutive_reset_counts[i]++;
+          reset_skip_counters[i] =
+              (1 << std::min(consecutive_reset_counts[i], (size_t)5));
+        }
+      } else {
+        consecutive_reset_counts[i] = 0;
+        reset_skip_counters[i] = 0;
       }
     }
   }

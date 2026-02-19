@@ -142,6 +142,11 @@ private:
 
   static config::MotorGenome genome_registry[CONTROLLER_REGISTRY_SIZE];
   static pdcsu::units::nm_t load_registry[CONTROLLER_REGISTRY_SIZE];
+
+  static bool reset_registry[CONTROLLER_REGISTRY_SIZE];
+  static size_t consecutive_reset_counts[CONTROLLER_REGISTRY_SIZE];
+  static size_t reset_skip_counters[CONTROLLER_REGISTRY_SIZE];
+
   static std::optional<pdcsu::util::BasePlant>
       plant_registry[CONTROLLER_REGISTRY_SIZE];
 

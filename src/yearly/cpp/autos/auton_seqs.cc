@@ -6,8 +6,7 @@
 #include <frc2/command/WaitUntilCommand.h>
 
 #include "commands/general/auto_intake_command.h"
-#include "commands/general/auto_shoot_command.h"
-#include "commands/general/auto_track_command.h"
+#include "commands/general/auto_scorer_command.h"
 #include "funkit/robot/swerve/drive_to_point_command.h"
 #include "funkit/robot/swerve/wait_until_close.h"
 #include "pdcsu_units.h"
@@ -48,29 +47,18 @@ using FPT = funkit::math::FieldPoint;
 
 #define START_Y (298.5_in_ - 16.5_in_)
 
-#define PARALLEL_DEADLINE(deadline, ...) \
-  frc2::ParallelDeadlineGroup { deadline, __VA_ARGS__ }
+#define PARALLEL_DEADLINE(deadline, parallel) \
+  frc2::ParallelDeadlineGroup { deadline, parallel }
 
 #define PARALLEL_RACE(action1, action2) \
   frc2::ParallelRaceGroup { action1, action2 }
 
-#define SEQ(...) \
-  frc2::SequentialCommandGroup { __VA_ARGS__ }
+#define SEQUENCE(action1, action2) \
+  frc2::SequentialCommandGroup { action1, action2 }
 
-#define INSTANT_TRACK(where)                                                   \
-  INSTANT {                                                                    \
-    [&]() {                                                                    \
-      container.scorer_ss_.SetTarget(ScorerSSTarget{.tracking_state = where}); \
-    }                                                                          \
-  }
-
-#define INSTANT_INTAKE(where)                                                \
-  INSTANT {                                                                  \
-    [&]() {                                                                  \
-      container.hoptake_ss_.SetTarget(HoptakeSSTarget{.target_state = where, \
-          .drivetrain_vel = container.drivetrain_.GetReadings()              \
-                                .estimated_pose.velocity.magnitude()});      \
-    }                                                                        \
+#define INSTANT(action)             \
+  {                                 \
+    frc2::InstantCommand { action } \
   }
 
 #define AUTO_NAME(default_name)                                \
@@ -110,6 +98,12 @@ using FPT = funkit::math::FieldPoint;
         MAX_ACCEL_##auto_name##_##pt_name, MAX_DECEL_##auto_name##_##pt_name, \
         funkit::robot::swerve::DriveToPointFlags::kRequireBearing             \
   }
+
+#define INTAKE(where) AutoIntakeCommand(container, where)
+
+#define SHOOT() AutoScorerCommand(container, true)
+
+#define TRACK() AutoScorerCommand(container, false)
 
 #define END_BUMPC1_PT MKPT(90_in_, 223.61_in_, 35_deg_, 0_fps_)
 #define START_BUMPC1_PT MKPT(90_in_, 110.61_in_, 35_deg_, 0_fps_)
@@ -157,15 +151,6 @@ using FPT = funkit::math::FieldPoint;
     }                                                                   \
   }
 
-#define TRACK_AND_SHOOT() \
-  AutoShootCommand { container }
-
-#define TRACK(where) \
-  AutoTrackCommand { container, where }
-
-#define INTAKE(where) \
-  AutoIntakeCommand { container, where }
-
 #define __AUTO__(codeName, stringName)                                 \
   codeName::codeName(                                                  \
       RobotContainer& container, bool is_blue_side, bool is_left_side) \
@@ -188,87 +173,83 @@ END DEFINE MACROS
 *************************/
 
 __AUTO__(LeaveAuto, "LEAVE")
-SEQ(START2(158.5_in_, START_Y, 180_deg_), WAIT{0.25_s},
-    DRIVE(LEAVE, 158.5_in_, START_Y - 3_ft_, 180_deg_, 0_fps_))
+SEQUENCE {
+  START2(158.5_in_, START_Y, 180_deg_), WAIT{0.25_s},
+      DRIVE(LEAVE, 158.5_in_, START_Y - 3_ft_, 180_deg_, 0_fps_),
+}
 }
 {}
 
 __AUTO__(CS2Auto, "CS2")
-SEQ(START2(92.5_in_, 144.54_in_, 0_deg_),
-    PARALLEL_DEADLINE(
-        SEQ(DRIVE_PT_BEARING(CS2, END_BUMPC1_PT, BUMP),
-            PARALLEL_DEADLINE(DRIVE_PT(CS2, P1C1_INTAKE_PT, NORM),
-                INTAKE(HoptakeState::kIntake)),
-            DRIVE_PT(CS2, P2C1_INTAKE_PT, NORM),
-            DRIVE_PT(CS2, P3C1_INTAKE_PT, NORM),
-            DRIVE_PT(CS2, P2C1_INTAKE_PT, NORM),
-            DRIVE_PT(CS2, P1C1_INTAKE_PT, NORM),
-            PARALLEL_DEADLINE(DRIVE_PT_BEARING(CS2, END_BUMPC1_PT, NORM),
-                INSTANT_INTAKE(HoptakeState::kBump)),
-            DRIVE_PT_BEARING(CS2, START_BUMPC1_PT, BUMP)),
-        TRACK(TrackingState::kTrack)),
-    TRACK_AND_SHOOT(),
-    PARALLEL_DEADLINE(
-        SEQ(DRIVE_PT(CS2, END_BUMPC1_PT, NORM),
-            PARALLEL_DEADLINE(DRIVE_PT(CS2, P1C2_INTAKE_PT, NORM),
-                INTAKE(HoptakeState::kIntake)),
-            DRIVE_PT(CS2, P2C2_INTAKE_PT, NORM),
-            DRIVE_PT(CS2, P3C2_INTAKE_PT, NORM),
-            DRIVE_PT(CS2, P2C2_INTAKE_PT, NORM),
-            DRIVE_PT(CS2, P1C2_INTAKE_PT, NORM),
-            PARALLEL_DEADLINE(DRIVE_PT_BEARING(CS2, END_BUMPC23_PT, NORM),
-                INSTANT_INTAKE(HoptakeState::kBump)),
-            PARALLEL_DEADLINE(DRIVE_PT_BEARING(CS2, START_BUMPC23_PT, BUMP),
-                INSTANT_INTAKE(HoptakeState::kIntake)),
-            DRIVE_PT(CS2, END_BUMPC23_PT, BUMP),
-            DRIVE_PT(CS2, P1C3_INTAKE_PT, NORM),
-            DRIVE_PT(CS2, P2C3_INTAKE_PT, NORM),
-            DRIVE_PT(CS2, P3C3_INTAKE_PT, NORM),
-            DRIVE_PT(CS2, P4C3_INTAKE_PT, NORM),
-            DRIVE_PT(CS2, P3C3_INTAKE_PT, NORM),
-            DRIVE_PT(CS2, P2C3_INTAKE_PT, NORM),
-            DRIVE_PT(CS2, P1C3_INTAKE_PT, NORM),
-            DRIVE_PT_BEARING(CS2, END_BUMPC23_PT, NORM),
-            DRIVE_PT_BEARING(CS2, START_BUMPC23_PT, BUMP),
-            DRIVE_PT_BEARING(CS2, END_BUMPC23_PT, BUMP)),
-        TRACK(TrackingState::kTrack)))
+SEQUENCE {
+  START2(92.5_in_, 144.54_in_, 0_deg_), TRACK(),
+      DRIVE_PT_BEARING(CS2, END_BUMPC1_PT, BUMP), INTAKE(HoptakeState::kIntake),
+      DRIVE_PT(CS2, P1C1_INTAKE_PT, NORM), DRIVE_PT(CS2, P2C1_INTAKE_PT, NORM),
+      DRIVE_PT(CS2, P3C1_INTAKE_PT, NORM), DRIVE_PT(CS2, P2C1_INTAKE_PT, NORM),
+      DRIVE_PT(CS2, P1C1_INTAKE_PT, NORM),
+      // driveuntilfull
+      INTAKE(HoptakeState::kBump), DRIVE_PT_BEARING(CS2, END_BUMPC1_PT, NORM),
+      DRIVE_PT_BEARING(CS2, START_BUMPC1_PT, BUMP),
+      PARALLEL_DEADLINE(WAIT{3.0_s}, SHOOT()),
+      DRIVE_PT(CS2, END_BUMPC1_PT, NORM), TRACK(),
+      INTAKE(HoptakeState::kIntake), DRIVE_PT(CS2, P1C2_INTAKE_PT, NORM),
+      DRIVE_PT(CS2, P2C2_INTAKE_PT, NORM), DRIVE_PT(CS2, P3C2_INTAKE_PT, NORM),
+      DRIVE_PT(CS2, P2C2_INTAKE_PT, NORM), DRIVE_PT(CS2, P1C2_INTAKE_PT, NORM),
+      // driveuntilfull
+      INTAKE(HoptakeState::kBump), DRIVE_PT_BEARING(CS2, END_BUMPC23_PT, NORM),
+      DRIVE_PT_BEARING(CS2, START_BUMPC23_PT, BUMP),
+      PARALLEL_DEADLINE(WAIT{3.0_s}, SHOOT()), TRACK(),
+      DRIVE_PT(CS2, END_BUMPC23_PT, BUMP), INTAKE(HoptakeState::kIntake),
+      DRIVE_PT(CS2, P1C3_INTAKE_PT, NORM), DRIVE_PT(CS2, P2C3_INTAKE_PT, NORM),
+      DRIVE_PT(CS2, P3C3_INTAKE_PT, NORM), DRIVE_PT(CS2, P4C3_INTAKE_PT, NORM),
+      DRIVE_PT(CS2, P3C3_INTAKE_PT, NORM), DRIVE_PT(CS2, P2C3_INTAKE_PT, NORM),
+      DRIVE_PT(CS2, P1C3_INTAKE_PT, NORM),
+      // driveuntilfull
+      INTAKE(HoptakeState::kBump), DRIVE_PT_BEARING(CS2, END_BUMPC23_PT, NORM),
+      DRIVE_PT_BEARING(CS2, START_BUMPC23_PT, BUMP),
+      PARALLEL_DEADLINE(WAIT{3.0_s}, SHOOT()), TRACK(),
+      DRIVE_PT_BEARING(CS2, END_BUMPC23_PT, BUMP),
+      INTAKE(HoptakeState::kIntake),
+}
 }
 {}
 
 __AUTO__(SimTestAuto, "SIMTEST")
-SEQ(SIM_TEST_START(), DRIVE(SIMTEST, 42_in_, 51.66_in_, 0_deg_, 4_fps_),
-    DRIVE(SIMTEST, 49_in_, 63.43_in_, 0_deg_, 6_fps_),
-    DRIVE(SIMTEST, 57_in_, 70.01_in_, 0_deg_, 6_fps_),
-    DRIVE(SIMTEST, 65_in_, 73.54_in_, 0_deg_, 6_fps_),
-    DRIVE(SIMTEST, 75_in_, 75_in_, 0_deg_, 6_fps_),
-    DRIVE(SIMTEST, 85_in_, 76.45_in_, 0_deg_, 6_fps_),
-    DRIVE(SIMTEST, 94_in_, 80.60_in_, 0_deg_, 6_fps_),
-    DRIVE(SIMTEST, 101_in_, 86.56_in_, 0_deg_, 6_fps_),
-    DRIVE(SIMTEST, 107_in_, 95.82_in_, 0_deg_, 6_fps_),
-    DRIVE(SIMTEST, 110_in_, 110_in_, 0_deg_, 6_fps_),
-    DRIVE(SIMTEST, 108_in_, 121.66_in_, 0_deg_, 6_fps_),
-    DRIVE(SIMTEST, 101_in_, 133.43_in_, 0_deg_, 6_fps_),
-    DRIVE(SIMTEST, 89_in_, 142.07_in_, 0_deg_, 6_fps_),
-    DRIVE(SIMTEST, 75_in_, 145_in_, 0_deg_, 6_fps_),
-    DRIVE(SIMTEST, 61_in_, 142.07_in_, 0_deg_, 6_fps_),
-    DRIVE(SIMTEST, 49_in_, 133.43_in_, 0_deg_, 6_fps_),
-    DRIVE(SIMTEST, 42_in_, 121.66_in_, 0_deg_, 6_fps_),
-    DRIVE(SIMTEST, 40_in_, 110_in_, 0_deg_, 6_fps_),
-    DRIVE(SIMTEST, 43_in_, 95.82_in_, 0_deg_, 6_fps_),
-    DRIVE(SIMTEST, 49_in_, 86.56_in_, 0_deg_, 6_fps_),
-    DRIVE(SIMTEST, 56_in_, 80.60_in_, 0_deg_, 6_fps_),
-    DRIVE(SIMTEST, 65_in_, 76.45_in_, 0_deg_, 6_fps_),
-    DRIVE(SIMTEST, 75_in_, 75_in_, 0_deg_, 6_fps_),
-    DRIVE(SIMTEST, 85_in_, 73.54_in_, 0_deg_, 6_fps_),
-    DRIVE(SIMTEST, 93_in_, 70.01_in_, 0_deg_, 6_fps_),
-    DRIVE(SIMTEST, 101_in_, 63.43_in_, 0_deg_, 6_fps_),
-    DRIVE(SIMTEST, 108_in_, 51.66_in_, 0_deg_, 6_fps_),
-    DRIVE(SIMTEST, 110_in_, 40_in_, 0_deg_, 6_fps_),
-    DRIVE(SIMTEST, 108_in_, 28.34_in_, 0_deg_, 6_fps_),
-    DRIVE(SIMTEST, 101_in_, 16.57_in_, 0_deg_, 6_fps_),
-    DRIVE(SIMTEST, 93_in_, 9.99_in_, 0_deg_, 6_fps_),
-    DRIVE(SIMTEST, 85_in_, 6.46_in_, 0_deg_, 4_fps_),
-    DRIVE(SIMTEST, 75_in_, 5_in_, 0_deg_, 0_fps_))
+SEQUENCE {
+  SIM_TEST_START(), DRIVE(SIMTEST, 42_in_, 51.66_in_, 0_deg_, 4_fps_),
+      DRIVE(SIMTEST, 49_in_, 63.43_in_, 0_deg_, 6_fps_),
+      DRIVE(SIMTEST, 57_in_, 70.01_in_, 0_deg_, 6_fps_),
+      DRIVE(SIMTEST, 65_in_, 73.54_in_, 0_deg_, 6_fps_),
+      DRIVE(SIMTEST, 75_in_, 75_in_, 0_deg_, 6_fps_),
+      DRIVE(SIMTEST, 85_in_, 76.45_in_, 0_deg_, 6_fps_),
+      DRIVE(SIMTEST, 94_in_, 80.60_in_, 0_deg_, 6_fps_),
+      DRIVE(SIMTEST, 101_in_, 86.56_in_, 0_deg_, 6_fps_),
+      DRIVE(SIMTEST, 107_in_, 95.82_in_, 0_deg_, 6_fps_),
+      DRIVE(SIMTEST, 110_in_, 110_in_, 0_deg_, 6_fps_),
+      DRIVE(SIMTEST, 108_in_, 121.66_in_, 0_deg_, 6_fps_),
+      DRIVE(SIMTEST, 101_in_, 133.43_in_, 0_deg_, 6_fps_),
+      DRIVE(SIMTEST, 89_in_, 142.07_in_, 0_deg_, 6_fps_),
+      DRIVE(SIMTEST, 75_in_, 145_in_, 0_deg_, 6_fps_),
+      DRIVE(SIMTEST, 61_in_, 142.07_in_, 0_deg_, 6_fps_),
+      DRIVE(SIMTEST, 49_in_, 133.43_in_, 0_deg_, 6_fps_),
+      DRIVE(SIMTEST, 42_in_, 121.66_in_, 0_deg_, 6_fps_),
+      DRIVE(SIMTEST, 40_in_, 110_in_, 0_deg_, 6_fps_),
+      DRIVE(SIMTEST, 43_in_, 95.82_in_, 0_deg_, 6_fps_),
+      DRIVE(SIMTEST, 49_in_, 86.56_in_, 0_deg_, 6_fps_),
+      DRIVE(SIMTEST, 56_in_, 80.60_in_, 0_deg_, 6_fps_),
+      DRIVE(SIMTEST, 65_in_, 76.45_in_, 0_deg_, 6_fps_),
+      DRIVE(SIMTEST, 75_in_, 75_in_, 0_deg_, 6_fps_),
+      DRIVE(SIMTEST, 85_in_, 73.54_in_, 0_deg_, 6_fps_),
+      DRIVE(SIMTEST, 93_in_, 70.01_in_, 0_deg_, 6_fps_),
+      DRIVE(SIMTEST, 101_in_, 63.43_in_, 0_deg_, 6_fps_),
+      DRIVE(SIMTEST, 108_in_, 51.66_in_, 0_deg_, 6_fps_),
+      DRIVE(SIMTEST, 110_in_, 40_in_, 0_deg_, 6_fps_),
+      DRIVE(SIMTEST, 108_in_, 28.34_in_, 0_deg_, 6_fps_),
+      DRIVE(SIMTEST, 101_in_, 16.57_in_, 0_deg_, 6_fps_),
+      DRIVE(SIMTEST, 93_in_, 9.99_in_, 0_deg_, 6_fps_),
+      DRIVE(SIMTEST, 85_in_, 6.46_in_, 0_deg_, 4_fps_),
+      DRIVE(SIMTEST, 75_in_, 5_in_, 0_deg_, 0_fps_),
+}
 }
 {}
 
