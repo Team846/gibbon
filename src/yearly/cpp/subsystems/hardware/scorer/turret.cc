@@ -1,8 +1,10 @@
 #include "subsystems/hardware/scorer/turret.h"
 
-#include <cmath>
 #include <frc/Filesystem.h>
 #include <frc/RobotBase.h>
+#include <funkit/math/collection.h>
+
+#include <cmath>
 
 #include "funkit/control/config/genome.h"
 #include "ports.h"
@@ -46,7 +48,6 @@ TurretSubsystem::TurretSubsystem()
 
   RegisterPreference("icnor/IPG", 0.5);
   RegisterPreference("icnor/friction_nm", 5.0_Nm_);
-  RegisterPreference("icnor/agvel_compensation", 2.5);
   RegisterPreference("encoder/offset1", 0.0_rot_);
   RegisterPreference("encoder/offset2", 0.0_rot_);
   RegisterPreference("encoder/min_rots", -3.0_rot_);
@@ -144,7 +145,8 @@ TurretReadings TurretSubsystem::ReadFromHardware() {
 
   TurretReadings readings{pos_real, vel_real, false};
 
-  degree_t error = GetTarget().pos_ - pos_real;
+  degree_t error =
+      funkit::math::CoterminalDifference(GetTarget().pos_, pos_real);
   Graph("error", error);
 
   readings.in_position_ =
@@ -207,8 +209,27 @@ void TurretSubsystem::WriteToHardware(TurretTarget target) {
   radian_t target_pos_native = arm_sys_->toNative(target.pos_);
   radps_t target_vel_native = arm_sys_->toNative(target.vel_);
 
-  target_vel_native =
-      GetPreferenceValue_double("icnor/agvel_compensation") * target_vel_native;
+  radps2_t accel = 0.0_radps2_;
+
+  if (last_time_ > 0.0_ms_) {
+    accel = (target_vel_native - last_vel_) /
+            u_max(9.0_ms_, (funkit::wpilib::CurrentFPGATime() - last_time_));
+  }
+  last_vel_ = target_vel_native;
+  last_time_ = funkit::wpilib::CurrentFPGATime();
+  Graph("debug/accel", accel);
+
+  radian_t native_error = target_pos_native - current_pos_native;
+  radps_t avg_vel =
+      (current_vel_native + target_vel_native + native_error / 0.04_s_) / 2.0;
+  if (u_abs(avg_vel) > 2_radps_) {
+    second_t comp_time = u_clamp(native_error / avg_vel, -0.05_s_, 0.05_s_);
+
+    Graph("debug/accel_comp_time", comp_time);
+
+    target_vel_native += comp_time * accel;
+    target_pos_native += 0.5 * comp_time * comp_time * accel;
+  }
 
   double output = icnor_controller_->getOutput(target_pos_native,
       target_vel_native, current_pos_native, current_vel_native);

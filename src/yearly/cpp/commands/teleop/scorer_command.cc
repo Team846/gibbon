@@ -22,10 +22,7 @@ void ScorerCommand::Periodic() {
   bool mirror_ =
       frc::DriverStation::GetAlliance() == frc::DriverStation::Alliance::kBlue;
 
-  bool isPassing = false;
-
   if (ci_readings_.pass_mode) {
-    isPassing = true;
     pdcsu::util::math::Vector2D pass_point{-1000_in_, -1000_in_};
     if (container_.drivetrain_.GetReadings().estimated_pose.position[0] <
         138.32_in_) {
@@ -42,33 +39,21 @@ void ScorerCommand::Periodic() {
               "passing/right_y")};
       Graph("right", true);
     } else {
-      isPassing = false;
       Graph("left", false);
       Graph("right", false);
     }
     funkit::math::FieldPoint field_point = {pass_point, 0_deg_, 0_fps_};
     field_point = field_point.mirrorOnlyY(mirror_);
     ShootingCalculator::target = field_point.point;
-    container_.drivetrain_.SetFieldObjectPose(
-        "pass_point", field_point.point, 0.0_deg_);
-    container_.drivetrain_.SetFieldObjectPose(
-        "shoot_point", {-1000_in_, -1000_in_}, 0.0_deg_);
     Graph("pass", true);
     Graph("shoot", false);
-  }
-
-  if (!ci_readings_.pass_mode) {
+  } else {
     ShootingCalculator::target =
         funkit::math::FieldPoint{{158.845_in_, 182.11_in_}, 0_deg_, 0_fps_}
             .mirror(mirror_)
             .point;
     Graph("shoot", true);
     Graph("pass", false);
-
-    container_.drivetrain_.SetFieldObjectPose(
-        "shoot_point", ShootingCalculator::target, 0.0_deg_);
-    container_.drivetrain_.SetFieldObjectPose(
-        "pass_point", {-1000_in_, -1000_in_}, 0.0_deg_);
   }
 
   if (ci_readings_.turret_trim_cw) {
@@ -95,9 +80,6 @@ void ScorerCommand::Periodic() {
 
   shooting_outputs = ShootingCalculator::GetOutputs();
 
-  bool isRed =
-      frc::DriverStation::GetAlliance() == frc::DriverStation::Alliance::kRed;
-
   if (!ci_readings_.pass_mode) {
     if (!mirror_ &&
         container_.drivetrain_.GetReadings().estimated_pose.position[1] >
@@ -111,7 +93,18 @@ void ScorerCommand::Periodic() {
     }
   }
 
-  if (!shooting_outputs.is_valid) {
+  target.shooter_target = shooting_outputs.shooter_vel;
+  target.hood_target = {
+      shooting_outputs.shot_angle, shooting_outputs.shot_angle_vel};
+  target.turret_target = {shooting_outputs.aim_angle -
+                              container_.drivetrain_.GetReadings().pose.bearing,
+      shooting_outputs.vel_aim_compensation -
+          container_.drivetrain_.GetReadings().yaw_rate};
+  target.shoot = shooting_outputs.is_valid &&
+                 !ci_readings_.override_autoshoot &&
+                 container_.scorer_ss_.GetReadings().will_make_shot;
+
+  if (!target.shoot) {
     container_.drivetrain_.SetFieldObjectPose(
         "shoot_point", {-1000_in_, -1000_in_}, 0.0_deg_);
     container_.drivetrain_.SetFieldObjectPose(
@@ -121,15 +114,19 @@ void ScorerCommand::Periodic() {
   } else {
     container_.drivetrain_.SetFieldTrajectory(
         shooting_outputs.start_traj, shooting_outputs.term_traj);
-  }
 
-  target.shooter_target = shooting_outputs.shooter_vel;
-  target.hood_target = {60_deg_, 0_radps_};
-  target.turret_target = {shooting_outputs.aim_angle -
-                              container_.drivetrain_.GetReadings().pose.bearing,
-      shooting_outputs.vel_aim_compensation -
-          container_.drivetrain_.GetReadings().yaw_rate};
-  target.shoot = shooting_outputs.is_valid && !ci_readings_.override_autoshoot;
+    if (ci_readings_.pass_mode) {
+      container_.drivetrain_.SetFieldObjectPose(
+          "shoot_point", {-1000_in_, -1000_in_}, 0.0_deg_);
+      container_.drivetrain_.SetFieldObjectPose(
+          "pass_point", ShootingCalculator::target, 0.0_deg_);
+    } else {
+      container_.drivetrain_.SetFieldObjectPose(
+          "shoot_point", ShootingCalculator::target, 0.0_deg_);
+      container_.drivetrain_.SetFieldObjectPose(
+          "pass_point", {-1000_in_, -1000_in_}, 0.0_deg_);
+    }
+  }
 
   container_.scorer_ss_.SetTarget(target);
 }

@@ -3,9 +3,16 @@
 #include <frc/DriverStation.h>
 
 ShootingCalculatorOutputs ShootingCalculator::outputs_{
-    0_deg_, 0_radps_, 0_fps_, false};
+    0_deg_, 0_radps_, 60_deg_, 0_radps_, 0_fps_, false};
 std::optional<funkit::base::Loggable> ShootingCalculator::loggable_opt;
 pdcsu::util::math::Vector2D ShootingCalculator::target{0_in_, 0_in_};
+
+const inch_t kDeltaHeight = 57.9_in_ - 24.9_in_;
+
+const degree_t kShotAngleMax = 75_deg_;
+const degree_t kShotAngleMin = 55_deg_;
+const foot_t kShotMaxDist = 30_ft_;
+const foot_t kPointblankDistance = 48_in_;
 
 void ShootingCalculator::Setup() {
   if (loggable_opt.has_value()) { return; }
@@ -17,6 +24,24 @@ void ShootingCalculator::Setup() {
   loggable_opt->RegisterPreference("swim/twistVelCompensation", 0.416);
 }
 
+degree_t ShootingCalculator::GetShotAngle(foot_t shot_distance) {
+  return kShotAngleMax - (kShotAngleMax - kShotAngleMin) *
+                             (shot_distance / kShotMaxDist).value();
+}
+radps_t ShootingCalculator::GetShotAngleVel(
+    foot_t shot_distance, fps_t vel_in_dir) {
+  return (kShotAngleMax - kShotAngleMin) *
+         UnitDivision<inch_t, second_t>(vel_in_dir) / kShotMaxDist;
+}
+
+fps_t ShootingCalculator::GetBaseVelocity(
+    degree_t shot_angle, foot_t shot_distance) {
+  UnitCompound<fps_t, fps_t> physics_vel_sksq =
+      16.0_fps2_ * shot_distance * shot_distance /
+      (shot_distance * u_tan(shot_angle) - kDeltaHeight);
+  return u_sqrt(physics_vel_sksq) / u_cos(shot_angle);
+}
+
 void ShootingCalculator::Calculate(const RobotContainer* container_) {
   if (!loggable_opt.has_value()) {
     throw std::runtime_error("ShootingCalculator not setup");
@@ -26,8 +51,6 @@ void ShootingCalculator::Calculate(const RobotContainer* container_) {
   using namespace pdcsu::util::math;
   using Vel2D = uVec<pdcsu::units::fps_t, 2>;
 
-  const inch_t pointblank_distance = 48_in_;
-
   auto drivetrain_readings = container_->drivetrain_.GetReadings();
 
   /*
@@ -35,7 +58,7 @@ void ShootingCalculator::Calculate(const RobotContainer* container_) {
   calculates the position of the shooter and the velocity at the shooter.
   */
 
-  const Vector2D robot_to_shooter = Vector2D{0_in_, -6_in_}.rotate(
+  const Vector2D robot_to_shooter = Vector2D{0_in_, 0.9375_in_}.rotate(
       drivetrain_readings.estimated_pose.bearing, true);
   const Vector2D shooter_pos =
       drivetrain_readings.estimated_pose.position + robot_to_shooter;
@@ -58,17 +81,23 @@ void ShootingCalculator::Calculate(const RobotContainer* container_) {
   */
   fps_t vel_perp =
       delta.rotate(90_deg_).dot(vel_at_shooter) / delta.magnitude();
-  //   fps_t vel_in_dir =
-  //       u_sqrt(vel_at_shooter.magnitude() * vel_at_shooter.magnitude() -
-  //              vel_perp * vel_perp);
+  fps_t vel_in_dir =
+      u_sqrt(vel_at_shooter.magnitude() * vel_at_shooter.magnitude() -
+             vel_perp * vel_perp);
+
+  inch_t D_f_O = u_clamp(inch_t{delta_mag} - kPointblankDistance,
+      kPointblankDistance, kShotMaxDist);
+
+  loggable.Graph("D_f_O", D_f_O);
+  outputs_.shot_angle = GetShotAngle(D_f_O);
+  loggable.Graph("shot_angle", outputs_.shot_angle);
+  loggable.Graph("shot_distance_ratio", (D_f_O / kShotMaxDist).value());
+  outputs_.shot_angle_vel = GetShotAngleVel(D_f_O, vel_in_dir);
 
   /*
   2pt interpolation to get target shooting velocity.
   */
-  const fps_t kPtBlank =
-      loggable.GetPreferenceValue_unit_type<fps_t>("2ptvel/kPointBlank");
-  const double kAdditive =
-      loggable.GetPreferenceValue_double("2ptvel/kAdditive");
+  auto shot_ptbvel = GetBaseVelocity(outputs_.shot_angle, kPointblankDistance);
 
   const second_t projectMultFac =
       loggable.GetPreferenceValue_double("swim/projectGain") * 1.0_s_ *
@@ -79,21 +108,25 @@ void ShootingCalculator::Calculate(const RobotContainer* container_) {
                         vel_at_shooter[1] * projectMultFac};
 
   const foot_t fwdErrorMag =
-      (target - projectFwd).magnitude() - pointblank_distance;
+      (target - projectFwd).magnitude() - kPointblankDistance;
 
-  const fps_t shooter_vel = kPtBlank + kAdditive * fwdErrorMag / 1.0_s_ -
-                            0.01 * kAdditive * kAdditive * fwdErrorMag *
-                                fwdErrorMag / 1.0_s_ / 1.0_ft_;
+  auto shot_vel = GetBaseVelocity(outputs_.shot_angle, fwdErrorMag);
 
-  outputs_.shooter_vel = shooter_vel;
+  fps_t target_vel =
+      loggable.GetPreferenceValue_unit_type<fps_t>("2ptvel/kPointBlank") +
+      loggable.GetPreferenceValue_double("2ptvel/kAdditive") *
+          (shot_vel - shot_ptbvel);
+
+  outputs_.shooter_vel = target_vel;
 
   /*
-  Calculate drivetrain angles
+  Calculate turret angles
   */
 
   degree_t aim_angle = delta.angle(true);
 
-  const double robot_proj_vel_ratio = vel_perp.value() / shooter_vel.value();
+  const double robot_proj_vel_ratio =
+      vel_perp.value() / outputs_.shooter_vel.value();
   const degree_t twist = u_asin(
       std::clamp(robot_proj_vel_ratio *
                      loggable.GetPreferenceValue_double("swim/twistGain"),
@@ -104,7 +137,7 @@ void ShootingCalculator::Calculate(const RobotContainer* container_) {
   aim_angle += twist;
 
   outputs_.shooter_vel =
-      shooter_vel * 1.0 /
+      outputs_.shooter_vel * 1.0 /
       u_cos(u_min(u_abs(twist * loggable.GetPreferenceValue_double(
                                     "swim/twistVelCompensation")),
           3.14159265358979323846_rad_ / 2.0));
@@ -125,7 +158,7 @@ void ShootingCalculator::Calculate(const RobotContainer* container_) {
           .resize(u_abs(vel_perp) * projectMultFac / 1_ft_ * 1_in_);
   foot_t d = (target - proj_vel).magnitude();
   loggable_opt->Graph("distance_vel", d);
-  outputs_.is_valid = d >= pointblank_distance && d <= 235.0_in_;
+  outputs_.is_valid = d >= kPointblankDistance && d <= 235.0_in_;
 
   outputs_.term_traj = SimulateTrajectory(container_) + outputs_.start_traj;
 }

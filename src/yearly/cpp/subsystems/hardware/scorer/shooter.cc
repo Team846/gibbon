@@ -53,7 +53,7 @@ void ShooterSubsystem::Setup() {
 }
 
 ShooterTarget ShooterSubsystem::ZeroTarget() const {
-  return ShooterTarget{0_fps_, true};
+  return ShooterTarget{0_fps_};
 }
 
 bool ShooterSubsystem::VerifyHardware() {
@@ -86,9 +86,11 @@ void ShooterSubsystem::WriteToHardware(ShooterTarget target) {
   genome2.follower_config = {ports::shooter_::kShooter1Params.can_id, true};
   esc_2_.ModifyGenome(genome2);
 
+  Graph("target", target.target_vel);
+
   Graph("velocity_error", target.target_vel - GetReadings().vel);
 
-  if (!target.active_shooting &&
+  if ((target.target_vel < 5_fps_) &&
       (u_abs(GetReadings().vel) - u_abs(target.target_vel)) >=
           GetPreferenceValue_unit_type<fps_t>("coast_down_tolerance")) {
     esc_1_.WriteDC(0.0);

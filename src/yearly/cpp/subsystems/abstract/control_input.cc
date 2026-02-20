@@ -59,8 +59,8 @@ ControlInputReadings ControlInputSubsystem::UpdateWithInput() {
     auto funkyFMS = instance.GetTable("FunkyFMS");
     auto simDS = funkyFMS->GetSubTable("SimDS");
     auto xbox0 = simDS->GetSubTable("xbox0");
-    if (!funkit::robot::XboxReadingsFromSimDS(xbox0.get(), trigger_threshold,
-                                             &dr_readings)) {
+    if (!funkit::robot::XboxReadingsFromSimDS(
+            xbox0.get(), trigger_threshold, &dr_readings)) {
       dr_readings = funkit::robot::XboxReadings{driver_, trigger_threshold};
     }
   } else {

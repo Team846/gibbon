@@ -33,11 +33,7 @@ void SetupEsc(HigherMotorController& esc, const MotorGenome& genome,
 
 HoodSubsystem::HoodSubsystem()
     : GenericSubsystem("hood"),
-      esc_{base::SPARK_MAX_NEO550, ports::hood_::kHoodParams},
-      cancoder_{ports::hood_::kCANCoder_CANID, ctre::phoenix6::CANBus{""}} {
-  cancoder_.OptimizeBusUtilization();
-  cancoder_.GetAbsolutePosition().SetUpdateFrequency(20_Hz);
-
+      esc_{base::SPARK_MAX_NEO550, ports::hood_::kHoodParams} {
   RegisterPreference("icnor/IPG", 0.5);
   RegisterPreference("icnor/friction_nm", 5.0_Nm_);
   RegisterPreference("encoder/offset", 0.0_rot_);
@@ -47,8 +43,8 @@ HoodSubsystem::HoodSubsystem()
 HoodSubsystem::~HoodSubsystem() = default;
 
 void HoodSubsystem::Setup() {
-  MotorGenome genome_backup{.motor_current_limit = 30_A_,
-      .smart_current_limit = 20_A_,
+  MotorGenome genome_backup{.motor_current_limit = 25_A_,
+      .smart_current_limit = 30_A_,
       .voltage_compensation = 12_V_,
       .brake_mode = true,
       .gains = {.kP = 0.0, .kI = 0.0, .kD = 0.0, .kF = 0.0}};
@@ -63,9 +59,9 @@ void HoodSubsystem::Setup() {
       motor_specs.stall_torque, motor_specs.free_speed, 12_V_);
 
   arm_sys_ = std::make_unique<DefArmSys>(
-      def_bldc, 1, 141_rot_ / 1_rot_,
-      [](radian_t, radps_t) -> nm_t { return nm_t{0.0}; },
-      2_lb_ * 0.12_m_ * 0.12_m_,
+      def_bldc, 1, 144_rot_ / 1_rot_,
+      [](radian_t, radps_t) -> nm_t { return nm_t{0}; },
+      3_lb_ * 0.2_m_ * 0.2_m_,
       GetPreferenceValue_unit_type<nm_t>("icnor/friction_nm"),
       1.0_Nm_ / 1200_radps_, 10_ms_);
 
@@ -80,27 +76,34 @@ void HoodSubsystem::Setup() {
 
   icnor_controller_->setProjectionHorizon(1);
 
-  icnor_controller_->setDesaturationThresh(25_rad_);
+  icnor_controller_->setDesaturationThresh(15_rad_);
 
   std::string learner_path =
       frc::filesystem::GetDeployDirectory() + "/ictest.iclearn";
   icnor_controller_->attachLearner(learner_path);
-
-  ZeroWithCANCoder();
+  if (!frc::RobotBase::IsSimulation()) { ZeroWithAbsoluteEncoder(); }
+  // esc_.SetPosition(degree_t{81});
 }
 
 HoodTarget HoodSubsystem::ZeroTarget() const {
-  return HoodTarget{0_deg_, 0_degps_};
+  return HoodTarget{60_deg_, 0_degps_};
 }
 
-void HoodSubsystem::ZeroWithCANCoder() {
-  auto abs = rotation_t{cancoder_.GetAbsolutePosition().GetValueAsDouble()};
+void HoodSubsystem::ZeroWithAbsoluteEncoder() {
+  degree_t abs = rotation_t(
+      esc_.SpecialRead(funkit::control::hardware::ReadType::kAbsPosition));
   abs = abs - GetPreferenceValue_unit_type<rotation_t>("encoder/offset");
-  esc_.SetPosition(abs);
+  degree_t norm = abs % 360_deg_;
+  // if (norm > 85_deg_ || norm < 40_deg_) {
+  //   throw std::runtime_error("Hood absolute encoder out of range");
+  // }
+  esc_.SetPosition(norm);
 }
 
 void HoodSubsystem::ZeroEncoders() {
-  auto abs = rotation_t{cancoder_.GetAbsolutePosition().GetValueAsDouble()};
+  auto abs = rotation_t(
+      esc_.SpecialRead(funkit::control::hardware::ReadType::kAbsPosition));
+  abs = abs - 81_deg_;
   SetPreferenceValue("encoder/offset", abs);
   Log("Zeroed hood encoders");
 }
@@ -119,14 +122,17 @@ HoodReadings HoodSubsystem::ReadFromHardware() {
 
   HoodReadings readings{pos_real, vel_real, false};
 
-  degree_t error = GetTarget().pos_ - pos_real;
+  degree_t error = u_clamp(GetTarget().pos_, 50_deg_, 75_deg_) - pos_real;
   Graph("error", error);
 
   readings.in_position_ =
       u_abs(error) < GetPreferenceValue_unit_type<degree_t>("tolerance");
 
-  auto abs = rotation_t{cancoder_.GetAbsolutePosition().GetValueAsDouble()};
+  auto abs = rotation_t(
+      esc_.SpecialRead(funkit::control::hardware::ReadType::kAbsPosition));
   abs = abs - GetPreferenceValue_unit_type<rotation_t>("encoder/offset");
+  degree_t norm = degree_t(abs) % 360_deg_;
+  Graph("absolute_encoder_pos", norm);
 
   return readings;
 }
@@ -134,6 +140,8 @@ HoodReadings HoodSubsystem::ReadFromHardware() {
 void HoodSubsystem::WriteToHardware(HoodTarget target) {
   auto genome = SubsystemGenomeHelper::LoadGenomePreferences(*this, "genome");
   esc_.ModifyGenome(genome);
+
+  target.pos_ = u_clamp(target.pos_, 50_deg_, 75_deg_);
 
   if (!icnor_controller_ || !arm_sys_) { return; }
 
@@ -148,7 +156,12 @@ void HoodSubsystem::WriteToHardware(HoodTarget target) {
   double output = icnor_controller_->getOutput(target_pos_native,
       target_vel_native, current_pos_native, current_vel_native);
 
-  output *= GetPreferenceValue_double("icnor/IPG");
+  output = std::clamp(output, -GetPreferenceValue_double("icnor/IPG"),
+      GetPreferenceValue_double("icnor/IPG"));
+
+  Graph("output", output);
+  Graph("position", degree_t(current_pos_real));
+  Graph("target/position", degree_t(target.pos_));
 
   esc_.WriteDC(output);
 }

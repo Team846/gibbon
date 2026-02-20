@@ -1,6 +1,5 @@
 #pragma once
 
-#include <ctre/phoenix6/CANcoder.hpp>
 #include <deque>
 #include <memory>
 
@@ -34,15 +33,13 @@ public:
   bool VerifyHardware() override;
 
   void ZeroEncoders();
-  void ZeroWithCANCoder();
+  void ZeroWithAbsoluteEncoder();
 
 private:
   HoodReadings ReadFromHardware() override;
   void WriteToHardware(HoodTarget target) override;
 
   funkit::control::HigherMotorController esc_;
-
-  ctre::phoenix6::hardware::CANcoder cancoder_;
 
   std::unique_ptr<pdcsu::control::ICNORPositionControl> icnor_controller_;
   std::unique_ptr<pdcsu::util::DefArmSys> arm_sys_;

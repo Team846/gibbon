@@ -97,14 +97,14 @@ void ScorerSuperstructure::WriteToHardware(ScorerSSTarget target) {
         GetPreferenceValue_unit_type<degree_t>("point_blank/turret_angle"),
         0_degps_};
     shooter_trgt = {
-        GetPreferenceValue_unit_type<fps_t>("point_blank/shooter_vel"), true};
+        GetPreferenceValue_unit_type<fps_t>("point_blank/shooter_vel")};
   } else if (target.tracking_state == TrackingState::kTrack) {
     hood_trgt = target.hood_target;
     turret_trgt = target.turret_target;
-    shooter_trgt = {target.shooter_target, true};
+    shooter_trgt = {target.shooter_target};
   } else if (target.tracking_state == TrackingState::kLockTurret) {
     hood_trgt = target.hood_target;
-    shooter_trgt = {target.shooter_target, true};
+    shooter_trgt = {target.shooter_target};
   }
 
   if (last_shoot != target.shoot)

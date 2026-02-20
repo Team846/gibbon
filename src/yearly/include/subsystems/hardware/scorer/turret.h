@@ -55,4 +55,7 @@ private:
   std::shared_ptr<pdcsu::control::ICNORLearner> icnor_learner_;
 
   TurretPositionCalculator turret_pos_calc_;
+
+  radps_t last_vel_ = 0.0_radps_;
+  ms_t last_time_ = -1.0_ms_;
 };

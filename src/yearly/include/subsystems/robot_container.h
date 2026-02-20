@@ -45,6 +45,6 @@ public:
     bool hoptake_ss_init = (GetPreferenceValue_bool("init_hoptake_ss"));
 
     RegisterSubsystemGroupAB({{&scorer_ss_, scorer_ss_init}});
-    RegisterSubsystemGroupB({{&hoptake_ss_, hoptake_ss_init}});
+    // RegisterSubsystemGroupB({{&hoptake_ss_, hoptake_ss_init}});
   }
 };
