@@ -101,9 +101,11 @@ using FPT = funkit::math::FieldPoint;
 
 #define INTAKE(where) AutoIntakeCommand(container, where)
 
-#define SHOOT() AutoScorerCommand(container, true)
+#define SHOOT() AutoScorerCommand(container, true, false)
 
-#define TRACK() AutoScorerCommand(container, false)
+#define TRACK() AutoScorerCommand(container, false, false)
+
+#define PASS() AutoScorerCommand(container, false, true)
 
 #define END_BUMPC1_PT MKPT(90_in_, 223.61_in_, 35_deg_, 0_fps_)
 #define START_BUMPC1_PT MKPT(90_in_, 110.61_in_, 35_deg_, 0_fps_)
@@ -182,32 +184,33 @@ SEQUENCE {
 
 __AUTO__(CS2Auto, "CS2")
 SEQUENCE {
-  START2(92.5_in_, 144.54_in_, 0_deg_), TRACK(),
+  START2(92.5_in_, 144.54_in_, 0_deg_), PASS(),
       DRIVE_PT_BEARING(CS2, END_BUMPC1_PT, BUMP), INTAKE(HoptakeState::kIntake),
       DRIVE_PT(CS2, P1C1_INTAKE_PT, NORM), DRIVE_PT(CS2, P2C1_INTAKE_PT, NORM),
-      DRIVE_PT(CS2, P3C1_INTAKE_PT, NORM), DRIVE_PT(CS2, P2C1_INTAKE_PT, NORM),
-      DRIVE_PT(CS2, P1C1_INTAKE_PT, NORM),
+      TRACK(), DRIVE_PT(CS2, P3C1_INTAKE_PT, NORM), TRACK(),
+      DRIVE_PT(CS2, P2C1_INTAKE_PT, NORM), DRIVE_PT(CS2, P1C1_INTAKE_PT, NORM),
       // driveuntilfull
-      INTAKE(HoptakeState::kBump), DRIVE_PT_BEARING(CS2, END_BUMPC1_PT, NORM),
+      INTAKE(HoptakeState::kBump), PASS(),
+      DRIVE_PT_BEARING(CS2, END_BUMPC1_PT, NORM), TRACK(),
       DRIVE_PT_BEARING(CS2, START_BUMPC1_PT, BUMP),
-      PARALLEL_DEADLINE(WAIT{3.0_s}, SHOOT()),
-      DRIVE_PT(CS2, END_BUMPC1_PT, NORM), TRACK(),
-      INTAKE(HoptakeState::kIntake), DRIVE_PT(CS2, P1C2_INTAKE_PT, NORM),
-      DRIVE_PT(CS2, P2C2_INTAKE_PT, NORM), DRIVE_PT(CS2, P3C2_INTAKE_PT, NORM),
+      PARALLEL_DEADLINE(WAIT{2.5_s}, SHOOT()), PASS(),
+      DRIVE_PT(CS2, END_BUMPC1_PT, NORM), INTAKE(HoptakeState::kIntake),
+      DRIVE_PT(CS2, P1C2_INTAKE_PT, NORM), DRIVE_PT(CS2, P2C2_INTAKE_PT, NORM),
+      TRACK(), DRIVE_PT(CS2, P3C2_INTAKE_PT, NORM),
       DRIVE_PT(CS2, P2C2_INTAKE_PT, NORM), DRIVE_PT(CS2, P1C2_INTAKE_PT, NORM),
       // driveuntilfull
       INTAKE(HoptakeState::kBump), DRIVE_PT_BEARING(CS2, END_BUMPC23_PT, NORM),
       DRIVE_PT_BEARING(CS2, START_BUMPC23_PT, BUMP),
-      PARALLEL_DEADLINE(WAIT{3.0_s}, SHOOT()), TRACK(),
+      PARALLEL_DEADLINE(WAIT{2.5_s}, SHOOT()), PASS(),
       DRIVE_PT(CS2, END_BUMPC23_PT, BUMP), INTAKE(HoptakeState::kIntake),
-      DRIVE_PT(CS2, P1C3_INTAKE_PT, NORM), DRIVE_PT(CS2, P2C3_INTAKE_PT, NORM),
-      DRIVE_PT(CS2, P3C3_INTAKE_PT, NORM), DRIVE_PT(CS2, P4C3_INTAKE_PT, NORM),
-      DRIVE_PT(CS2, P3C3_INTAKE_PT, NORM), DRIVE_PT(CS2, P2C3_INTAKE_PT, NORM),
-      DRIVE_PT(CS2, P1C3_INTAKE_PT, NORM),
+      DRIVE_PT(CS2, P1C3_INTAKE_PT, NORM), TRACK(),
+      DRIVE_PT(CS2, P2C3_INTAKE_PT, NORM), DRIVE_PT(CS2, P3C3_INTAKE_PT, NORM),
+      DRIVE_PT(CS2, P4C3_INTAKE_PT, NORM), DRIVE_PT(CS2, P3C3_INTAKE_PT, NORM),
+      DRIVE_PT(CS2, P2C3_INTAKE_PT, NORM), DRIVE_PT(CS2, P1C3_INTAKE_PT, NORM),
       // driveuntilfull
       INTAKE(HoptakeState::kBump), DRIVE_PT_BEARING(CS2, END_BUMPC23_PT, NORM),
       DRIVE_PT_BEARING(CS2, START_BUMPC23_PT, BUMP),
-      PARALLEL_DEADLINE(WAIT{3.0_s}, SHOOT()), TRACK(),
+      PARALLEL_DEADLINE(WAIT{3.0_s}, SHOOT()), PASS(),
       DRIVE_PT_BEARING(CS2, END_BUMPC23_PT, BUMP),
       INTAKE(HoptakeState::kIntake),
 }

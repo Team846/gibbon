@@ -6,4 +6,4 @@
 #include "subsystems/robot_container.h"
 
 frc2::InstantCommand AutoScorerCommand(
-    RobotContainer& container, bool enable_shooting);
+    RobotContainer& container, bool enable_shooting, bool enable_passing);

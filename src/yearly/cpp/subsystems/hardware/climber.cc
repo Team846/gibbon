@@ -1,4 +1,4 @@
-#include "subsystems/hardware/climb/climber.h"
+#include "subsystems/hardware/climber.h"
 
 #include "funkit/control/config/genome.h"
 #include "ports.h"

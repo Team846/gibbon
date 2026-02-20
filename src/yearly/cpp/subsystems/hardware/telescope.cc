@@ -1,4 +1,4 @@
-#include "subsystems/hardware/climb/telescope.h"
+#include "subsystems/hardware/telescope.h"
 
 #include "funkit/control/config/genome.h"
 #include "ports.h"
@@ -77,10 +77,5 @@ void TelescopeSubsystem::WriteToHardware(TelescopeTarget target) {
   } else if (target.target_state == TelescopeState::kDeployed) {
     trgt_pos_ = GetPreferenceValue_unit_type<inch_t>("pos_deployed");
   }
-
-  if (target.target_state == TelescopeState::kIdleBackDrive) {
-    esc_.WriteDC(0.0);
-  } else {
-    esc_.WritePosition(trgt_pos_);
-  }
+  esc_.WritePosition(trgt_pos_);
 }

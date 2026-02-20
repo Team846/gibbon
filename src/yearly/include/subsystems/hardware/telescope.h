@@ -5,7 +5,7 @@
 #include "funkit/robot/GenericSubsystem.h"
 #include "pdcsu_control.h"
 
-enum class TelescopeState { kStow, kIdleBackDrive, kDeployed };
+enum class TelescopeState { kStow, kDeployed };
 
 struct TelescopeReadings {
   inch_t pos_;
