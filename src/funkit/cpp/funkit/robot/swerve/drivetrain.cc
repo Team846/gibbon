@@ -356,7 +356,7 @@ DrivetrainReadings DrivetrainSubsystem::ReadFromHardware() {
       pdcsu::units::fps_t{0}, pdcsu::units::fps_t{0}};
 
   for (int i = 0; i < 4; i++) {
-    // modules_[i]->UpdateReadings();
+    modules_[i]->UpdateReadings();
     SwerveModuleReadings r = modules_[i]->GetReadings();
 
     drive_positions[i] = r.drive_pos;
@@ -584,9 +584,9 @@ void DrivetrainSubsystem::WriteToHardware(DrivetrainTarget target) {
   auto drive_genome =
       SubsystemGenomeHelper::LoadGenomePreferences(*this, "drive_genome");
 
-  // for (int i = 0; i < 4; i++) {
-  //   modules_[i]->ModifySwerveGenome(drive_genome, steer_genome);
-  // }
+  for (int i = 0; i < 4; i++) {
+    modules_[i]->ModifySwerveGenome(drive_genome, steer_genome);
+  }
 
   cached_max_omega_cut_ =
       GetPreferenceValue_unit_type<pdcsu::units::degps_t>("max_omega_cut");
@@ -601,8 +601,8 @@ void DrivetrainSubsystem::WriteToHardware(DrivetrainTarget target) {
       target.cut_excess_steering ? cut_angular_vel : target.angular_velocity,
       target.cut_excess_steering, cached_max_speed_);
 
-  // for (int i = 0; i < 4; i++)
-  //   modules_[i]->UpdateHardware();
+  for (int i = 0; i < 4; i++)
+    modules_[i]->UpdateHardware();
 
   auto pose = GetReadings().estimated_pose;
   units::inch_t pos_x_wpi(pose.position[0].value());

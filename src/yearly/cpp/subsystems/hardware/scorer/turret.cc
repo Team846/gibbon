@@ -7,6 +7,7 @@
 #include <cmath>
 
 #include "funkit/control/config/genome.h"
+#include "funkit/robot/calculators/AprilTagCalculator.h"
 #include "ports.h"
 
 using namespace funkit::control;
@@ -147,7 +148,11 @@ TurretReadings TurretSubsystem::ReadFromHardware() {
 
   degree_t error =
       funkit::math::CoterminalDifference(GetTarget().pos_, pos_real);
+  Graph("pos", degree_t(pos_real));
   Graph("error", error);
+
+  funkit::robot::calculators::AprilTagCalculator::turret_angle = pos_real;
+  funkit::robot::calculators::AprilTagCalculator::turret_vel = vel_real;
 
   readings.in_position_ =
       u_abs(error) < GetPreferenceValue_unit_type<degree_t>("tolerance");
@@ -175,6 +180,9 @@ TurretReadings TurretSubsystem::ReadFromHardware() {
 void TurretSubsystem::WriteToHardware(TurretTarget target) {
   auto genome = SubsystemGenomeHelper::LoadGenomePreferences(*this, "genome");
   esc_.ModifyGenome(genome);
+
+  // TODO remove
+  target.pos_ = u_clamp(target.pos_, -70_deg_, 70_deg_);
 
   if (!icnor_controller_ || !arm_sys_) { return; }
 

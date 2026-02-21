@@ -48,8 +48,7 @@ void ScorerCommand::Periodic() {
     Graph("pass", true);
     Graph("shoot", false);
   } else {
-    ShootingCalculator::target =
-        funkit::math::FieldPoint{{158.845_in_, 182.11_in_}, 0_deg_, 0_fps_}
+    ShootingCalculator::target = funkit::math::FieldPoint{{158.845_in_, 182.11_in_}, 0_deg_, 0_fps_}
             .mirror(mirror_)
             .point;
     Graph("shoot", true);
@@ -127,6 +126,9 @@ void ScorerCommand::Periodic() {
           "pass_point", {-1000_in_, -1000_in_}, 0.0_deg_);
     }
   }
+
+  // container_.drivetrain_.SetFieldObjectPose(
+  //   "test_point", {158.845_in_, 182.11_in_}, 0.0_deg_);
 
   container_.scorer_ss_.SetTarget(target);
 }

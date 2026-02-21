@@ -81,23 +81,46 @@ void HoodSubsystem::Setup() {
   std::string learner_path =
       frc::filesystem::GetDeployDirectory() + "/ictest.iclearn";
   icnor_controller_->attachLearner(learner_path);
+
   if (!frc::RobotBase::IsSimulation()) { ZeroWithAbsoluteEncoder(); }
-  // esc_.SetPosition(degree_t{81});
 }
 
 HoodTarget HoodSubsystem::ZeroTarget() const {
   return HoodTarget{60_deg_, 0_degps_};
 }
 
+namespace {
+
+degree_t UnwrapHoodAbsolute(degree_t raw_minus_offset) {
+  degree_t unwrapped = raw_minus_offset;
+  while (unwrapped > 90_deg_) {
+    unwrapped -= 360_deg_;
+  }
+  while (unwrapped < 40_deg_) {
+    unwrapped = unwrapped + 360_deg_;
+  }
+  return unwrapped;
+}
+
+}  // namespace
+
 void HoodSubsystem::ZeroWithAbsoluteEncoder() {
-  degree_t abs = rotation_t(
-      esc_.SpecialRead(funkit::control::hardware::ReadType::kAbsPosition));
-  abs = abs - GetPreferenceValue_unit_type<rotation_t>("encoder/offset");
-  degree_t norm = abs % 360_deg_;
-  // if (norm > 85_deg_ || norm < 40_deg_) {
-  //   throw std::runtime_error("Hood absolute encoder out of range");
-  // }
-  esc_.SetPosition(norm);
+  degree_t raw = degree_t(rotation_t(
+      esc_.SpecialRead(funkit::control::hardware::ReadType::kAbsPosition)));
+  degree_t offset_deg =
+      degree_t(GetPreferenceValue_unit_type<rotation_t>("encoder/offset"));
+  for (int i = 0; i < 5; i++) {
+    degree_t abs = UnwrapHoodAbsolute(raw - offset_deg);
+    if (abs > 90_deg_ || abs < 40_deg_) {
+      std::this_thread::sleep_for(std::chrono::milliseconds(200));
+      continue;
+    } else {
+      esc_.SetPosition(abs);
+      Log("Zeroed hood encoders to {}", abs.value());
+      return;
+    }
+  }
+  Error("Failed to zero hood encoders");
 }
 
 void HoodSubsystem::ZeroEncoders() {
@@ -128,11 +151,12 @@ HoodReadings HoodSubsystem::ReadFromHardware() {
   readings.in_position_ =
       u_abs(error) < GetPreferenceValue_unit_type<degree_t>("tolerance");
 
-  auto abs = rotation_t(
-      esc_.SpecialRead(funkit::control::hardware::ReadType::kAbsPosition));
-  abs = abs - GetPreferenceValue_unit_type<rotation_t>("encoder/offset");
-  degree_t norm = degree_t(abs) % 360_deg_;
-  Graph("absolute_encoder_pos", norm);
+  degree_t raw = degree_t(rotation_t(
+      esc_.SpecialRead(funkit::control::hardware::ReadType::kAbsPosition)));
+  degree_t offset_deg =
+      degree_t(GetPreferenceValue_unit_type<rotation_t>("encoder/offset"));
+  degree_t abs = UnwrapHoodAbsolute(raw - offset_deg);
+  Graph("absolute_encoder_pos", abs);
 
   return readings;
 }
