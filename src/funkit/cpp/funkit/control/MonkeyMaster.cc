@@ -423,17 +423,16 @@ std::string_view MonkeyMaster::parseError(
 }
 
 void MonkeyMaster::CheckForResets() {
-  // for (size_t i = 1; i <= slot_counter_; i++) {
-  //   if (controller_registry[i] != nullptr) {
-  //     if (controller_registry[i]->Read(hardware::ReadType::kRestFault) > 0.5)
-  //     {
-  //       loggable_.Warn(
-  //           "Reset detected on Motor Controller Slot ID {}.
-  //           Reconfiguring...", i);
-  //       SetGenome(i, genome_registry[i], true);
-  //     }
-  //   }
-  // }
+  for (size_t i = 1; i <= slot_counter_; i++) {
+    if (controller_registry[i] != nullptr) {
+      if (controller_registry[i]->Read(hardware::ReadType::kRestFault) > 0.5)
+      {
+        loggable_.Warn(
+            "Reset detected on Motor Controller Slot ID {}. Reconfiguring...", i);
+        SetGenome(i, genome_registry[i], true);
+      }
+    }
+  }
 }
 
 }  // namespace funkit::control

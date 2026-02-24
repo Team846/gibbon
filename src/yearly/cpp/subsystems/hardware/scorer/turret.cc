@@ -39,21 +39,22 @@ void SetupEsc(HigherMotorController& esc, const MotorGenome& genome,
 TurretSubsystem::TurretSubsystem()
     : GenericSubsystem("turret"),
       esc_{base::TALON_FX_KRAKENX60, ports::turret_::kTurretParams},
-      cancoder_1_{ports::turret_::kCANCoder1_CANID, ctre::phoenix6::CANBus{""}},
-      cancoder_2_{
-          ports::turret_::kCANCoder2_CANID, ctre::phoenix6::CANBus{""}} {
+      cancoder_1_{
+          ports::turret_::kCANCoder1_CANID, ctre::phoenix6::CANBus{"thalamus"}},
+      cancoder_2_{ports::turret_::kCANCoder2_CANID,
+          ctre::phoenix6::CANBus{"thalamus"}} {
   cancoder_1_.OptimizeBusUtilization();
   cancoder_2_.OptimizeBusUtilization();
   cancoder_1_.GetAbsolutePosition().SetUpdateFrequency(20_Hz);
   cancoder_2_.GetAbsolutePosition().SetUpdateFrequency(20_Hz);
 
-  RegisterPreference("icnor/IPG", 0.5);
+  RegisterPreference("icnor/IPG", 1.0);
   RegisterPreference("icnor/friction_nm", 5.0_Nm_);
   RegisterPreference("encoder/offset1", 0.0_rot_);
   RegisterPreference("encoder/offset2", 0.0_rot_);
   RegisterPreference("encoder/min_rots", -3.0_rot_);
   RegisterPreference("encoder/max_rots", 3.0_rot_);
-  RegisterPreference("encoder/max_tolerance", 0.025_rot_);
+  RegisterPreference("encoder/max_tolerance", 0.015_rot_);
   RegisterPreference("tolerance", 2_deg_);
 
   RegisterPreference("wrap/positive", 260_deg_);
@@ -63,10 +64,10 @@ TurretSubsystem::TurretSubsystem()
 TurretSubsystem::~TurretSubsystem() = default;
 
 void TurretSubsystem::Setup() {
-  MotorGenome genome_backup{.motor_current_limit = 30_A_,
-      .smart_current_limit = 20_A_,
+  MotorGenome genome_backup{.motor_current_limit = 120_A_,
+      .smart_current_limit = 120_A_,
       .voltage_compensation = 12_V_,
-      .brake_mode = true,
+      .brake_mode = false,
       .gains = {.kP = 0.0, .kI = 0.0, .kD = 0.0, .kF = 0.0}};
 
   funkit::control::config::SubsystemGenomeHelper::CreateGenomePreferences(
@@ -108,7 +109,7 @@ TurretTarget TurretSubsystem::ZeroTarget() const {
   return TurretTarget{0_deg_, 0_degps_};
 }
 
-void TurretSubsystem::ZeroWithCRT() {
+void TurretSubsystem::ZeroWithCRT(bool retry) {
   auto abs1 = rotation_t{cancoder_1_.GetAbsolutePosition().GetValueAsDouble()};
   auto abs2 = rotation_t{cancoder_2_.GetAbsolutePosition().GetValueAsDouble()};
 
@@ -120,8 +121,15 @@ void TurretSubsystem::ZeroWithCRT() {
       GetPreferenceValue_unit_type<rotation_t>("encoder/max_rots"),
       GetPreferenceValue_unit_type<rotation_t>("encoder/max_tolerance")};
 
-  auto sol = TurretPositionCalculator::GetPosition(inputs);
-  esc_.SetPosition(sol.turretRotations);
+  for (int i = 0; i < retry ? 5 : 1; i++) {
+    auto sol = TurretPositionCalculator::GetPosition(inputs);
+    if (sol.isValid) {
+      esc_.SetPosition(sol.turretRotations);
+      break;
+    }
+    std::this_thread::sleep_for(std::chrono::milliseconds(200));
+  }
+  Error("Unable to zero turret with CRT after {} attempts", retry ? 5 : 1);
 }
 
 void TurretSubsystem::ZeroEncoders() {
@@ -180,6 +188,20 @@ TurretReadings TurretSubsystem::ReadFromHardware() {
 void TurretSubsystem::WriteToHardware(TurretTarget target) {
   auto genome = SubsystemGenomeHelper::LoadGenomePreferences(*this, "genome");
   esc_.ModifyGenome(genome);
+
+  if (GetReadings().pos_ > 40_deg_ || GetReadings().pos_ < -40_deg_) {
+    zero_walk_ctr_++;
+
+    if (zero_walk_ctr_ < 30)
+      esc_.WriteDC(0.04);
+    else
+      esc_.WriteDC(-0.04);
+
+    if (zero_walk_ctr_ > 60) zero_walk_ctr_ = 0;
+
+    ZeroWithCRT(false);
+    return;
+  }
 
   // TODO remove
   target.pos_ = u_clamp(target.pos_, -70_deg_, 70_deg_);

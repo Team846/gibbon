@@ -35,7 +35,7 @@ public:
   bool VerifyHardware() override;
 
   void ZeroEncoders();
-  void ZeroWithCRT();
+  void ZeroWithCRT(bool retry = true);
 
 private:
   TurretReadings ReadFromHardware() override;
@@ -58,4 +58,6 @@ private:
 
   radps_t last_vel_ = 0.0_radps_;
   ms_t last_time_ = -1.0_ms_;
+
+  size_t zero_walk_ctr_ = 0;
 };

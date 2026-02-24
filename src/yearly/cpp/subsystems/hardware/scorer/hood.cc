@@ -34,8 +34,8 @@ void SetupEsc(HigherMotorController& esc, const MotorGenome& genome,
 HoodSubsystem::HoodSubsystem()
     : GenericSubsystem("hood"),
       esc_{base::SPARK_MAX_NEO550, ports::hood_::kHoodParams} {
-  RegisterPreference("icnor/IPG", 0.5);
-  RegisterPreference("icnor/friction_nm", 5.0_Nm_);
+  RegisterPreference("icnor/IPG", 1.0);
+  RegisterPreference("icnor/friction_nm", 0.0_Nm_);
   RegisterPreference("encoder/offset", 0.0_rot_);
   RegisterPreference("tolerance", 1.5_deg_);
 }
@@ -89,14 +89,19 @@ HoodTarget HoodSubsystem::ZeroTarget() const {
   return HoodTarget{60_deg_, 0_degps_};
 }
 
+const degree_t hood_absolute_min = 40_deg_;
+const degree_t hood_absolute_max = 90_deg_;
+const degree_t hood_soft_min = 47_deg_;
+const degree_t hood_soft_max = 77_deg_;
+
 namespace {
 
 degree_t UnwrapHoodAbsolute(degree_t raw_minus_offset) {
   degree_t unwrapped = raw_minus_offset;
-  while (unwrapped > 90_deg_) {
+  while (unwrapped > hood_absolute_max) {
     unwrapped -= 360_deg_;
   }
-  while (unwrapped < 40_deg_) {
+  while (unwrapped < hood_absolute_min) {
     unwrapped = unwrapped + 360_deg_;
   }
   return unwrapped;
@@ -104,15 +109,17 @@ degree_t UnwrapHoodAbsolute(degree_t raw_minus_offset) {
 
 }  // namespace
 
-void HoodSubsystem::ZeroWithAbsoluteEncoder() {
+void HoodSubsystem::ZeroWithAbsoluteEncoder(bool retry) {
   degree_t raw = degree_t(rotation_t(
       esc_.SpecialRead(funkit::control::hardware::ReadType::kAbsPosition)));
   degree_t offset_deg =
       degree_t(GetPreferenceValue_unit_type<rotation_t>("encoder/offset"));
-  for (int i = 0; i < 5; i++) {
+  for (int i = 0; i < retry ? 5 : 1; i++) {
     degree_t abs = UnwrapHoodAbsolute(raw - offset_deg);
-    if (abs > 90_deg_ || abs < 40_deg_) {
-      std::this_thread::sleep_for(std::chrono::milliseconds(200));
+    if (abs > hood_absolute_max || abs < hood_absolute_min) {
+      if (retry) {
+        std::this_thread::sleep_for(std::chrono::milliseconds(200));
+      }
       continue;
     } else {
       esc_.SetPosition(abs);
@@ -145,8 +152,11 @@ HoodReadings HoodSubsystem::ReadFromHardware() {
 
   HoodReadings readings{pos_real, vel_real, false};
 
-  degree_t error = u_clamp(GetTarget().pos_, 50_deg_, 75_deg_) - pos_real;
-  Graph("error", error);
+  Graph("readings/position", degree_t(pos_real));
+
+  degree_t error =
+      u_clamp(GetTarget().pos_, hood_soft_min, hood_soft_max) - pos_real;
+  Graph("debug/error", error);
 
   readings.in_position_ =
       u_abs(error) < GetPreferenceValue_unit_type<degree_t>("tolerance");
@@ -156,7 +166,7 @@ HoodReadings HoodSubsystem::ReadFromHardware() {
   degree_t offset_deg =
       degree_t(GetPreferenceValue_unit_type<rotation_t>("encoder/offset"));
   degree_t abs = UnwrapHoodAbsolute(raw - offset_deg);
-  Graph("absolute_encoder_pos", abs);
+  Graph("readings/absolute_encoder_pos", abs);
 
   return readings;
 }
@@ -165,11 +175,19 @@ void HoodSubsystem::WriteToHardware(HoodTarget target) {
   auto genome = SubsystemGenomeHelper::LoadGenomePreferences(*this, "genome");
   esc_.ModifyGenome(genome);
 
-  target.pos_ = u_clamp(target.pos_, 50_deg_, 75_deg_);
+  target.pos_ = u_clamp(target.pos_, hood_soft_min, hood_soft_max);
 
   if (!icnor_controller_ || !arm_sys_) { return; }
 
   radian_t current_pos_real = esc_.GetPosition<radian_t>();
+
+  if (current_pos_real > hood_absolute_max ||
+      current_pos_real < hood_absolute_min) {
+    ZeroWithAbsoluteEncoder(false);
+    esc_.WriteDC(0.0);
+    return;
+  }
+
   radps_t current_vel_real = esc_.GetVelocity<radps_t>();
   radian_t current_pos_native = arm_sys_->toNative(current_pos_real);
   radps_t current_vel_native = arm_sys_->toNative(current_vel_real);
@@ -183,7 +201,7 @@ void HoodSubsystem::WriteToHardware(HoodTarget target) {
   output = std::clamp(output, -GetPreferenceValue_double("icnor/IPG"),
       GetPreferenceValue_double("icnor/IPG"));
 
-  Graph("output", output);
+  Graph("debug/output", output);
   Graph("position", degree_t(current_pos_real));
   Graph("target/position", degree_t(target.pos_));
 

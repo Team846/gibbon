@@ -31,8 +31,8 @@ radps_t DyeRotorSubsystem::getTargetRotorSpeed(DyeRotorState rotor_state) {
 DyeRotorSubsystem::~DyeRotorSubsystem() = default;
 
 void DyeRotorSubsystem::Setup() {
-  MotorGenome genome_backup{.motor_current_limit = 40_A_,
-      .smart_current_limit = 40_A_,
+  MotorGenome genome_backup{.motor_current_limit = 90_A_,
+      .smart_current_limit = 90_A_,
       .voltage_compensation = 12_V_,
       .brake_mode = true,
       .gains = {.kP = 0.0, .kI = 0.0, .kD = 0.0, .kF = 0.0}};

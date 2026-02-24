@@ -203,8 +203,6 @@ To undo the going back:
 
 ## CppCheck Warnings
 ```
-src/funkit/cpp/funkit/robot/swerve/swerve_module.cc:127:17: warning: Variable 'kMaxAttempts' is assigned a value that is never used. [unreadVariable]
-src/funkit/cpp/funkit/robot/swerve/swerve_module.cc:128:17: warning: Variable 'kSleepTimeMs' is assigned a value that is never used. [unreadVariable]
 src/funkit/cpp/funkit/math/collection.cc:27:0: warning: The function 'VerticalDeadband' is never used. [unusedFunction]
 src/funkit/cpp/funkit/math/collection.cc:55:0: warning: The function 'CoterminalSum' is never used. [unusedFunction]
 src/funkit/cpp/funkit/math/collection.cc:69:0: warning: The function 'modulo' is never used. [unusedFunction]

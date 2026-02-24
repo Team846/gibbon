@@ -48,7 +48,8 @@ void ScorerCommand::Periodic() {
     Graph("pass", true);
     Graph("shoot", false);
   } else {
-    ShootingCalculator::target = funkit::math::FieldPoint{{158.845_in_, 182.11_in_}, 0_deg_, 0_fps_}
+    ShootingCalculator::target =
+        funkit::math::FieldPoint{{158.845_in_, 182.11_in_}, 0_deg_, 0_fps_}
             .mirror(mirror_)
             .point;
     Graph("shoot", true);
@@ -99,9 +100,12 @@ void ScorerCommand::Periodic() {
                               container_.drivetrain_.GetReadings().pose.bearing,
       shooting_outputs.vel_aim_compensation -
           container_.drivetrain_.GetReadings().yaw_rate};
-  target.shoot = shooting_outputs.is_valid &&
-                 !ci_readings_.override_autoshoot &&
-                 container_.scorer_ss_.GetReadings().will_make_shot;
+  target.shoot =
+      ci_readings_.point_blank_shot ||
+      (shooting_outputs.is_valid && !ci_readings_.override_autoshoot &&
+          container_.scorer_ss_.GetReadings().will_make_shot &&
+          !frc::DriverStation::IsTest()) ||
+      ci_readings_.force_shoot;
 
   if (!target.shoot) {
     container_.drivetrain_.SetFieldObjectPose(
@@ -126,9 +130,6 @@ void ScorerCommand::Periodic() {
           "pass_point", {-1000_in_, -1000_in_}, 0.0_deg_);
     }
   }
-
-  // container_.drivetrain_.SetFieldObjectPose(
-  //   "test_point", {158.845_in_, 182.11_in_}, 0.0_deg_);
 
   container_.scorer_ss_.SetTarget(target);
 }

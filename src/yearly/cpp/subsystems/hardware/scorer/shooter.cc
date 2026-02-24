@@ -18,11 +18,11 @@ ShooterSubsystem::ShooterSubsystem()
 ShooterSubsystem::~ShooterSubsystem() = default;
 
 void ShooterSubsystem::Setup() {
-  MotorGenome genome_backup{.motor_current_limit = 22_A_,
-      .smart_current_limit = 26_A_,
+  MotorGenome genome_backup{.motor_current_limit = 120_A_,
+      .smart_current_limit = 120_A_,
       .voltage_compensation = 12_V_,
       .brake_mode = true,
-      .gains = {.kP = 0.0, .kI = 0.0, .kD = 0.0, .kF = 0.0}};
+      .gains = {.kP = 0.001, .kI = 0.0, .kD = 0.0, .kF = 0.22}};
 
   funkit::control::config::SubsystemGenomeHelper::CreateGenomePreferences(
       *this, "genome", genome_backup);
@@ -39,7 +39,7 @@ void ShooterSubsystem::Setup() {
 
   esc_1_.Setup(genome_backup, shooter_plant);
   auto genome2 = genome_backup;
-  genome2.follower_config = {ports::shooter_::kShooter1Params.can_id, true};
+  // genome2.follower_config = {ports::shooter_::kShooter1Params.can_id, true};
   esc_2_.Setup(genome2, shooter_plant);
 
   esc_1_.EnableStatusFrames(
@@ -65,12 +65,12 @@ bool ShooterSubsystem::VerifyHardware() {
 
 ShooterReadings ShooterSubsystem::ReadFromHardware() {
   fps_t vel = (esc_1_.GetVelocity<mps_t>() + esc_2_.GetVelocity<mps_t>()) / 2.0;
-  Graph("velocity", vel);
+  Graph("readings/velocity", vel);
 
   bool is_spun_up = u_abs(vel - GetTarget().target_vel) <
                     GetPreferenceValue_unit_type<fps_t>("velocity_tolerance");
 
-  Graph("is_spun_up", is_spun_up);
+  Graph("readings/is_spun_up", is_spun_up);
 
   return ShooterReadings{vel, is_spun_up};
 }
@@ -83,12 +83,12 @@ void ShooterSubsystem::WriteToHardware(ShooterTarget target) {
   esc_1_.ModifyGenome(genome);
 
   auto genome2 = genome;
-  genome2.follower_config = {ports::shooter_::kShooter1Params.can_id, true};
+  // genome2.follower_config = {ports::shooter_::kShooter1Params.can_id, true};
   esc_2_.ModifyGenome(genome2);
 
-  Graph("target", target.target_vel);
+  Graph("debug/target", target.target_vel);
 
-  Graph("velocity_error", target.target_vel - GetReadings().vel);
+  Graph("debug/velocity_error", target.target_vel - GetReadings().vel);
 
   if ((target.target_vel < 5_fps_) &&
       (u_abs(GetReadings().vel) - u_abs(target.target_vel)) >=
@@ -99,5 +99,5 @@ void ShooterSubsystem::WriteToHardware(ShooterTarget target) {
 
   esc_1_.WriteVelocityOnController(target.target_vel);
   esc_2_.WriteVelocityOnController(
-      target.target_vel);  // Function is no-op because esc_2_ is follower
+      target.target_vel);  // Function is no-op when esc_2_ is follower
 }

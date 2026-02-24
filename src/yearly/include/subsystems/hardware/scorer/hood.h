@@ -33,7 +33,7 @@ public:
   bool VerifyHardware() override;
 
   void ZeroEncoders();
-  void ZeroWithAbsoluteEncoder();
+  void ZeroWithAbsoluteEncoder(bool retry = true);
 
 private:
   HoodReadings ReadFromHardware() override;

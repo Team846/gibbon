@@ -17,8 +17,8 @@ IntakeSubsystem::IntakeSubsystem()
 IntakeSubsystem::~IntakeSubsystem() = default;
 
 void IntakeSubsystem::Setup() {
-  MotorGenome genome_backup{.motor_current_limit = 40_A_,
-      .smart_current_limit = 40_A_,
+  MotorGenome genome_backup{.motor_current_limit = 50_A_,
+      .smart_current_limit = 50_A_,
       .voltage_compensation = 12_V_,
       .brake_mode = true,
       .gains = {.kP = 0.0, .kI = 0.0, .kD = 0.0, .kF = 0.0}};
@@ -32,9 +32,9 @@ void IntakeSubsystem::Setup() {
   DefBLDC def_bldc(motor_specs.stall_current, motor_specs.free_current,
       motor_specs.stall_torque, motor_specs.free_speed, 12_V_);
 
-  // TODO: Fix error
-  DefLinearSys intake_plant(def_bldc, 1, 12_rot_ / 20_in_, 0.0_mps2_, 1.0_kg_,
-      0.5_N_, 0.5_N_ / 700_radps_, 20_ms_);
+  DefLinearSys intake_plant(def_bldc, 1,
+      20_rot_ / 12_rot_ * 1_rad_ / 2.0625_in_, 0.0_mps2_, 1.0_kg_, 0.5_N_,
+      0.5_N_ / 700_radps_, 20_ms_);
 
   esc_.Setup(genome_backup, intake_plant);
 

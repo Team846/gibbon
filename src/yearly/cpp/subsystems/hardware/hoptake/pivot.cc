@@ -20,8 +20,8 @@ PivotSubsystem::PivotSubsystem()
 PivotSubsystem::~PivotSubsystem() = default;
 
 void PivotSubsystem::Setup() {
-  MotorGenome genome_backup{.motor_current_limit = 35_A_,
-      .smart_current_limit = 35_A_,
+  MotorGenome genome_backup{.motor_current_limit = 50_A_,
+      .smart_current_limit = 50_A_,
       .voltage_compensation = 12_V_,
       .brake_mode = true,
       .gains = {.kP = 0.0, .kI = 0.0, .kD = 0.0, .kF = 0.0}};
@@ -35,11 +35,12 @@ void PivotSubsystem::Setup() {
   DefBLDC def_bldc(motor_specs.stall_current, motor_specs.free_current,
       motor_specs.stall_torque, motor_specs.free_speed, 12_V_);
 
-  // TODO: Fix
   DefArmSys pivot_plant(
-      def_bldc, 1, 52_rot_ / 9_rot_ * 60_rot_ / 18_rot_ * 64_rot_ / 18_rot_,
-      [&](radian_t x, radps_t v) -> nm_t { return 0.0_Nm_; }, 0.001044_kgm2_,
-      0.05_Nm_, 0.1_Nm_ / 1200_radps_, 20_ms_);
+      def_bldc, 1, 50_rot_ / 12_rot_ * 60_rot_ / 18_rot_ * 64_rot_ / 18_rot_,
+      [](radian_t x, radps_t v) -> nm_t {
+        return nm_t{2.27_kg_ * 9.81_mps2_ * 0.23_m_ * u_cos(x)};
+      },
+      0.001044_kgm2_, 0.05_Nm_, 0.1_Nm_ / 1200_radps_, 20_ms_);
 
   esc_.Setup(genome_backup, pivot_plant);
 
