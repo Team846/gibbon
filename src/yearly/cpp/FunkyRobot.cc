@@ -203,6 +203,9 @@ void FunkyRobot::OnPeriodic() {
 
 void FunkyRobot::InitTest() {
   container_.drivetrain_.SetDefaultCommand(DriveCommand{container_});
+  container_.scorer_ss_.SetDefaultCommand(ScorerCommand{container_});
+  container_.hoptake_ss_.SetDefaultCommand(HoptakeCommand{container_});
+  ControlTriggerInitializer::InitTeleopTriggers(container_);
 }
 
 #ifndef RUNNING_FRC_TESTS

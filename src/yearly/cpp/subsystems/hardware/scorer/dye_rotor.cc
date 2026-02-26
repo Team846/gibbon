@@ -74,6 +74,8 @@ DyeRotorReadings DyeRotorSubsystem::ReadFromHardware() {
   radps_t target_speed = getTargetRotorSpeed(current_state);
   radps_t error = target_speed - esc_.GetVelocity<radps_t>();
 
+  Graph("error", error);
+
   return DyeRotorReadings{error};
 }
 

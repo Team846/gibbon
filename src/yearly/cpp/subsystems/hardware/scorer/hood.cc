@@ -114,7 +114,7 @@ void HoodSubsystem::ZeroWithAbsoluteEncoder(bool retry) {
       esc_.SpecialRead(funkit::control::hardware::ReadType::kAbsPosition)));
   degree_t offset_deg =
       degree_t(GetPreferenceValue_unit_type<rotation_t>("encoder/offset"));
-  for (int i = 0; i < retry ? 5 : 1; i++) {
+  for (int i = 0; i < (retry ? 5 : 1); i++) {
     degree_t abs = UnwrapHoodAbsolute(raw - offset_deg);
     if (abs > hood_absolute_max || abs < hood_absolute_min) {
       if (retry) {

@@ -7,6 +7,7 @@
 #include <units/current.h>
 #include <units/voltage.h>
 
+#include <algorithm>
 #include <iostream>
 #include <string_view>
 #include <vector>
@@ -28,35 +29,17 @@ namespace funkit::control {
         "Invalid MonkeyMaster slot ID: " + std::to_string(slot_id) + " in " + \
         "[" + __func__ + "]");
 
-#define LOG_IF_ERROR(action_name)                                          \
+#define LOG_IF_ERROR(slot_id, action_name)                                 \
   {                                                                        \
     hardware::ControllerErrorCodes err =                                   \
         controller_registry[slot_id]->GetLastErrorCode();                  \
     if (err != hardware::ControllerErrorCodes::kAllOK) {                   \
       loggable_.Error("Error [{}] completing action [{}] for slot ID {}.", \
           parseError(err), action_name, slot_id);                          \
+      RecordDeviceError(slot_id);                                          \
+    } else {                                                               \
+      RecordDeviceSuccess(slot_id);                                        \
     }                                                                      \
-  }
-
-#define NUM_RETRIES 5
-#define INITIAL_RETRY_DELAY_MS 10
-
-#define SMART_RETRY(action, action_name)                                    \
-  for (int i = 0; i < NUM_RETRIES; i++) {                                   \
-    action;                                                                 \
-    hardware::ControllerErrorCodes err =                                    \
-        controller_registry[slot_id]->GetLastErrorCode();                   \
-    if (err == hardware::ControllerErrorCodes::kAllOK)                      \
-      break;                                                                \
-    else if (i == NUM_RETRIES - 1) {                                        \
-      loggable_.Error("Failed [{}] for slot ID {}.", action_name, slot_id); \
-    } else {                                                                \
-      loggable_.Warn(                                                       \
-          "Error [{}] while attempting [{}] for slot ID {}. Retrying...",   \
-          parseError(err), action_name, slot_id);                           \
-      std::this_thread::sleep_for(                                          \
-          std::chrono::milliseconds(INITIAL_RETRY_DELAY_MS * (1 << i)));    \
-    }                                                                       \
   }
 
 funkit::base::Loggable MonkeyMaster::loggable_{"MonkeyMaster"};
@@ -80,9 +63,69 @@ pdcsu::units::volt_t MonkeyMaster::battery_voltage{pdcsu::units::volt_t{0}};
 
 std::queue<MonkeyMaster::MotorMessage> MonkeyMaster::control_messages{};
 
+int MonkeyMaster::skip_loops_remaining_[CONTROLLER_REGISTRY_SIZE]{};
+bool MonkeyMaster::skip_decided_this_loop_[CONTROLLER_REGISTRY_SIZE]{};
+bool MonkeyMaster::skip_this_loop_[CONTROLLER_REGISTRY_SIZE]{};
+bool MonkeyMaster::last_attempt_was_error_[CONTROLLER_REGISTRY_SIZE]{};
+bool MonkeyMaster::set_genome_pending_retry_[CONTROLLER_REGISTRY_SIZE]{};
+bool MonkeyMaster::set_genome_force_set_[CONTROLLER_REGISTRY_SIZE]{};
+
+bool MonkeyMaster::GetSkipDecisionForSlotThisLoop(size_t slot_id) {
+  if (slot_id >= CONTROLLER_REGISTRY_SIZE ||
+      controller_registry[slot_id] == nullptr)
+    return false;
+  if (!skip_decided_this_loop_[slot_id]) {
+    skip_decided_this_loop_[slot_id] = true;
+    skip_this_loop_[slot_id] = (skip_loops_remaining_[slot_id] > 0);
+    if (skip_this_loop_[slot_id]) skip_loops_remaining_[slot_id]--;
+  }
+  return skip_this_loop_[slot_id];
+}
+
+void MonkeyMaster::RecordDeviceError(size_t slot_id) {
+  if (slot_id >= CONTROLLER_REGISTRY_SIZE) return;
+  bool was_already_error = last_attempt_was_error_[slot_id];
+  last_attempt_was_error_[slot_id] = true;
+  if (was_already_error) {
+    int& s = skip_loops_remaining_[slot_id];
+    s = (s == 0 ? 1 : std::min(s * 2, 64));
+  }
+}
+
+void MonkeyMaster::RecordDeviceSuccess(size_t slot_id) {
+  if (slot_id >= CONTROLLER_REGISTRY_SIZE) return;
+  last_attempt_was_error_[slot_id] = false;
+  skip_loops_remaining_[slot_id] = 0;
+}
+
+void MonkeyMaster::RetrySetGenomeIfPending() {
+  for (size_t i = 0; i < CONTROLLER_REGISTRY_SIZE; i++) {
+    if (controller_registry[i] == nullptr || !set_genome_pending_retry_[i])
+      continue;
+    if (GetSkipDecisionForSlotThisLoop(i)) continue;
+
+    set_genome_pending_retry_[i] = false;
+    controller_registry[i]->SetGenome(
+        genome_registry[i], set_genome_force_set_[i]);
+    hardware::ControllerErrorCodes err =
+        controller_registry[i]->GetLastErrorCode();
+    if (err != hardware::ControllerErrorCodes::kAllOK) {
+      loggable_.Error(
+          "Error [{}] retrying SetGenome for slot ID {}.", parseError(err), i);
+      RecordDeviceError(i);
+      set_genome_pending_retry_[i] = true;
+    } else {
+      RecordDeviceSuccess(i);
+    }
+  }
+}
+
 void MonkeyMaster::Setup() {}
 
 void MonkeyMaster::Tick(bool disabled) {
+  for (size_t i = 0; i < CONTROLLER_REGISTRY_SIZE; i++)
+    skip_decided_this_loop_[i] = false;
+
   battery_voltage = pdcsu::units::volt_t{
       frc::RobotController::GetBatteryVoltage().to<double>()};
 
@@ -99,6 +142,7 @@ void MonkeyMaster::Tick(bool disabled) {
 
   for (size_t i = 0; i < CONTROLLER_REGISTRY_SIZE; i++) {
     if (controller_registry[i] != nullptr) {
+      if (GetSkipDecisionForSlotThisLoop(i)) continue;
       if (slot_id_to_sim_[i]) {
         simulation::VirtualMonkey* sim =
             dynamic_cast<simulation::VirtualMonkey*>(controller_registry[i]);
@@ -118,10 +162,10 @@ void MonkeyMaster::Tick(bool disabled) {
 
 void MonkeyMaster::SetNeutralMode(size_t slot_id, bool brake_mode) {
   CHECK_SLOT_ID();
+  if (GetSkipDecisionForSlotThisLoop(slot_id)) return;
   genome_registry[slot_id].brake_mode = brake_mode;
-  SMART_RETRY(controller_registry[slot_id]->SetGenome(genome_registry[slot_id]),
-      "SetNeutralMode");
-  LOG_IF_ERROR("SetNeutralMode");
+  controller_registry[slot_id]->SetGenome(genome_registry[slot_id]);
+  LOG_IF_ERROR(slot_id, "SetNeutralMode");
 }
 
 void MonkeyMaster::WriteMessages() {
@@ -133,10 +177,24 @@ void MonkeyMaster::WriteMessages() {
     control_messages.pop();
   }
 
+  RetrySetGenomeIfPending();
+
   std::vector<PerDeviceInformation> per_device_information;
   for (const auto& msg : messages_to_process) {
     size_t slot_id = msg.slot_id;
     auto* controller = controller_registry[slot_id];
+
+    if (GetSkipDecisionForSlotThisLoop(slot_id)) {
+      double DC = 0.0;
+      bool is_limitable = (msg.type == MotorMessage::Type::DC);
+      if (msg.type == MotorMessage::Type::DC)
+        DC = std::clamp(std::get<double>(msg.value), -1.0, 1.0);
+      if (plant_registry[slot_id].has_value()) {
+        per_device_information.push_back(
+            {slot_id, *plant_registry[slot_id], radps_t{0}, DC, is_limitable});
+      }
+      continue;
+    }
 
     double DC = 0.0;
     bool is_limitable = false;
@@ -177,6 +235,13 @@ void MonkeyMaster::WriteMessages() {
           radps_t{controller->Read(hardware::ReadType::kReadVelocity)}, DC,
           is_limitable});
     }
+    {
+      hardware::ControllerErrorCodes err = controller->GetLastErrorCode();
+      if (err != hardware::ControllerErrorCodes::kAllOK)
+        RecordDeviceError(slot_id);
+      else
+        RecordDeviceSuccess(slot_id);
+    }
   }
 
   auto limited_dcs =
@@ -186,6 +251,8 @@ void MonkeyMaster::WriteMessages() {
     size_t slot_id = msg.slot_id;
     auto* controller = controller_registry[slot_id];
 
+    if (GetSkipDecisionForSlotThisLoop(slot_id)) continue;
+
     switch (msg.type) {
     case MotorMessage::Type::DC: {
       base::ControlRequest cr = limited_dcs[slot_id];
@@ -193,7 +260,7 @@ void MonkeyMaster::WriteMessages() {
           controller->GetLastErrorCode() !=
               funkit::control::hardware::ControllerErrorCodes::kAllOK) {
         controller->Write(cr);
-        LOG_IF_ERROR("WriteDC");
+        LOG_IF_ERROR(slot_id, "WriteDC");
       }
       break;
     }
@@ -204,7 +271,7 @@ void MonkeyMaster::WriteMessages() {
           controller->GetLastErrorCode() !=
               funkit::control::hardware::ControllerErrorCodes::kAllOK) {
         controller->Write(cr);
-        LOG_IF_ERROR("WritePosition");
+        LOG_IF_ERROR(slot_id, "WritePosition");
       }
       break;
     }
@@ -215,7 +282,7 @@ void MonkeyMaster::WriteMessages() {
           controller->GetLastErrorCode() !=
               funkit::control::hardware::ControllerErrorCodes::kAllOK) {
         controller->Write(cr);
-        LOG_IF_ERROR("WriteVelocity");
+        LOG_IF_ERROR(slot_id, "WriteVelocity");
       }
       break;
     }
@@ -287,8 +354,8 @@ size_t MonkeyMaster::ConstructController(
 
   genome_registry[slot_id] = genome;
 
-  SMART_RETRY(this_controller->SetGenome(genome), "SetGenome");
-  LOG_IF_ERROR("SetGenome");
+  this_controller->SetGenome(genome);
+  LOG_IF_ERROR(slot_id, "SetGenome");
 
   return slot_id;
 }
@@ -298,21 +365,19 @@ void MonkeyMaster::EnableStatusFrames(size_t slot_id,
     pdcsu::units::ms_t velocity_ms, pdcsu::units::ms_t encoder_position_ms,
     pdcsu::units::ms_t analog_position_ms) {
   CHECK_SLOT_ID();
+  if (GetSkipDecisionForSlotThisLoop(slot_id)) return;
 
-  SMART_RETRY(
-      controller_registry[slot_id]->EnableStatusFrames(frames, faults_ms,
-          velocity_ms, encoder_position_ms, analog_position_ms),
-      "EnableStatusFrames");
-  LOG_IF_ERROR("EnableStatusFrames");
+  controller_registry[slot_id]->EnableStatusFrames(
+      frames, faults_ms, velocity_ms, encoder_position_ms, analog_position_ms);
+  LOG_IF_ERROR(slot_id, "EnableStatusFrames");
 }
 
 void MonkeyMaster::OverrideStatusFramePeriod(size_t slot_id,
     funkit::control::config::StatusFrame frame, pdcsu::units::ms_t period) {
   CHECK_SLOT_ID();
-  SMART_RETRY(
-      controller_registry[slot_id]->OverrideStatusFramePeriod(frame, period),
-      "OverrideStatusFramePeriod");
-  LOG_IF_ERROR("OverrideStatusFramePeriod");
+  if (GetSkipDecisionForSlotThisLoop(slot_id)) return;
+  controller_registry[slot_id]->OverrideStatusFramePeriod(frame, period);
+  LOG_IF_ERROR(slot_id, "OverrideStatusFramePeriod");
 }
 
 pdcsu::units::volt_t MonkeyMaster::GetBatteryVoltage() {
@@ -328,12 +393,23 @@ void MonkeyMaster::SetLoad(size_t slot_id, pdcsu::units::nm_t load) {
 void MonkeyMaster::SetGenome(
     size_t slot_id, config::MotorGenome genome, bool force_set) {
   CHECK_SLOT_ID();
+  if (GetSkipDecisionForSlotThisLoop(slot_id)) return;
 
   genome_registry[slot_id] = genome;
 
-  SMART_RETRY(
-      controller_registry[slot_id]->SetGenome(genome, force_set), "SetGenome");
-  LOG_IF_ERROR("SetGenome");
+  controller_registry[slot_id]->SetGenome(genome, force_set);
+  hardware::ControllerErrorCodes err =
+      controller_registry[slot_id]->GetLastErrorCode();
+  if (err != hardware::ControllerErrorCodes::kAllOK) {
+    loggable_.Error("Error [{}] completing action [SetGenome] for slot ID {}.",
+        parseError(err), slot_id);
+    RecordDeviceError(slot_id);
+    set_genome_pending_retry_[slot_id] = true;
+    set_genome_force_set_[slot_id] = force_set;
+  } else {
+    RecordDeviceSuccess(slot_id);
+    set_genome_pending_retry_[slot_id] = false;
+  }
 }
 
 void MonkeyMaster::WriteDC(size_t slot_id, double duty_cycle) {
@@ -360,36 +436,39 @@ hardware::ReadResponse MonkeyMaster::Read(
     size_t slot_id, hardware::ReadType type) {
   CHECK_SLOT_ID();
 
-  return controller_registry[slot_id]->Read(type);
+  if (GetSkipDecisionForSlotThisLoop(slot_id)) return 0.0;
+
+  hardware::ReadResponse result = controller_registry[slot_id]->Read(type);
+  LOG_IF_ERROR(slot_id, "Read");
+  return result;
 }
 
 void MonkeyMaster::SpecialConfigure(
     size_t slot_id, hardware::SpecialConfigureType type) {
   CHECK_SLOT_ID();
+  if (GetSkipDecisionForSlotThisLoop(slot_id)) return;
 
-  SMART_RETRY(
-      controller_registry[slot_id]->SpecialConfigure(type), "SpecialConfigure");
-  LOG_IF_ERROR("SpecialConfigure");
+  controller_registry[slot_id]->SpecialConfigure(type);
+  LOG_IF_ERROR(slot_id, "SpecialConfigure");
 }
 
 void MonkeyMaster::SetSoftLimits(size_t slot_id,
     pdcsu::units::radian_t forward_limit,
     pdcsu::units::radian_t reverse_limit) {
   CHECK_SLOT_ID();
+  if (GetSkipDecisionForSlotThisLoop(slot_id)) return;
 
-  SMART_RETRY(
-      controller_registry[slot_id]->SetSoftLimits(forward_limit, reverse_limit),
-      "SetSoftLimits");
-  LOG_IF_ERROR("SetSoftLimits");
+  controller_registry[slot_id]->SetSoftLimits(forward_limit, reverse_limit);
+  LOG_IF_ERROR(slot_id, "SetSoftLimits");
 }
 
 void MonkeyMaster::ZeroEncoder(
     size_t slot_id, pdcsu::units::radian_t position) {
   CHECK_SLOT_ID();
+  if (GetSkipDecisionForSlotThisLoop(slot_id)) return;
 
-  SMART_RETRY(
-      controller_registry[slot_id]->ZeroEncoder(position), "ZeroEncoder");
-  LOG_IF_ERROR("ZeroEncoder");
+  controller_registry[slot_id]->ZeroEncoder(position);
+  LOG_IF_ERROR(slot_id, "ZeroEncoder");
 }
 
 std::string_view MonkeyMaster::parseError(
@@ -425,10 +504,11 @@ std::string_view MonkeyMaster::parseError(
 void MonkeyMaster::CheckForResets() {
   for (size_t i = 1; i <= slot_counter_; i++) {
     if (controller_registry[i] != nullptr) {
-      if (controller_registry[i]->Read(hardware::ReadType::kRestFault) > 0.5)
-      {
+      if (GetSkipDecisionForSlotThisLoop(i)) continue;
+      if (controller_registry[i]->Read(hardware::ReadType::kRestFault) > 0.5) {
         loggable_.Warn(
-            "Reset detected on Motor Controller Slot ID {}. Reconfiguring...", i);
+            "Reset detected on Motor Controller Slot ID {}. Reconfiguring...",
+            i);
         SetGenome(i, genome_registry[i], true);
       }
     }

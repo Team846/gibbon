@@ -121,7 +121,7 @@ void TurretSubsystem::ZeroWithCRT(bool retry) {
       GetPreferenceValue_unit_type<rotation_t>("encoder/max_rots"),
       GetPreferenceValue_unit_type<rotation_t>("encoder/max_tolerance")};
 
-  for (int i = 0; i < retry ? 5 : 1; i++) {
+  for (int i = 0; i < (retry ? 5 : 1); i++) {
     auto sol = TurretPositionCalculator::GetPosition(inputs);
     if (sol.isValid) {
       esc_.SetPosition(sol.turretRotations);
@@ -156,8 +156,8 @@ TurretReadings TurretSubsystem::ReadFromHardware() {
 
   degree_t error =
       funkit::math::CoterminalDifference(GetTarget().pos_, pos_real);
-  Graph("pos", degree_t(pos_real));
-  Graph("error", error);
+  Graph("readings/pos", degree_t(pos_real));
+  Graph("debug/error", error);
 
   funkit::robot::calculators::AprilTagCalculator::turret_angle = pos_real;
   funkit::robot::calculators::AprilTagCalculator::turret_vel = vel_real;
@@ -189,7 +189,7 @@ void TurretSubsystem::WriteToHardware(TurretTarget target) {
   auto genome = SubsystemGenomeHelper::LoadGenomePreferences(*this, "genome");
   esc_.ModifyGenome(genome);
 
-  if (GetReadings().pos_ > 40_deg_ || GetReadings().pos_ < -40_deg_) {
+  if (GetReadings().pos_ > 400_deg_ || GetReadings().pos_ < -400_deg_) {
     zero_walk_ctr_++;
 
     if (zero_walk_ctr_ < 30)

@@ -36,9 +36,9 @@ struct ports {
 
   struct turret_ {
     static constexpr funkit::control::config::MotorConstructionParameters
-        kTurretParams = {16, "thalamus", true};  // TODO: add to canivore
-    static constexpr int kCANCoder1_CANID = 52;
-    static constexpr int kCANCoder2_CANID = 53;
+        kTurretParams = {16, "thalamus", true};
+    static constexpr int kCANCoder1_CANID = 53; // TODO recheck
+    static constexpr int kCANCoder2_CANID = 52;
   };
 
   struct shooter_ {
