@@ -190,11 +190,11 @@ void FunkyRobot::OnPeriodic() {
 
   if (!isDisabled) {
     auto shift_data = AllianceShiftCalculator::Calculate();
-    Graph("our_hub_active", shift_data.our_hub_active);
-    Graph("won_auto", shift_data.won_auto);
-    Graph("shift", shift_data.shift);
-    Graph("until_flip", shift_data.until_flip);
-    Graph("our_time_left", shift_data.our_time_left);
+    Graph("game_data/shift_active", shift_data.our_hub_active);
+    Graph("game_data/active_first", shift_data.won_auto);
+    Graph("game_data/shift", shift_data.shift);
+    Graph("game_data/until_flip", shift_data.until_flip);
+    Graph("game_data/our_time_left", shift_data.our_time_left);
   }
 
   if (homing_count_ > 0 && isDisabled)
