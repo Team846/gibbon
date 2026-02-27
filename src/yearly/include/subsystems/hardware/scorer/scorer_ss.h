@@ -2,6 +2,9 @@
 
 #include <frc/DigitalInput.h>
 
+#include <cstdint>
+#include <vector>
+
 #include "calculators/TurretPositionCalculator.h"
 #include "funkit/control/HigherMotorController.h"
 #include "funkit/robot/GenericRobot.h"
@@ -58,13 +61,35 @@ public:
   void ZeroEncoders();
 
 private:
+  struct HysteresisWindow {
+    std::vector<uint8_t> samples;
+    int index = 0;
+    int valid_count = 0;
+    int true_count = 0;
+
+    void Configure(int loops);
+    void Push(bool sample);
+    bool Full() const;
+    double Fraction() const;
+  };
+
   ScorerSSReadings ReadFromHardware() override;
   void WriteToHardware(ScorerSSTarget target) override;
+  void ConfigureHysteresisWindows();
 
   bool last_shoot = false;
+  bool will_make_shot_hysteresis_ = false;
 
   degree_t turret_adjustment_ = 0_deg_;
   degree_t hood_adjustment_ = 0_deg_;
 
   size_t rotor_reset_ctr = 0U;
+
+  int on_window_loops_ = 0;
+  int off_window_loops_ = 0;
+  int off_recent_window_loops_ = 0;
+
+  HysteresisWindow on_window_;
+  HysteresisWindow off_window_;
+  HysteresisWindow off_recent_window_;
 };

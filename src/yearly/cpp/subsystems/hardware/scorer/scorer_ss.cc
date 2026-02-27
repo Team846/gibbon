@@ -1,5 +1,7 @@
 #include "subsystems/hardware/scorer/scorer_ss.h"
 
+#include <algorithm>
+
 #include "ports.h"
 
 using namespace funkit::control;
@@ -21,7 +23,13 @@ ScorerSuperstructure::ScorerSuperstructure()
   RegisterPreference("point_blank/hood_angle", 85_deg_);
   RegisterPreference("point_blank/shooter_vel", 24_fps_);
 
-  RegisterPreference("rotor_reset_loops", 20);
+  RegisterPreference("will_make_shot_hysteresis/on_percent", 70.0);
+  RegisterPreference("will_make_shot_hysteresis/on_window_loops", 40);
+  RegisterPreference("will_make_shot_hysteresis/off_percent", 50.0);
+  RegisterPreference("will_make_shot_hysteresis/off_window_loops", 20);
+  RegisterPreference("will_make_shot_hysteresis/off_recent_window_loops", 10);
+
+  RegisterPreference("rotor_reset_loops", 10);
 }
 
 ScorerSuperstructure::~ScorerSuperstructure() = default;
@@ -55,6 +63,61 @@ bool ScorerSuperstructure::VerifyHardware() {
          shooter.VerifyHardware() && dye_rotor.VerifyHardware();
 }
 
+void ScorerSuperstructure::HysteresisWindow::Configure(int loops) {
+  samples.assign(std::max(1, loops), 0U);
+  index = 0;
+  valid_count = 0;
+  true_count = 0;
+}
+
+void ScorerSuperstructure::HysteresisWindow::Push(bool sample) {
+  if (samples.empty()) { return; }
+
+  const uint8_t sample_value = sample ? 1U : 0U;
+  if (valid_count < static_cast<int>(samples.size())) {
+    valid_count++;
+  } else {
+    true_count -= samples[index];
+  }
+
+  samples[index] = sample_value;
+  true_count += sample_value;
+  index = (index + 1) % static_cast<int>(samples.size());
+}
+
+bool ScorerSuperstructure::HysteresisWindow::Full() const {
+  return valid_count >= static_cast<int>(samples.size());
+}
+
+double ScorerSuperstructure::HysteresisWindow::Fraction() const {
+  if (valid_count <= 0) { return 0.0; }
+  return static_cast<double>(true_count) / static_cast<double>(valid_count);
+}
+
+void ScorerSuperstructure::ConfigureHysteresisWindows() {
+  const int on_window_loops = std::max(
+      1, GetPreferenceValue_int("will_make_shot_hysteresis/on_window_loops"));
+  const int off_window_loops = std::max(
+      1, GetPreferenceValue_int("will_make_shot_hysteresis/off_window_loops"));
+  const int off_recent_window_loops =
+      std::max(1, GetPreferenceValue_int(
+                      "will_make_shot_hysteresis/off_recent_window_loops"));
+
+  if (on_window_loops == on_window_loops_ &&
+      off_window_loops == off_window_loops_ &&
+      off_recent_window_loops == off_recent_window_loops_) {
+    return;
+  }
+
+  on_window_loops_ = on_window_loops;
+  off_window_loops_ = off_window_loops;
+  off_recent_window_loops_ = off_recent_window_loops;
+
+  on_window_.Configure(on_window_loops_);
+  off_window_.Configure(off_window_loops_);
+  off_recent_window_.Configure(off_recent_window_loops_);
+}
+
 ScorerSSReadings ScorerSuperstructure::ReadFromHardware() {
   ScorerSSReadings readings;
 
@@ -63,9 +126,36 @@ ScorerSSReadings ScorerSuperstructure::ReadFromHardware() {
   shooter.UpdateReadings();
   dye_rotor.UpdateReadings();
 
-  readings.will_make_shot = turret.GetReadings().in_position_ &&
-                            hood.GetReadings().in_position_ &&
-                            shooter.GetReadings().is_spun_up;
+  const bool raw_will_make_shot = turret.GetReadings().in_position_ &&
+                                  hood.GetReadings().in_position_ &&
+                                  shooter.GetReadings().is_spun_up;
+
+  ConfigureHysteresisWindows();
+  on_window_.Push(raw_will_make_shot);
+
+  const bool off_sample = !raw_will_make_shot;
+  off_window_.Push(off_sample);
+  off_recent_window_.Push(off_sample);
+
+  const double on_threshold = std::clamp(
+      GetPreferenceValue_double("will_make_shot_hysteresis/on_percent") / 100.0,
+      0.0, 1.0);
+  const double off_threshold = std::clamp(
+      GetPreferenceValue_double("will_make_shot_hysteresis/off_percent") /
+          100.0,
+      0.0, 1.0);
+
+  if (!will_make_shot_hysteresis_) {
+    if (on_window_.Full() && on_window_.Fraction() >= on_threshold) {
+      will_make_shot_hysteresis_ = true;
+    }
+  } else if (off_window_.Full() && off_recent_window_.Full() &&
+             off_window_.Fraction() >= off_threshold &&
+             off_recent_window_.Fraction() > off_threshold) {
+    will_make_shot_hysteresis_ = false;
+  }
+
+  readings.will_make_shot = will_make_shot_hysteresis_;
 
   return readings;
 }

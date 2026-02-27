@@ -127,7 +127,7 @@ void HoodSubsystem::ZeroWithAbsoluteEncoder(bool retry) {
       return;
     }
   }
-  Error("Failed to zero hood encoders");
+  if (retry) { Error("Failed to zero hood encoders"); }
 }
 
 void HoodSubsystem::ZeroEncoders() {

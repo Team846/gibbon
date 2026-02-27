@@ -10,8 +10,9 @@ IntakeSubsystem::IntakeSubsystem()
     : GenericSubsystem("Intake"),
       esc_{base::TALON_FX_KRAKENX44, ports::intake_::kIntakeParams} {
   RegisterPreference("speed_idle", 0.0_fps_);
-  RegisterPreference("speed_intake", 25.0_fps_);
+  RegisterPreference("speed_intake", 35.0_fps_);
   RegisterPreference("speed_evac", -25.0_fps_);
+  RegisterPreference("dynamic_intake_gain", 0.25);
 }
 
 IntakeSubsystem::~IntakeSubsystem() = default;
@@ -21,7 +22,7 @@ void IntakeSubsystem::Setup() {
       .smart_current_limit = 50_A_,
       .voltage_compensation = 12_V_,
       .brake_mode = true,
-      .gains = {.kP = 0.0, .kI = 0.0, .kD = 0.0, .kF = 0.0}};
+      .gains = {.kP = 0.001, .kI = 0.0, .kD = 0.0, .kF = 0.00127}};
 
   funkit::control::config::SubsystemGenomeHelper::CreateGenomePreferences(
       *this, "genome", genome_backup);
@@ -71,7 +72,7 @@ void IntakeSubsystem::WriteToHardware(IntakeTarget target) {
 
   if (target.target_state == IntakeState::kIntake) {
     trgt_vel_ =
-        GetPreferenceValue_unit_type<fps_t>("speed_intake") + target.dt_vel_;
+        GetPreferenceValue_unit_type<fps_t>("speed_intake") + target.dt_vel_ * GetPreferenceValue_double("dynamic_intake_gain");
   } else if (target.target_state == IntakeState::kEvac) {
     trgt_vel_ = GetPreferenceValue_unit_type<fps_t>("speed_evac");
   } else {

@@ -1066,7 +1066,7 @@
   {
     "name": "/Preferences/turret/icnor/IPG",
     "type": "double",
-    "value": 0.15,
+    "value": 1.0,
     "properties": {
       "persistent": true
     }
@@ -1162,7 +1162,7 @@
   {
     "name": "/Preferences/turret/tolerance (deg)",
     "type": "double",
-    "value": 10.0,
+    "value": 2.0,
     "properties": {
       "persistent": true
     }
@@ -1186,7 +1186,7 @@
   {
     "name": "/Preferences/hood/icnor/IPG",
     "type": "double",
-    "value": 1.0,
+    "value": 0.5,
     "properties": {
       "persistent": true
     }

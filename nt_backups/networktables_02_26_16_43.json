@@ -1066,7 +1066,7 @@
   {
     "name": "/Preferences/turret/icnor/IPG",
     "type": "double",
-    "value": 0.15,
+    "value": 1.0,
     "properties": {
       "persistent": true
     }
@@ -1162,7 +1162,7 @@
   {
     "name": "/Preferences/turret/tolerance (deg)",
     "type": "double",
-    "value": 10.0,
+    "value": 2.0,
     "properties": {
       "persistent": true
     }
@@ -1186,7 +1186,7 @@
   {
     "name": "/Preferences/hood/icnor/IPG",
     "type": "double",
-    "value": 1.0,
+    "value": 0.5,
     "properties": {
       "persistent": true
     }
@@ -1226,7 +1226,7 @@
   {
     "name": "/Preferences/DyeRotor/speed_84bps (min^-1 rot)",
     "type": "double",
-    "value": 250.0,
+    "value": 120.0,
     "properties": {
       "persistent": true
     }
@@ -1266,7 +1266,7 @@
   {
     "name": "/Preferences/scorer_ss/passing/left_y (in)",
     "type": "double",
-    "value": 130.0,
+    "value": 70.0,
     "properties": {
       "persistent": true
     }
@@ -1282,7 +1282,7 @@
   {
     "name": "/Preferences/scorer_ss/passing/right_y (in)",
     "type": "double",
-    "value": 130.0,
+    "value": 70.0,
     "properties": {
       "persistent": true
     }

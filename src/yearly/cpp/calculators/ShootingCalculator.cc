@@ -10,15 +10,15 @@ pdcsu::util::math::Vector2D ShootingCalculator::target{0_in_, 0_in_};
 const inch_t kDeltaHeight = 57.9_in_ - 24.9_in_;
 
 const degree_t kShotAngleMax = 75_deg_;
-const degree_t kShotAngleMin = 55_deg_;
-const foot_t kShotMaxDist = 30_ft_;
-const foot_t kPointblankDistance = 48_in_;
+const degree_t kShotAngleMin = 50_deg_;
+const foot_t kShotMaxDist = 24_ft_;
+const foot_t kPointblankDistance = 41.925_in_;
 
 void ShootingCalculator::Setup() {
   if (loggable_opt.has_value()) { return; }
   loggable_opt.emplace(funkit::base::Loggable("ShootingCalculator"));
-  loggable_opt->RegisterPreference("2ptvel/kPointBlank", 17_fps_);
-  loggable_opt->RegisterPreference("2ptvel/kAdditive", 0.0);
+  loggable_opt->RegisterPreference("2ptvel/kPointBlank", 23_fps_);
+  loggable_opt->RegisterPreference("2ptvel/kAdditive", 3.68);
   loggable_opt->RegisterPreference("swim/twistGain", 0.0);
   loggable_opt->RegisterPreference("swim/projectGain", 0.0);
   loggable_opt->RegisterPreference("swim/twistVelCompensation", 0.416);
@@ -88,16 +88,15 @@ void ShootingCalculator::Calculate(const RobotContainer* container_) {
   inch_t D_f_O = u_clamp(inch_t{delta_mag} - kPointblankDistance,
       kPointblankDistance, kShotMaxDist);
 
+  if (delta_mag < kPointblankDistance) { return; }
+
   loggable.Graph("D_f_O", D_f_O);
-  outputs_.shot_angle = GetShotAngle(D_f_O);
-  loggable.Graph("shot_angle", outputs_.shot_angle);
   loggable.Graph("shot_distance_ratio", (D_f_O / kShotMaxDist).value());
-  outputs_.shot_angle_vel = GetShotAngleVel(D_f_O, vel_in_dir);
+  outputs_.shot_angle_vel = GetShotAngleVel(delta_mag, vel_in_dir);
 
   /*
   2pt interpolation to get target shooting velocity.
   */
-  auto shot_ptbvel = GetBaseVelocity(outputs_.shot_angle, kPointblankDistance);
 
   const second_t projectMultFac =
       loggable.GetPreferenceValue_double("swim/projectGain") * 1.0_s_ *
@@ -107,9 +106,12 @@ void ShootingCalculator::Calculate(const RobotContainer* container_) {
       shooter_pos + Vector2D{vel_at_shooter[0] * projectMultFac,
                         vel_at_shooter[1] * projectMultFac};
 
-  const foot_t fwdErrorMag =
-      (target - projectFwd).magnitude() - kPointblankDistance;
+  const foot_t fwdErrorMag = (target - projectFwd).magnitude();
 
+  outputs_.shot_angle = GetShotAngle(fwdErrorMag - kPointblankDistance);
+  auto shot_ptbvel = GetBaseVelocity(outputs_.shot_angle, kPointblankDistance);
+
+  loggable.Graph("shot_angle", outputs_.shot_angle);
   auto shot_vel = GetBaseVelocity(outputs_.shot_angle, fwdErrorMag);
 
   fps_t target_vel =
@@ -136,11 +138,11 @@ void ShootingCalculator::Calculate(const RobotContainer* container_) {
 
   aim_angle += twist;
 
-  outputs_.shooter_vel =
-      outputs_.shooter_vel * 1.0 /
-      u_cos(u_min(u_abs(twist * loggable.GetPreferenceValue_double(
-                                    "swim/twistVelCompensation")),
-          3.14159265358979323846_rad_ / 2.0));
+    outputs_.shooter_vel =
+        outputs_.shooter_vel * 1.0 /
+        u_cos(u_min(u_abs(twist * loggable.GetPreferenceValue_double(
+                                      "swim/twistVelCompensation")),
+            3.14159265358979323846_rad_ / 2.0));
 
   outputs_.aim_angle = aim_angle;
 

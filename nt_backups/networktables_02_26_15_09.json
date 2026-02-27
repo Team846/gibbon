@@ -274,7 +274,7 @@
   {
     "name": "/Preferences/SwerveDrivetrain/odom_variance",
     "type": "double",
-    "value": 0.2,
+    "value": 2.0,
     "properties": {
       "persistent": true
     }
@@ -330,7 +330,7 @@
   {
     "name": "/Preferences/SwerveDrivetrain/april_tags/april_variance_coeff",
     "type": "double",
-    "value": 1.0,
+    "value": 0.2,
     "properties": {
       "persistent": true
     }
@@ -346,7 +346,7 @@
   {
     "name": "/Preferences/SwerveDrivetrain/april_tags/fudge_latency1 (ms)",
     "type": "double",
-    "value": 50.0,
+    "value": 15.0,
     "properties": {
       "persistent": true
     }
@@ -354,7 +354,7 @@
   {
     "name": "/Preferences/SwerveDrivetrain/april_tags/fudge_latency2 (ms)",
     "type": "double",
-    "value": 50.0,
+    "value": 70.0,
     "properties": {
       "persistent": true
     }
@@ -850,7 +850,7 @@
   {
     "name": "/Preferences/SwerveDrivetrain/april_tags/fudge_latency3 (ms)",
     "type": "double",
-    "value": 50.0,
+    "value": 15.0,
     "properties": {
       "persistent": true
     }
@@ -930,7 +930,7 @@
   {
     "name": "/Preferences/ShootingCalculator/2ptvel/kAdditive",
     "type": "double",
-    "value": 4.3,
+    "value": 3.68,
     "properties": {
       "persistent": true
     }
@@ -938,7 +938,7 @@
   {
     "name": "/Preferences/ShootingCalculator/swim/twistGain",
     "type": "double",
-    "value": -0.19,
+    "value": 0.0,
     "properties": {
       "persistent": true
     }
@@ -946,7 +946,7 @@
   {
     "name": "/Preferences/ShootingCalculator/swim/projectGain",
     "type": "double",
-    "value": 0.9,
+    "value": 0.0,
     "properties": {
       "persistent": true
     }
@@ -954,7 +954,7 @@
   {
     "name": "/Preferences/ShootingCalculator/swim/twistVelCompensation",
     "type": "double",
-    "value": 0.54,
+    "value": 0.416,
     "properties": {
       "persistent": true
     }
@@ -962,7 +962,7 @@
   {
     "name": "/Preferences/SwerveDrivetrain/april_tags/fudge_latency4 (ms)",
     "type": "double",
-    "value": 50.0,
+    "value": 15.0,
     "properties": {
       "persistent": true
     }
@@ -1066,7 +1066,7 @@
   {
     "name": "/Preferences/turret/icnor/IPG",
     "type": "double",
-    "value": 0.15,
+    "value": 0.5,
     "properties": {
       "persistent": true
     }
@@ -1162,7 +1162,7 @@
   {
     "name": "/Preferences/turret/tolerance (deg)",
     "type": "double",
-    "value": 10.0,
+    "value": 2.0,
     "properties": {
       "persistent": true
     }
@@ -1186,7 +1186,7 @@
   {
     "name": "/Preferences/hood/icnor/IPG",
     "type": "double",
-    "value": 1.0,
+    "value": 0.5,
     "properties": {
       "persistent": true
     }
@@ -1266,7 +1266,7 @@
   {
     "name": "/Preferences/scorer_ss/passing/left_y (in)",
     "type": "double",
-    "value": 130.0,
+    "value": 70.0,
     "properties": {
       "persistent": true
     }
@@ -1282,7 +1282,7 @@
   {
     "name": "/Preferences/scorer_ss/passing/right_y (in)",
     "type": "double",
-    "value": 130.0,
+    "value": 70.0,
     "properties": {
       "persistent": true
     }
@@ -1306,7 +1306,7 @@
   {
     "name": "/Preferences/scorer_ss/point_blank/shooter_vel (ft s^-1)",
     "type": "double",
-    "value": 26.0,
+    "value": 36.0,
     "properties": {
       "persistent": true
     }
@@ -1314,7 +1314,7 @@
   {
     "name": "/Preferences/scorer_ss/rotor_reset_loops",
     "type": "int",
-    "value": 13,
+    "value": 7,
     "properties": {
       "persistent": true
     }
@@ -1402,7 +1402,7 @@
   {
     "name": "/Preferences/turret/genome/motor_current_limit (A)",
     "type": "double",
-    "value": 80.0,
+    "value": 30.0,
     "properties": {
       "persistent": true
     }
@@ -1410,7 +1410,7 @@
   {
     "name": "/Preferences/turret/genome/smart_current_limit (A)",
     "type": "double",
-    "value": 80.0,
+    "value": 20.0,
     "properties": {
       "persistent": true
     }
@@ -1562,7 +1562,7 @@
   {
     "name": "/Preferences/shooter/genome/gains/kP",
     "type": "double",
-    "value": 0.52,
+    "value": 0.54,
     "properties": {
       "persistent": true
     }
@@ -1650,7 +1650,7 @@
   {
     "name": "/Preferences/Intake/genome/motor_current_limit (A)",
     "type": "double",
-    "value": 80.0,
+    "value": 50.0,
     "properties": {
       "persistent": true
     }
@@ -1658,7 +1658,7 @@
   {
     "name": "/Preferences/Intake/genome/smart_current_limit (A)",
     "type": "double",
-    "value": 80.0,
+    "value": 50.0,
     "properties": {
       "persistent": true
     }
@@ -1803,14 +1803,6 @@
     "name": "/Preferences/scorer_ss/will_make_shot_hysteresis/off_recent_window_loops",
     "type": "int",
     "value": 10,
-    "properties": {
-      "persistent": true
-    }
-  },
-  {
-    "name": "/Preferences/Intake/dynamic_intake_gain",
-    "type": "double",
-    "value": 0.25,
     "properties": {
       "persistent": true
     }

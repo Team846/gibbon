@@ -129,7 +129,7 @@ void TurretSubsystem::ZeroWithCRT(bool retry) {
     }
     std::this_thread::sleep_for(std::chrono::milliseconds(200));
   }
-  Error("Unable to zero turret with CRT after {} attempts", retry ? 5 : 1);
+  if (retry) { Error("Unable to zero turret with CRT after 5 attempts"); }
 }
 
 void TurretSubsystem::ZeroEncoders() {
@@ -203,30 +203,46 @@ void TurretSubsystem::WriteToHardware(TurretTarget target) {
     return;
   }
 
-  // TODO remove
-  target.pos_ = u_clamp(target.pos_, -70_deg_, 70_deg_);
-
-  if (!icnor_controller_ || !arm_sys_) { return; }
+  if (!std::isfinite(target.pos_.value())) {
+    esc_.WriteDC(0.0);
+    return;
+  }
 
   degree_t wrap_positive =
       GetPreferenceValue_unit_type<degree_t>("wrap/positive");
   degree_t wrap_negative =
-      GetPreferenceValue_unit_type<degree_t>("wrap/negative");
-  if (target.pos_ > wrap_positive) {
-    double n = std::floor((target.pos_ - wrap_positive).value() / 360.0);
-    target.pos_ -= degree_t{360.0 * n};
-  }
-  if (target.pos_ < wrap_negative) {
-    double n = std::floor((wrap_negative - target.pos_).value() / 360.0);
-    target.pos_ += degree_t{360.0 * n};
-  }
-
-  while (target.pos_ > wrap_positive) {
+      GetPreferenceValue_unit_type<degree_t>("wrap/negative"); // TODO
+  while (target.pos_ > wrap_positive) { //TODO remove this one
     target.pos_ -= 360_deg_;
   }
   while (target.pos_ < wrap_negative) {
     target.pos_ += 360_deg_;
   }
+
+  // TODO remove
+  target.pos_ = u_clamp(target.pos_, -90_deg_, 90_deg_);
+
+  if (!icnor_controller_ || !arm_sys_) { return; }
+
+  // degree_t wrap_positive =
+  //     GetPreferenceValue_unit_type<degree_t>("wrap/positive");
+  // degree_t wrap_negative =
+  //     GetPreferenceValue_unit_type<degree_t>("wrap/negative");
+  // if (target.pos_ > wrap_positive) {
+  //   double n = std::floor((target.pos_ - wrap_positive).value() / 360.0);
+  //   target.pos_ -= degree_t{360.0 * n};
+  // }
+  // if (target.pos_ < wrap_negative) {
+  //   double n = std::floor((wrap_negative - target.pos_).value() / 360.0);
+  //   target.pos_ += degree_t{360.0 * n};
+  // }
+
+  // while (target.pos_ > wrap_positive) { TODO add this one back
+  //   target.pos_ -= 360_deg_;
+  // }
+  // while (target.pos_ < wrap_negative) {
+  //   target.pos_ += 360_deg_;
+  // }
 
   Graph("target/pos", target.pos_);
   Graph("target/vel", target.vel_);

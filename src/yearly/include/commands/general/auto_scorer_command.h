@@ -5,5 +5,5 @@
 
 #include "subsystems/robot_container.h"
 
-frc2::InstantCommand AutoIntakeCommand(
-    RobotContainer& container, HoptakeState target);
+frc2::InstantCommand AutoScorerCommand(
+    RobotContainer& container, bool enable_shooting, bool enable_passing);

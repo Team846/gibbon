@@ -25,14 +25,14 @@ void ScorerCommand::Periodic() {
   if (ci_readings_.pass_mode) {
     pdcsu::util::math::Vector2D pass_point{-1000_in_, -1000_in_};
     if (container_.drivetrain_.GetReadings().estimated_pose.position[0] <
-        138.32_in_) {
+        158.5_in_) {
       pass_point = {container_.scorer_ss_.GetPreferenceValue_unit_type<inch_t>(
                         "passing/left_x"),
           container_.scorer_ss_.GetPreferenceValue_unit_type<inch_t>(
               "passing/left_y")};
       Graph("left", true);
     } else if (container_.drivetrain_.GetReadings().estimated_pose.position[0] >
-               178.32_in_) {
+               158.5_in_) {
       pass_point = {container_.scorer_ss_.GetPreferenceValue_unit_type<inch_t>(
                         "passing/right_x"),
           container_.scorer_ss_.GetPreferenceValue_unit_type<inch_t>(
@@ -104,8 +104,10 @@ void ScorerCommand::Periodic() {
       ci_readings_.point_blank_shot ||
       (shooting_outputs.is_valid && !ci_readings_.override_autoshoot &&
           container_.scorer_ss_.GetReadings().will_make_shot &&
-          !frc::DriverStation::IsTest()) ||
-      ci_readings_.force_shoot;
+          !frc::DriverStation::IsTest() && container_.drivetrain_.variance < 16.0) ||
+      ci_readings_.force_shoot ||
+      (ci_readings_.pass_mode &&
+          container_.scorer_ss_.turret.GetReadings().in_position_);
 
   if (!target.shoot) {
     container_.drivetrain_.SetFieldObjectPose(
