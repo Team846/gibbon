@@ -67,6 +67,8 @@ PivotReadings PivotSubsystem::ReadFromHardware() {
   degree_t error = trgt_pos_ - current_pos;
   Graph("error", error);
 
+  Graph("current", esc_.GetCurrent());
+
   return PivotReadings{current_pos};
 }
 
@@ -78,9 +80,9 @@ void PivotSubsystem::WriteToHardware(PivotTarget target) {
 
   if (target.target_state == PivotState::kStow) {
     trgt_pos_ = GetPreferenceValue_unit_type<degree_t>("pos_stow");
-  } else if (target.target_state == PivotState::kIntake) {
+  } else {  //(target.target_state == PivotState::kIntake) {
     trgt_pos_ = GetPreferenceValue_unit_type<degree_t>("pos_intake");
-  } else if (target.target_state == PivotState::kAgitate) {
+  } /*else if (target.target_state == PivotState::kAgitate) {
     if (ctr_agitate < GetPreferenceValue_int("agigtate/on_loop_count")) {
       trgt_pos_ = GetPreferenceValue_unit_type<degree_t>("pos_agitate");
     } else {
@@ -92,7 +94,15 @@ void PivotSubsystem::WriteToHardware(PivotTarget target) {
     } else {
       ctr_agitate++;
     }
-  }
+  }*/
 
-  esc_.WritePosition(trgt_pos_);
+  if (trgt_pos_ < GetReadings().pos_) {
+    esc_.WriteDC((trgt_pos_ - GetReadings().pos_).value() * genome.gains.kP +
+                 genome.gains.kI * u_sin(GetReadings().pos_) -
+                 genome.gains.kD * esc_.GetVelocity<radps_t>().value());
+  } else {
+    esc_.WriteDC((trgt_pos_ - GetReadings().pos_).value() * genome.gains.kP +
+                 genome.gains.kF * u_sin(GetReadings().pos_) -
+                 genome.gains.kD * esc_.GetVelocity<radps_t>().value());
+  }
 }

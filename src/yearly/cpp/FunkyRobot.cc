@@ -123,7 +123,8 @@ void FunkyRobot::ClearDefaultCommands() {
 }
 
 void FunkyRobot::OnPeriodic() {
-  ShootingCalculator::Calculate(&container_);
+  ShootingCalculator::Calculate(
+      &container_, container_.control_input_.GetReadings().pass_mode);
 
   if (frc::RobotBase::IsSimulation()) {
     auto instance = nt::NetworkTableInstance::GetDefault();

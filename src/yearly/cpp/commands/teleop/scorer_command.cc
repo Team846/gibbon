@@ -104,12 +104,13 @@ void ScorerCommand::Periodic() {
       ci_readings_.point_blank_shot ||
       (shooting_outputs.is_valid && !ci_readings_.override_autoshoot &&
           container_.scorer_ss_.GetReadings().will_make_shot &&
-          !frc::DriverStation::IsTest() && container_.drivetrain_.variance < 16.0) ||
+          !frc::DriverStation::IsTest() &&
+          container_.drivetrain_.variance < 16.0) ||  // TODO fix variance case
       ci_readings_.force_shoot ||
       (ci_readings_.pass_mode &&
           container_.scorer_ss_.turret.GetReadings().in_position_);
 
-  if (!target.shoot) {
+  if (!shooting_outputs.is_valid) {
     container_.drivetrain_.SetFieldObjectPose(
         "shoot_point", {-1000_in_, -1000_in_}, 0.0_deg_);
     container_.drivetrain_.SetFieldObjectPose(

@@ -28,7 +28,8 @@ class ShootingCalculator {
 public:
   static void Setup();
 
-  static void Calculate(const RobotContainer* container_);
+  static void Calculate(
+      const RobotContainer* container_, bool effort_when_invald = false);
 
   static degree_t GetShotAngle(foot_t shot_distance);
   static radps_t GetShotAngleVel(foot_t shot_distance, fps_t vel_in_dir);

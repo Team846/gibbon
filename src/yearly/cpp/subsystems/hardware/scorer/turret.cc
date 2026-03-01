@@ -59,6 +59,8 @@ TurretSubsystem::TurretSubsystem()
 
   RegisterPreference("wrap/positive", 260_deg_);
   RegisterPreference("wrap/negative", -260_deg_);
+
+  RegisterPreference("fakevel_comp", 0.35);
 }
 
 TurretSubsystem::~TurretSubsystem() = default;
@@ -208,41 +210,27 @@ void TurretSubsystem::WriteToHardware(TurretTarget target) {
     return;
   }
 
+  if (!icnor_controller_ || !arm_sys_) { return; }
+
   degree_t wrap_positive =
       GetPreferenceValue_unit_type<degree_t>("wrap/positive");
   degree_t wrap_negative =
-      GetPreferenceValue_unit_type<degree_t>("wrap/negative"); // TODO
-  while (target.pos_ > wrap_positive) { //TODO remove this one
+      GetPreferenceValue_unit_type<degree_t>("wrap/negative");
+  if (target.pos_ > wrap_positive) {
+    double n = std::floor((target.pos_ - wrap_positive).value() / 360.0);
+    target.pos_ -= degree_t{360.0 * n};
+  }
+  if (target.pos_ < wrap_negative) {
+    double n = std::floor((wrap_negative - target.pos_).value() / 360.0);
+    target.pos_ += degree_t{360.0 * n};
+  }
+
+  while (target.pos_ > wrap_positive) {
     target.pos_ -= 360_deg_;
   }
   while (target.pos_ < wrap_negative) {
     target.pos_ += 360_deg_;
   }
-
-  // TODO remove
-  target.pos_ = u_clamp(target.pos_, -90_deg_, 90_deg_);
-
-  if (!icnor_controller_ || !arm_sys_) { return; }
-
-  // degree_t wrap_positive =
-  //     GetPreferenceValue_unit_type<degree_t>("wrap/positive");
-  // degree_t wrap_negative =
-  //     GetPreferenceValue_unit_type<degree_t>("wrap/negative");
-  // if (target.pos_ > wrap_positive) {
-  //   double n = std::floor((target.pos_ - wrap_positive).value() / 360.0);
-  //   target.pos_ -= degree_t{360.0 * n};
-  // }
-  // if (target.pos_ < wrap_negative) {
-  //   double n = std::floor((wrap_negative - target.pos_).value() / 360.0);
-  //   target.pos_ += degree_t{360.0 * n};
-  // }
-
-  // while (target.pos_ > wrap_positive) { TODO add this one back
-  //   target.pos_ -= 360_deg_;
-  // }
-  // while (target.pos_ < wrap_negative) {
-  //   target.pos_ += 360_deg_;
-  // }
 
   Graph("target/pos", target.pos_);
   Graph("target/vel", target.vel_);
@@ -278,7 +266,7 @@ void TurretSubsystem::WriteToHardware(TurretTarget target) {
   }
 
   double output = icnor_controller_->getOutput(target_pos_native,
-      target_vel_native, current_pos_native, current_vel_native);
+      target_vel_native * GetPreferenceValue_double("fakevel_comp"), current_pos_native, current_vel_native);
 
   output *= GetPreferenceValue_double("icnor/IPG");
 

@@ -143,7 +143,6 @@ ATCalculatorOutput AprilTagCalculator::calculate(ATCalculatorInput input) {
                   cam_table->GetEntry("tl").GetLastChange() / 1000000.0};
     pdcsu::units::second_t tl =
         pdcsu::units::second_t(cam_table->GetNumber("tl", -1));
-    if (delay > 3.5 * funkit::robot::GenericRobot::kPeriod) { continue; }
 
     std::vector<double> tx_nums = cam_table->GetNumberArray("tx", {});
     std::vector<double> distances_num =
@@ -161,7 +160,8 @@ ATCalculatorOutput AprilTagCalculator::calculate(ATCalculatorInput input) {
     if (input.fudge_latency.contains(config.camera_id)) {
       fudge = input.fudge_latency.at(config.camera_id);
     }
-    pdcsu::units::second_t effective_latency = tl + fudge;
+    pdcsu::units::second_t effective_latency = tl + fudge + delay;
+    if (effective_latency > 200_ms_) { continue; }
     pdcsu::units::second_t capture_time = now - effective_latency;
 
     std::vector<double> tags = cam_table->GetNumberArray("tags", {});
@@ -238,6 +238,11 @@ ATCalculatorOutput AprilTagCalculator::calculate(ATCalculatorInput input) {
 
   output.variance = 1.0 / sum_w;
   correction = output.pos - input.odom_pose.position;
+  // correction[0] = u_clamp(correction[0], -12_in_, 12_in_);
+  // correction[1] = u_clamp(correction[1], -12_in_, 12_in_);
+
+  // output.pos = input.pose.position + correction;
+  
   return output;
 }
 }

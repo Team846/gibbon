@@ -9,7 +9,7 @@ using namespace funkit::control::config;
 DyeRotorSubsystem::DyeRotorSubsystem()
     : GenericSubsystem("DyeRotor"),
       esc_{base::TALON_FX_KRAKENX60, ports::dye_rotor_::kDyeRotorParams} {
-  // Theoretical 375 RPM maximum speed
+  // Theoretical 171.43 RPM maximum speed
   RegisterPreference("speed_84bps", 300_rpm_);
   RegisterPreference("speed_slow_feed", 120_rpm_);
   RegisterPreference("speed_reverse", -200_rpm_);
@@ -47,7 +47,7 @@ void DyeRotorSubsystem::Setup() {
       motor_specs.stall_torque, motor_specs.free_speed, 12_V_);
 
   DefArmSys DyeRotor_plant(
-      def_bldc, 1, 16_rot_ / 1_rot_,
+      def_bldc, 1, 35_rot_ / 1_rot_,
       [&](radian_t x, radps_t v) -> nm_t { return 0.0_Nm_; },
       3_lb_ * 7_in_ * 7_in_, 4.0_Nm_, 2.0_Nm_ / 628_radps_, 10_ms_);
 

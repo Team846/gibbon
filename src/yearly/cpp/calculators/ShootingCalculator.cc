@@ -14,13 +14,15 @@ const degree_t kShotAngleMin = 50_deg_;
 const foot_t kShotMaxDist = 24_ft_;
 const foot_t kPointblankDistance = 41.925_in_;
 
+const foot_t fullEffortDistance = 235.0_in_;
+
 void ShootingCalculator::Setup() {
   if (loggable_opt.has_value()) { return; }
   loggable_opt.emplace(funkit::base::Loggable("ShootingCalculator"));
   loggable_opt->RegisterPreference("2ptvel/kPointBlank", 23_fps_);
   loggable_opt->RegisterPreference("2ptvel/kAdditive", 3.68);
   loggable_opt->RegisterPreference("swim/twistGain", 0.0);
-  loggable_opt->RegisterPreference("swim/projectGain", 0.0);
+  loggable_opt->RegisterPreference("swim/tofGain", 0.0);
   loggable_opt->RegisterPreference("swim/twistVelCompensation", 0.416);
 }
 
@@ -36,13 +38,15 @@ radps_t ShootingCalculator::GetShotAngleVel(
 
 fps_t ShootingCalculator::GetBaseVelocity(
     degree_t shot_angle, foot_t shot_distance) {
+  const auto denom = shot_distance * u_tan(shot_angle) - kDeltaHeight;
+  if (denom <= 0.02_in_) { return 0_fps_; }
   UnitCompound<fps_t, fps_t> physics_vel_sksq =
-      16.0_fps2_ * shot_distance * shot_distance /
-      (shot_distance * u_tan(shot_angle) - kDeltaHeight);
+      16.0_fps2_ * shot_distance * shot_distance / denom;
   return u_sqrt(physics_vel_sksq) / u_cos(shot_angle);
 }
 
-void ShootingCalculator::Calculate(const RobotContainer* container_) {
+void ShootingCalculator::Calculate(
+    const RobotContainer* container_, bool effort_when_invald) {
   if (!loggable_opt.has_value()) {
     throw std::runtime_error("ShootingCalculator not setup");
   }
@@ -65,102 +69,88 @@ void ShootingCalculator::Calculate(const RobotContainer* container_) {
 
   outputs_.start_traj = shooter_pos;
 
-  const auto tangential_speed =
-      robot_to_shooter.magnitude() *
-      pdcsu::units::radps_t{drivetrain_readings.yaw_rate} / 1_rad_;
   const Vel2D vel_at_shooter =
-      drivetrain_readings.estimated_pose.velocity +
-      Vel2D{tangential_speed, robot_to_shooter.angle(true) + 90_deg_,
-          true};  // TODO: verify signs
+      drivetrain_readings.estimated_pose
+          .velocity;  // Robot-to-shooter is small enough, that term may be
+                      // considered zero
 
-  const Vector2D delta = target - shooter_pos;
-  const foot_t delta_mag = delta.magnitude();
+  const Vector2D odelta = target - shooter_pos;
+  Vector2D delta = odelta;
 
-  /*
-  Find velocity towards the target and perpendicular to it (CCW is positive).
-  */
-  fps_t vel_perp =
-      delta.rotate(90_deg_).dot(vel_at_shooter) / delta.magnitude();
-  fps_t vel_in_dir =
-      u_sqrt(vel_at_shooter.magnitude() * vel_at_shooter.magnitude() -
-             vel_perp * vel_perp);
+  if (odelta.magnitude() < 0.03_in_) { return; }
 
-  inch_t D_f_O = u_clamp(inch_t{delta_mag} - kPointblankDistance,
-      kPointblankDistance, kShotMaxDist);
+  fps_t vel_in_dir = odelta.dot(vel_at_shooter) / odelta.magnitude();
+  fps_t vel_perp = odelta.rotate(90_deg_, true).dot(vel_at_shooter) / odelta.magnitude();
+  foot_t delta_mag = odelta.magnitude();
 
-  if (delta_mag < kPointblankDistance) { return; }
+  second_t tof = odelta.magnitude() / 100_in_ *
+                 0.375_s_;  // Initial guess (likely lower than actual)
+                            //   degree_t shot_angle = 75_deg_;
 
-  loggable.Graph("D_f_O", D_f_O);
-  loggable.Graph("shot_distance_ratio", (D_f_O / kShotMaxDist).value());
+  // Recursive iteration to find TOF
+  for (int i = 0; i < 7; i++) {
+    auto delta2 =
+        odelta - Vector2D{vel_at_shooter[0] * tof, vel_at_shooter[1] * tof};
+    auto delta_mag2 = delta2.magnitude();
+
+    if (delta_mag2 < kPointblankDistance) {
+      return;
+    }  // Works when approaching TOF from below
+
+    /*
+    2pt interpolation to get target shooting velocity.
+    */
+
+    auto shot_angle = GetShotAngle(delta_mag - kPointblankDistance);
+    auto shot_vel = GetBaseVelocity(shot_angle, delta_mag);
+
+    tof = delta_mag / (shot_vel * u_cos(shot_angle));
+  }
+
+  delta = target - shooter_pos -
+          Vector2D{vel_at_shooter[0] * tof *
+                       loggable.GetPreferenceValue_double("swim/tofGain"),
+              vel_at_shooter[1] * tof *
+                  loggable.GetPreferenceValue_double("swim/tofGain")}; /*loggable.GetPreferenceValue_double("swim/tofGain")
+* delta
++ (1.0 - loggable.GetPreferenceValue_double("swim/tofGain")) * odelta;*/
+  delta_mag = delta.magnitude();
+
+  /* Apply shooter and hood targets */
+  outputs_.shot_angle = GetShotAngle(delta_mag - kPointblankDistance);
   outputs_.shot_angle_vel = GetShotAngleVel(delta_mag, vel_in_dir);
-
-  /*
-  2pt interpolation to get target shooting velocity.
-  */
-
-  const second_t projectMultFac =
-      loggable.GetPreferenceValue_double("swim/projectGain") * 1.0_s_ *
-      1.0_ft_ / delta_mag;
-
-  const Vector2D projectFwd =
-      shooter_pos + Vector2D{vel_at_shooter[0] * projectMultFac,
-                        vel_at_shooter[1] * projectMultFac};
-
-  const foot_t fwdErrorMag = (target - projectFwd).magnitude();
-
-  outputs_.shot_angle = GetShotAngle(fwdErrorMag - kPointblankDistance);
   auto shot_ptbvel = GetBaseVelocity(outputs_.shot_angle, kPointblankDistance);
 
   loggable.Graph("shot_angle", outputs_.shot_angle);
-  auto shot_vel = GetBaseVelocity(outputs_.shot_angle, fwdErrorMag);
+  loggable.Graph("vel_perp", vel_perp);
+  auto shot_vel = GetBaseVelocity(outputs_.shot_angle, delta_mag);
 
-  fps_t target_vel =
+  outputs_.shooter_vel =
       loggable.GetPreferenceValue_unit_type<fps_t>("2ptvel/kPointBlank") +
       loggable.GetPreferenceValue_double("2ptvel/kAdditive") *
           (shot_vel - shot_ptbvel);
 
-  outputs_.shooter_vel = target_vel;
-
-  /*
-  Calculate turret angles
-  */
-
-  degree_t aim_angle = delta.angle(true);
-
-  const double robot_proj_vel_ratio =
-      vel_perp.value() / outputs_.shooter_vel.value();
-  const degree_t twist = u_asin(
-      std::clamp(robot_proj_vel_ratio *
-                     loggable.GetPreferenceValue_double("swim/twistGain"),
-          -1.0, 1.0));
-
-  loggable.Graph("swim/twist", twist);
-
-  aim_angle += twist;
-
-    outputs_.shooter_vel =
-        outputs_.shooter_vel * 1.0 /
-        u_cos(u_min(u_abs(twist * loggable.GetPreferenceValue_double(
-                                      "swim/twistVelCompensation")),
-            3.14159265358979323846_rad_ / 2.0));
-
-  outputs_.aim_angle = aim_angle;
+  /* Calculate and apply turret targets */
+  outputs_.aim_angle = odelta.angle(true) + u_asin(std::clamp(loggable.GetPreferenceValue_double("swim/twistGain") * (vel_perp / outputs_.shooter_vel).value(), -1.0, 1.0));
 
   auto cross_product =
       delta[0] * vel_at_shooter[1] - delta[1] * vel_at_shooter[0];
   auto distance_squared = delta_mag * delta_mag;
 
-  outputs_.vel_aim_compensation =
-      u_clamp(1_rad_ * (cross_product / distance_squared), -300_degps_,
-          300_degps_);  // TODO: use max omega
+  outputs_.vel_aim_compensation = u_clamp(
+      1_rad_ * (cross_product / distance_squared), -300_degps_, 300_degps_);
 
-  Vector2D proj_vel =
-      projectFwd +
-      Vector2D{1_in_, aim_angle + drivetrain_readings.pose.bearing, true}
-          .resize(u_abs(vel_perp) * projectMultFac / 1_ft_ * 1_in_);
-  foot_t d = (target - proj_vel).magnitude();
-  loggable_opt->Graph("distance_vel", d);
-  outputs_.is_valid = d >= kPointblankDistance && d <= 235.0_in_;
+  /* Determine shot validity and whether to apply full effort */
+  outputs_.is_valid =
+      delta_mag >= kPointblankDistance && delta_mag <= fullEffortDistance;
+
+  if (delta_mag > fullEffortDistance) {
+    if (effort_when_invald) {
+      outputs_.shooter_vel = 50_fps_;
+    } else {
+      outputs_.shooter_vel = 0_fps_;
+    }
+  }
 
   outputs_.term_traj = SimulateTrajectory(container_) + outputs_.start_traj;
 }

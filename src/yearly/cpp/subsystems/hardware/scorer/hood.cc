@@ -91,7 +91,7 @@ HoodTarget HoodSubsystem::ZeroTarget() const {
 
 const degree_t hood_absolute_min = 40_deg_;
 const degree_t hood_absolute_max = 90_deg_;
-const degree_t hood_soft_min = 47_deg_;
+const degree_t hood_soft_min = 52_deg_;
 const degree_t hood_soft_max = 77_deg_;
 
 namespace {
@@ -174,6 +174,11 @@ HoodReadings HoodSubsystem::ReadFromHardware() {
 void HoodSubsystem::WriteToHardware(HoodTarget target) {
   auto genome = SubsystemGenomeHelper::LoadGenomePreferences(*this, "genome");
   esc_.ModifyGenome(genome);
+
+  if (!std::isfinite(target.pos_.value())) {
+    esc_.WriteDC(0.0);
+    return;
+  }
 
   target.pos_ = u_clamp(target.pos_, hood_soft_min, hood_soft_max);
 

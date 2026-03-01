@@ -72,7 +72,8 @@ void IntakeSubsystem::WriteToHardware(IntakeTarget target) {
 
   if (target.target_state == IntakeState::kIntake) {
     trgt_vel_ =
-        GetPreferenceValue_unit_type<fps_t>("speed_intake") + target.dt_vel_ * GetPreferenceValue_double("dynamic_intake_gain");
+        GetPreferenceValue_unit_type<fps_t>("speed_intake") +
+        target.dt_vel_ * GetPreferenceValue_double("dynamic_intake_gain");
   } else if (target.target_state == IntakeState::kEvac) {
     trgt_vel_ = GetPreferenceValue_unit_type<fps_t>("speed_evac");
   } else {
