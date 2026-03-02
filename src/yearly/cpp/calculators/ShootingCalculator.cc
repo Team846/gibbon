@@ -148,7 +148,7 @@ void ShootingCalculator::Calculate(
     if (effort_when_invald) {
       outputs_.shooter_vel = 50_fps_;
     } else {
-      outputs_.shooter_vel = 0_fps_;
+      outputs_.shooter_vel = 20_fps_;
     }
   }
 

@@ -1826,7 +1826,7 @@
   {
     "name": "/Preferences/turret/fakevel_comp",
     "type": "double",
-    "value": 1.69,
+    "value": 1.4,
     "properties": {
       "persistent": true
     }

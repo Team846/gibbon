@@ -207,12 +207,11 @@ void ScorerSuperstructure::WriteToHardware(ScorerSSTarget target) {
     } else {
       dye_rotor_trgt = {DyeRotorState::kRotor84bps};
     }
-
-  } else if (target.reverse_rotor) {
-    dye_rotor_trgt = {DyeRotorState::kRotorReverse};
   } else {
     dye_rotor_trgt = {DyeRotorState::kRotorIdle};
   }
+
+  if (target.reverse_rotor) { dye_rotor_trgt = {DyeRotorState::kRotorReverse}; }
 
   hood.SetTarget(hood_trgt);
   turret.SetTarget(turret_trgt);

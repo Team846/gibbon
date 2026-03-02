@@ -86,7 +86,8 @@ UserSettableValues GetUserSettableValues() {
           .BR = {ports::drivetrain_::kBRCANCoder_CANID,
               ports::drivetrain_::kBRDrive_CANID,
               ports::drivetrain_::kBRSteer_CANID}},
-      .april_camera_configs = {},
+      .april_camera_configs = {{1U, 13_in_ - 6.75_in_, -14_in_ + .375_in_},
+          {2U, 13_in_ - .375_in_, -14_in_ + 2.125_in_}},
       .turret_camera_config =
           std::make_optional<funkit::robot::calculators::TurretTagCameraConfig>(
               {4U, 0.0_in_, 0.9375_in_, 0.0_in_, -5.85_in_}),

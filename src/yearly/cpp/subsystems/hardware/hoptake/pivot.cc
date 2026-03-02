@@ -67,7 +67,7 @@ PivotReadings PivotSubsystem::ReadFromHardware() {
   degree_t error = trgt_pos_ - current_pos;
   Graph("error", error);
 
-  Graph("current", esc_.GetCurrent());
+  // Graph("current", esc_.GetCurrent());
 
   return PivotReadings{current_pos};
 }

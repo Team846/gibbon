@@ -71,6 +71,8 @@ frc2::InstantCommand AutoScorerCommand(
               shooting_outputs.aim_angle - drivetrain_readings.pose.bearing,
               shooting_outputs.vel_aim_compensation -
                   drivetrain_readings.yaw_rate};
+          scorer_target.hood_target = {
+              shooting_outputs.shot_angle, shooting_outputs.shot_angle_vel};
           scorer_target.shoot = enable_shooting && shooting_outputs.is_valid;
           scorer_target.tracking_state = TrackingState::kTrack;
 

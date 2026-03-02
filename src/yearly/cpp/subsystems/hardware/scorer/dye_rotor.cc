@@ -86,6 +86,24 @@ void DyeRotorSubsystem::WriteToHardware(DyeRotorTarget target) {
 
   esc_.ModifyGenome(genome);
 
+  radps_t trgt_vel_ = getTargetRotorSpeed(current_state);
+
+  if (target.target_state == DyeRotorState::kRotor84bps) {
+    if (u_abs(esc_.GetVelocity<radps_t>()) < 20_rpm_) {
+      stall_ctr_++;
+    } else {
+      stall_ctr_ = 0;
+    }
+    if (reset_ctr_ > 10 && reset_ctr_ <= 20) {
+      trgt_vel_ = GetPreferenceValue_unit_type<radps_t>("speed_reverse");
+    } else if (reset_ctr_ > 0) {
+      // Let it spin up again - continue
+    } else {
+      if (stall_ctr_ > 25) { reset_ctr_ = 20; }
+    }
+    if (reset_ctr_ > 0) reset_ctr_--;
+  }
+
   current_state = target.target_state;
-  esc_.WriteVelocity(getTargetRotorSpeed(current_state));
+  esc_.WriteVelocity(trgt_vel_);
 }

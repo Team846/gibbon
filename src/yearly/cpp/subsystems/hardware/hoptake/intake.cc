@@ -74,6 +74,20 @@ void IntakeSubsystem::WriteToHardware(IntakeTarget target) {
     trgt_vel_ =
         GetPreferenceValue_unit_type<fps_t>("speed_intake") +
         target.dt_vel_ * GetPreferenceValue_double("dynamic_intake_gain");
+    if (u_abs(esc_.GetVelocity<mps_t>()) < 10_fps_) {
+      stall_ctr_++;
+    } else {
+      stall_ctr_ = 0;
+    }
+    if (reset_ctr_ > 10 && reset_ctr_ <= 20) {
+      trgt_vel_ = GetPreferenceValue_unit_type<fps_t>("speed_evac");
+    } else if (reset_ctr_ > 0) {
+      // Let it spin up again - continue
+    } else {
+      if (stall_ctr_ > 25) { reset_ctr_ = 20; }
+    }
+
+    if (reset_ctr_ > 0) reset_ctr_--;
   } else if (target.target_state == IntakeState::kEvac) {
     trgt_vel_ = GetPreferenceValue_unit_type<fps_t>("speed_evac");
   } else {

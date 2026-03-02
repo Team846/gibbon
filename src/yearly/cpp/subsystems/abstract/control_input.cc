@@ -87,22 +87,22 @@ ControlInputReadings ControlInputSubsystem::UpdateWithInput() {
   ci_readings_.force_shoot = op_readings.left_bumper;
   ci_readings_.agitate = op_readings.lsb;
 
-  ci_readings_.hood_trim_cw = op_readings.pov == funkit::robot::XboxPOV::kUp;
-  ci_readings_.hood_trim_ccw = op_readings.pov == funkit::robot::XboxPOV::kDown;
+  // ci_readings_.hood_trim_cw = op_readings.pov == funkit::robot::XboxPOV::kUp;
+  // ci_readings_.hood_trim_ccw = op_readings.pov == funkit::robot::XboxPOV::kDown;
 
-  ci_readings_.turret_trim_cw =
-      op_readings.pov == funkit::robot::XboxPOV::kLeft;
-  ci_readings_.turret_trim_ccw =
-      op_readings.pov == funkit::robot::XboxPOV::kRight;
+  // ci_readings_.turret_trim_cw =
+  //     op_readings.pov == funkit::robot::XboxPOV::kLeft;
+  // ci_readings_.turret_trim_ccw =
+  //     op_readings.pov == funkit::robot::XboxPOV::kRight;
 
   ci_readings_.pass_mode = dr_readings.right_bumper;
   ci_readings_.descend_l1 = op_readings.right_bumper;
   ci_readings_.override_force_assist = op_readings.y_button;
   ci_readings_.evac_storage = op_readings.a_button;
-  ci_readings_.rev_dye_rotor = op_readings.left_stick_x < -0.5;
+  ci_readings_.rev_dye_rotor = op_readings.left_stick_y < -0.5;
   ci_readings_.home = op_readings.back_button;
 
-  ci_readings_.turret_no_spin = op_keyboard_readings.one_button;
+  // ci_readings_.turret_no_spin = op_keyboard_readings.one_button;
 
   previous_driver_ = dr_readings;
   previous_operator_ = op_readings;

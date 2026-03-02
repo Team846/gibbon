@@ -938,7 +938,7 @@
   {
     "name": "/Preferences/ShootingCalculator/swim/twistGain",
     "type": "double",
-    "value": -0.07,
+    "value": -0.05,
     "properties": {
       "persistent": true
     }
@@ -1818,7 +1818,7 @@
   {
     "name": "/Preferences/ShootingCalculator/swim/tofGain",
     "type": "double",
-    "value": 0.0216,
+    "value": 0.0245,
     "properties": {
       "persistent": true
     }
@@ -1826,7 +1826,7 @@
   {
     "name": "/Preferences/turret/fakevel_comp",
     "type": "double",
-    "value": 1.69,
+    "value": 1.4,
     "properties": {
       "persistent": true
     }

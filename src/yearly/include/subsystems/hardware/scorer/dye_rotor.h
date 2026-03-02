@@ -46,4 +46,7 @@ private:
   funkit::control::HigherMotorController esc_;
 
   DyeRotorState current_state;
+
+  int reset_ctr_ = 0;
+  int stall_ctr_ = 0;
 };

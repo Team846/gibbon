@@ -37,13 +37,9 @@ using FPT = funkit::math::FieldPoint;
 #define MAX_DECEL_CS2_BUMP 35_fps2_
 #define MAX_VEL_CS2_BUMP 15_fps_
 
-#define MAX_ACCEL_LEAVE 10_fps2_
-#define MAX_DECEL_LEAVE 10_fps2_
-#define MAX_VEL_LEAVE 5_fps_
-
-#define MAX_ACCEL_SIMTEST 30_fps2_
-#define MAX_DECEL_SIMTEST 30_fps2_
-#define MAX_VEL_SIMTEST 15_fps_
+#define MAX_ACCEL_CS2_SWIM 10_fps2_
+#define MAX_DECEL_CS2_SWIM 10_fps2_
+#define MAX_VEL_CS2_SWIM 8.5_fps_
 
 #define START_Y (298.5_in_ - 16.5_in_)
 
@@ -114,18 +110,20 @@ using FPT = funkit::math::FieldPoint;
 #define END_BUMPC23_PT MKPT(102_in_, 223.61_in_, 35_deg_, 0_fps_)
 #define START_BUMPC23_PT MKPT(102_in_, 110.61_in_, 35_deg_, 0_fps_)
 
-#define P1C1_INTAKE_PT MKPT(76.5_in_, 287.35_in_, 0_deg_, 11_fps_)
-#define P2C1_INTAKE_PT MKPT(87.25_in_, 312.6_in_, 7_deg_, 7_fps_)
-#define P3C1_INTAKE_PT MKPT(93.75_in_, 324.2_in_, 15_deg_, 0_fps_)
+#define P1C1_INTAKE_PT MKPT(90.5_in_, 287.35_in_, 15_deg_, 11_fps_)
+#define P2C1_INTAKE_PT MKPT(103.25_in_, 312.6_in_, 20_deg_, 7_fps_)
+#define P3C1_INTAKE_PT MKPT(113.75_in_, 324.2_in_, 35_deg_, 0_fps_)
 
-#define P1C2_INTAKE_PT MKPT(121.1_in_, 260.5_in_, 0_deg_, 11_fps_)
-#define P2C2_INTAKE_PT MKPT(129.35_in_, 300.42_in_, 7_deg_, 7_fps_)
-#define P3C2_INTAKE_PT MKPT(134.85_in_, 324.35_in_, 15_deg_, 0_fps_)
+#define P1C2_INTAKE_PT MKPT(135.1_in_, 260.5_in_, 15_deg_, 11_fps_)
+#define P2C2_INTAKE_PT MKPT(145.35_in_, 300.42_in_, 20_deg_, 7_fps_)
+#define P3C2_INTAKE_PT MKPT(160.85_in_, 324.35_in_, 35_deg_, 0_fps_)
 
 #define P1C3_INTAKE_PT MKPT(111.1_in_, 254.5_in_, 20_deg_, 11_fps_)
 #define P2C3_INTAKE_PT MKPT(118.35_in_, 280.42_in_, 40_deg_, 11_fps_)
 #define P3C3_INTAKE_PT MKPT(124.85_in_, 290.65_in_, 60_deg_, 7_fps_)
 #define P4C3_INTAKE_PT MKPT(146.85_in_, 295.35_in_, 90_deg_, 0_fps_)
+
+#define DEPOT MKPT(87_in_, 28_in_, 180_deg_, 0_fps_)
 
 #define __AUTO__(codeName, stringName)                                 \
   codeName::codeName(                                                  \
@@ -150,35 +148,22 @@ END DEFINE MACROS
 
 __AUTO__(CS2Auto, "CS2")
 SEQUENCE {
-  START2(92.5_in_, 144.54_in_, 0_deg_), PASS(),
+  START2(92.5_in_, 144.54_in_, 0_deg_),
       DRIVE_PT_BEARING(CS2, END_BUMPC1_PT, BUMP), TRACK(),
       INTAKE(HoptakeState::kIntake), DRIVE_PT(CS2, P1C1_INTAKE_PT, NORM),
       DRIVE_PT(CS2, P2C1_INTAKE_PT, NORM), TRACK(),
       DRIVE_PT(CS2, P3C1_INTAKE_PT, NORM), TRACK(),
       DRIVE_PT(CS2, P2C1_INTAKE_PT, NORM), DRIVE_PT(CS2, P1C1_INTAKE_PT, NORM),
-      // driveuntilfull
-      INTAKE(HoptakeState::kBump), DRIVE_PT_BEARING(CS2, END_BUMPC1_PT, NORM),
-      TRACK(), DRIVE_PT_BEARING(CS2, START_BUMPC1_PT, BUMP),
-      PARALLEL_DEADLINE(WAIT{2.5_s}, SHOOT()),
+      INTAKE(HoptakeState::kBump), DRIVE_PT(CS2, END_BUMPC1_PT, NORM),
+      TRACK(), DRIVE_PT(CS2, START_BUMPC1_PT, BUMP),
+      PARALLEL_DEADLINE(WAIT{2.2_s}, SHOOT()), TRACK(),
       DRIVE_PT(CS2, END_BUMPC1_PT, NORM), INTAKE(HoptakeState::kIntake),
       DRIVE_PT(CS2, P1C2_INTAKE_PT, NORM), DRIVE_PT(CS2, P2C2_INTAKE_PT, NORM),
       TRACK(), DRIVE_PT(CS2, P3C2_INTAKE_PT, NORM),
       DRIVE_PT(CS2, P2C2_INTAKE_PT, NORM), DRIVE_PT(CS2, P1C2_INTAKE_PT, NORM),
-      // driveuntilfull
-      INTAKE(HoptakeState::kBump), DRIVE_PT_BEARING(CS2, END_BUMPC23_PT, NORM),
-      DRIVE_PT_BEARING(CS2, START_BUMPC23_PT, BUMP),
-      PARALLEL_DEADLINE(WAIT{2.5_s}, SHOOT()),
-      DRIVE_PT(CS2, END_BUMPC23_PT, BUMP), INTAKE(HoptakeState::kIntake),
-      DRIVE_PT(CS2, P1C3_INTAKE_PT, NORM), TRACK(),
-      DRIVE_PT(CS2, P2C3_INTAKE_PT, NORM), DRIVE_PT(CS2, P3C3_INTAKE_PT, NORM),
-      DRIVE_PT(CS2, P4C3_INTAKE_PT, NORM), DRIVE_PT(CS2, P3C3_INTAKE_PT, NORM),
-      DRIVE_PT(CS2, P2C3_INTAKE_PT, NORM), DRIVE_PT(CS2, P1C3_INTAKE_PT, NORM),
-      // driveuntilfull
-      INTAKE(HoptakeState::kBump), DRIVE_PT_BEARING(CS2, END_BUMPC23_PT, NORM),
-      DRIVE_PT_BEARING(CS2, START_BUMPC23_PT, BUMP),
-      PARALLEL_DEADLINE(WAIT{3.0_s}, SHOOT()),
-      DRIVE_PT_BEARING(CS2, END_BUMPC23_PT, BUMP),
-      INTAKE(HoptakeState::kIntake),
+      INTAKE(HoptakeState::kBump), DRIVE_PT(CS2, END_BUMPC23_PT, NORM),
+      DRIVE_PT(CS2, START_BUMPC23_PT, BUMP), INTAKE(HoptakeState::kIntake),
+      frc2::ParallelDeadlineGroup(frc2::SequentialCommandGroup{DRIVE_PT_BEARING(CS2, DEPOT, SWIM), WAIT{5_s}}, SHOOT()),
 }
 }
 {}
