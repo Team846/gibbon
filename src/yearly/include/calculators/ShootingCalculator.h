@@ -1,6 +1,7 @@
 #pragma once
 
 #include "funkit/base/Loggable.h"
+#include "funkit/math/fieldpoints.h"
 #include "pdcsu_units.h"
 #include "subsystems/robot_container.h"
 
@@ -16,6 +17,14 @@ struct ShootingCalculatorOutputs {
   bool is_valid;
 };
 
+struct ShootingCalculatorInput {
+  funkit::math::Vector2D position;
+  pdcsu::util::math::uVec<pdcsu::units::fps_t, 2> velocity;
+  pdcsu::units::degree_t bearing;
+  pdcsu::units::degps_t yaw_rate;
+  bool is_blue_alliance;
+};
+
 class ShootingCalculator {
 public:
   static void Setup();
@@ -23,6 +32,9 @@ public:
   static void Calculate(const RobotContainer* container_);
 
   static ShootingCalculatorOutputs GetOutputs() { return outputs_; };
+
+  static ShootingCalculatorOutputs CalculateFromInput(
+      const ShootingCalculatorInput& in);
 
 private:
   static ShootingCalculatorOutputs outputs_;

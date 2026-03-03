@@ -132,6 +132,28 @@ model {
             wpi.cpp.deps.wpilib(it)
         }
     }
+
+    testSuites {
+        frcUserProgramTest(GoogleTestTestSuiteSpec) {
+            testing $.components.frcUserProgram
+
+            println "Configuring frcUserProgramTest..."
+            sources.cpp {
+                source {
+                    srcDir 'src/test/cpp'
+                    include '**/*.cpp', '**/*.cc'
+                }
+            }
+            binaries.all {
+                cppCompiler.args << '-DNOMINMAX'
+                println "Applied compiler argument NOMINMAX to allow for compilation on Windows platform."
+            }
+            wpi.cpp.enableExternalTasks(it)
+            wpi.cpp.vendor.cpp(it)
+            wpi.cpp.deps.wpilib(it)
+            wpi.cpp.deps.googleTest(it)
+        }
+    }
 }
 
 task backupNetworkTables(type: Exec) {
@@ -156,27 +178,6 @@ tasks.matching { it.name.startsWith('deploy') }.all {
 }
 
 
-    // testSuites {
-    //     frcUserProgramTest(GoogleTestTestSuiteSpec) {
-    //         testing $.components.frcUserProgram
-
-    //         println "Configuring frcUserProgramTest..."
-    //         sources.cpp {
-    //             source {
-    //                 srcDir 'src/test/cpp'
-    //                 include '**/*.cpp'
-    //             }
-    //         }
-    //         binaries.all {
-    //             cppCompiler.args << '-DNOMINMAX'
-    //             println "Applied compiler argument NOMINMAX to allow for compilation on Windows platform."
-    //         }
-    //         wpi.cpp.enableExternalTasks(it)
-    //         wpi.cpp.vendor.cpp(it)
-    //         wpi.cpp.deps.wpilib(it)
-    //         wpi.cpp.deps.googleTest(it)
-    //     }
-    // }
 
 spotless {
     cpp {
@@ -184,7 +185,7 @@ spotless {
             include '**/*.cpp', '**/*.cc', '**/*.h', '**/*.hpp'
             exclude '**/build/**', '**/build-*/**', '**/pdcsu*/**'
         }
-        def selectedClangVersion = project.hasProperty('fromCI') ? '18.1.8' : '18.1.8'
+        def selectedClangVersion = project.hasProperty('fromCI') ? '19.1.1' : '19.1.1'
 
         def styleFile = file('.clang-format')
         def styleConfig = styleFile.text.trim()
