@@ -1298,7 +1298,7 @@
   {
     "name": "/Preferences/scorer_ss/point_blank/hood_angle (deg)",
     "type": "double",
-    "value": 65.0,
+    "value": 85.0,
     "properties": {
       "persistent": true
     }
@@ -1306,7 +1306,7 @@
   {
     "name": "/Preferences/scorer_ss/point_blank/shooter_vel (ft s^-1)",
     "type": "double",
-    "value": 32.5,
+    "value": 26.0,
     "properties": {
       "persistent": true
     }

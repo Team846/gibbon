@@ -82,7 +82,7 @@ void DriveToPointCommand::Execute() {
       vel_dir_target_val + (vel_dir_target_val - vel_mag) * kA;
 
   vel_dir_target_controlled_val =
-      std::min(15.0, std::max(-15.0, vel_dir_target_controlled_val));
+      std::min(17.4, std::max(-17.4, vel_dir_target_controlled_val));
 
   pdcsu::util::math::uVec<pdcsu::units::fps_t, 2> vel_target{
       pdcsu::units::fps_t{vel_lat_target_val},

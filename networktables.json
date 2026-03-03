@@ -362,7 +362,7 @@
   {
     "name": "/Preferences/SwerveDrivetrain/drive_to_point/kC",
     "type": "double",
-    "value": 0.5,
+    "value": 0.9,
     "properties": {
       "persistent": true
     }

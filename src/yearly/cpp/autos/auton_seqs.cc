@@ -1,5 +1,6 @@
 #include "autos/auton_seqs.h"
 
+#include <frc2/command/ConditionalCommand.h>
 #include <frc2/command/ParallelDeadlineGroup.h>
 #include <frc2/command/ParallelRaceGroup.h>
 #include <frc2/command/WaitCommand.h>
@@ -104,24 +105,19 @@ using FPT = funkit::math::FieldPoint;
 
 #define PASS() AutoScorerCommand(container, false, true)
 
-#define END_BUMPC1_PT MKPT(90_in_, 223.61_in_, 35_deg_, 0_fps_)
-#define START_BUMPC1_PT MKPT(90_in_, 110.61_in_, 35_deg_, 0_fps_)
+#define END_BUMPC1_PT MKPT(94_in_, 223.61_in_, 35_deg_, 8_fps_)
+#define START_BUMPC1_PT MKPT(94_in_, 110.61_in_, 35_deg_, 8_fps_)
 // 8_fps
-#define END_BUMPC23_PT MKPT(102_in_, 223.61_in_, 35_deg_, 0_fps_)
-#define START_BUMPC23_PT MKPT(102_in_, 110.61_in_, 35_deg_, 0_fps_)
+#define END_BUMPC23_PT MKPT(107_in_, 223.61_in_, 35_deg_, 8_fps_)
+#define START_BUMPC23_PT MKPT(107_in_, 110.61_in_, 35_deg_, 8_fps_)
 
 #define P1C1_INTAKE_PT MKPT(90.5_in_, 287.35_in_, 15_deg_, 11_fps_)
 #define P2C1_INTAKE_PT MKPT(103.25_in_, 312.6_in_, 20_deg_, 7_fps_)
 #define P3C1_INTAKE_PT MKPT(113.75_in_, 324.2_in_, 35_deg_, 0_fps_)
 
-#define P1C2_INTAKE_PT MKPT(135.1_in_, 260.5_in_, 15_deg_, 11_fps_)
-#define P2C2_INTAKE_PT MKPT(145.35_in_, 300.42_in_, 20_deg_, 7_fps_)
-#define P3C2_INTAKE_PT MKPT(160.85_in_, 324.35_in_, 35_deg_, 0_fps_)
-
-#define P1C3_INTAKE_PT MKPT(111.1_in_, 254.5_in_, 20_deg_, 11_fps_)
-#define P2C3_INTAKE_PT MKPT(118.35_in_, 280.42_in_, 40_deg_, 11_fps_)
-#define P3C3_INTAKE_PT MKPT(124.85_in_, 290.65_in_, 60_deg_, 7_fps_)
-#define P4C3_INTAKE_PT MKPT(146.85_in_, 295.35_in_, 90_deg_, 0_fps_)
+#define P1C2_INTAKE_PT MKPT(135.1_in_, 280.5_in_, 15_deg_, 11_fps_)
+#define P2C2_INTAKE_PT MKPT(155.35_in_, 305.42_in_, 30_deg_, 7_fps_)
+#define P3C2_INTAKE_PT MKPT(170.85_in_, 324.35_in_, 45_deg_, 0_fps_)
 
 #define DEPOT MKPT(87_in_, 28_in_, 180_deg_, 0_fps_)
 
@@ -148,22 +144,27 @@ END DEFINE MACROS
 
 __AUTO__(CS2Auto, "CS2")
 SEQUENCE {
-  START2(92.5_in_, 144.54_in_, 0_deg_),
-      DRIVE_PT_BEARING(CS2, END_BUMPC1_PT, BUMP), TRACK(),
-      INTAKE(HoptakeState::kIntake), DRIVE_PT(CS2, P1C1_INTAKE_PT, NORM),
-      DRIVE_PT(CS2, P2C1_INTAKE_PT, NORM), TRACK(),
-      DRIVE_PT(CS2, P3C1_INTAKE_PT, NORM), TRACK(),
-      DRIVE_PT(CS2, P2C1_INTAKE_PT, NORM), DRIVE_PT(CS2, P1C1_INTAKE_PT, NORM),
-      INTAKE(HoptakeState::kBump), DRIVE_PT(CS2, END_BUMPC1_PT, NORM),
-      TRACK(), DRIVE_PT(CS2, START_BUMPC1_PT, BUMP),
+  START2(92.5_in_, 144.54_in_, 0_deg_), DRIVE_PT(CS2, END_BUMPC1_PT, BUMP),
+      TRACK(), INTAKE(HoptakeState::kIntake),
+      DRIVE_PT(CS2, P1C1_INTAKE_PT, NORM), DRIVE_PT(CS2, P2C1_INTAKE_PT, NORM),
+      TRACK(), DRIVE_PT(CS2, P3C1_INTAKE_PT, NORM), TRACK(),
+      DRIVE_PT(CS2, P1C1_INTAKE_PT, NORM), INTAKE(HoptakeState::kBump),
+      DRIVE_PT(CS2, END_BUMPC1_PT, NORM), TRACK(),
+      DRIVE_PT(CS2, START_BUMPC1_PT, BUMP),
       PARALLEL_DEADLINE(WAIT{2.2_s}, SHOOT()), TRACK(),
       DRIVE_PT(CS2, END_BUMPC1_PT, NORM), INTAKE(HoptakeState::kIntake),
       DRIVE_PT(CS2, P1C2_INTAKE_PT, NORM), DRIVE_PT(CS2, P2C2_INTAKE_PT, NORM),
       TRACK(), DRIVE_PT(CS2, P3C2_INTAKE_PT, NORM),
-      DRIVE_PT(CS2, P2C2_INTAKE_PT, NORM), DRIVE_PT(CS2, P1C2_INTAKE_PT, NORM),
-      INTAKE(HoptakeState::kBump), DRIVE_PT(CS2, END_BUMPC23_PT, NORM),
+      DRIVE_PT(CS2, P1C2_INTAKE_PT, NORM), INTAKE(HoptakeState::kBump),
+      DRIVE_PT(CS2, END_BUMPC23_PT, NORM),
       DRIVE_PT(CS2, START_BUMPC23_PT, BUMP), INTAKE(HoptakeState::kIntake),
-      frc2::ParallelDeadlineGroup(frc2::SequentialCommandGroup{DRIVE_PT_BEARING(CS2, DEPOT, SWIM), WAIT{5_s}}, SHOOT()),
+      frc2::ConditionalCommand(
+          frc2::ParallelDeadlineGroup(
+              frc2::SequentialCommandGroup{
+                  DRIVE_PT_BEARING(CS2, DEPOT, SWIM), WAIT{5_s}},
+              SHOOT()),
+          frc2::ParallelDeadlineGroup(WAIT{10_s}, SHOOT()),
+          [left = is_left_side]() { return left; })
 }
 }
 {}
