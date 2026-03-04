@@ -15,6 +15,14 @@
     "**/*~": true
   },
   "C_Cpp.default.configurationProvider": "vscode-wpilib",
+  "C_Cpp.default.compileCommands": "${workspaceFolder}/build/BinaryCompileCommands/compileFrcUserProgramTestOsxuniversalDebugGoogleTestExeFrcUserProgramTestCppCompileCommands/compile_commands.json",
+  "C_Cpp.default.intelliSenseMode": "macos-clang-arm64",
+  "C_Cpp.default.includePath": [
+    "${workspaceFolder}/src/yearly/include/**",
+    "${workspaceFolder}/src/funkit/include/**",
+    "${workspaceFolder}/src/pdcsu_tr15/**",
+    "${env:HOME}/.gradle/caches/8.11/transforms/**/transformed/*-headers/**"
+  ],
   "files.associations": {
     "any": "cpp",
     "array": "cpp",
@@ -129,6 +137,6 @@
   },
   "wpilib.useWindbgX": true,
   "C_Cpp.errorSquiggles": "enabled",
-  "wpilib.skipTests": true,
+  "wpilib.skipTests": false,
   "editor.suggestSelection": "recentlyUsedByPrefix"
 }
