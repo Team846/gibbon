@@ -1838,13 +1838,5 @@
     "properties": {
       "persistent": true
     }
-  },
-  {
-    "name": "/Preferences/turret/icnor/load_nm (m^2 kg s^-2)",
-    "type": "double",
-    "value": 2.5,
-    "properties": {
-      "persistent": true
-    }
   }
 ]

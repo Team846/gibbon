@@ -922,7 +922,7 @@
   {
     "name": "/Preferences/ShootingCalculator/2ptvel/kPointBlank (ft s^-1)",
     "type": "double",
-    "value": 23.7,
+    "value": 21.0,
     "properties": {
       "persistent": true
     }
@@ -930,7 +930,7 @@
   {
     "name": "/Preferences/ShootingCalculator/2ptvel/kAdditive",
     "type": "double",
-    "value": 5.06846,
+    "value": 5.8,
     "properties": {
       "persistent": true
     }
@@ -938,7 +938,7 @@
   {
     "name": "/Preferences/ShootingCalculator/swim/twistGain",
     "type": "double",
-    "value": -0.074,
+    "value": -0.07,
     "properties": {
       "persistent": true
     }
@@ -1130,7 +1130,7 @@
   {
     "name": "/Preferences/turret/encoder/offset1 (rot)",
     "type": "double",
-    "value": -0.16796875,
+    "value": -0.155029296875,
     "properties": {
       "persistent": true
     }
@@ -1138,7 +1138,7 @@
   {
     "name": "/Preferences/turret/encoder/offset2 (rot)",
     "type": "double",
-    "value": 0.2587890625,
+    "value": 0.268310546875,
     "properties": {
       "persistent": true
     }
@@ -1322,7 +1322,7 @@
   {
     "name": "/Preferences/Intake/speed_idle (ft s^-1)",
     "type": "double",
-    "value": 27.0,
+    "value": 20.0,
     "properties": {
       "persistent": true
     }
@@ -1562,7 +1562,7 @@
   {
     "name": "/Preferences/shooter/genome/gains/kP",
     "type": "double",
-    "value": 0.45,
+    "value": 0.3,
     "properties": {
       "persistent": true
     }
@@ -1818,7 +1818,7 @@
   {
     "name": "/Preferences/ShootingCalculator/swim/tofGain",
     "type": "double",
-    "value": 0.023,
+    "value": 0.0216,
     "properties": {
       "persistent": true
     }
@@ -1835,14 +1835,6 @@
     "name": "/Preferences/pivot/pos_collapsed (deg)",
     "type": "double",
     "value": -10.0,
-    "properties": {
-      "persistent": true
-    }
-  },
-  {
-    "name": "/Preferences/turret/icnor/load_nm (m^2 kg s^-2)",
-    "type": "double",
-    "value": 2.5,
     "properties": {
       "persistent": true
     }

@@ -161,11 +161,12 @@ ScorerSSReadings ScorerSuperstructure::ReadFromHardware() {
 }
 
 void ScorerSuperstructure::AdjustTurret(bool cw) {
-  (cw) ? turret_adjustment_ -= 0.5_deg_ : turret_adjustment_ += 0.5_deg_;
+  (cw) ? turret_adjustment_ -= 0.1_deg_ : turret_adjustment_ += 0.1_deg_;
 }
 
 void ScorerSuperstructure::AdjustHood(bool up) {
-  (up) ? hood_adjustment_ += 0.5_deg_ : hood_adjustment_ -= 0.5_deg_;
+  (up) ? hood_adjustment_ += 0.05_deg_ : hood_adjustment_ -= 0.05_deg_;
+  turret_adjustment_ = 0_deg_; // TODO fix
 }
 
 void ScorerSuperstructure::ClearAdjustments() {
@@ -212,6 +213,8 @@ void ScorerSuperstructure::WriteToHardware(ScorerSSTarget target) {
   }
 
   if (target.reverse_rotor) { dye_rotor_trgt = {DyeRotorState::kRotorReverse}; }
+
+  turret_trgt.pos_ += turret_adjustment_;
 
   hood.SetTarget(hood_trgt);
   turret.SetTarget(turret_trgt);

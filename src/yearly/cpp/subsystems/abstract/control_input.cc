@@ -87,13 +87,13 @@ ControlInputReadings ControlInputSubsystem::UpdateWithInput() {
   ci_readings_.force_shoot = op_readings.left_bumper;
   ci_readings_.agitate = op_readings.lsb;
 
-  // ci_readings_.hood_trim_cw = op_readings.pov == funkit::robot::XboxPOV::kUp;
-  // ci_readings_.hood_trim_ccw = op_readings.pov == funkit::robot::XboxPOV::kDown;
+  ci_readings_.hood_trim_cw = op_readings.pov == funkit::robot::XboxPOV::kUp;
+  ci_readings_.hood_trim_ccw = op_readings.pov == funkit::robot::XboxPOV::kDown;
 
-  // ci_readings_.turret_trim_cw =
-  //     op_readings.pov == funkit::robot::XboxPOV::kLeft;
-  // ci_readings_.turret_trim_ccw =
-  //     op_readings.pov == funkit::robot::XboxPOV::kRight;
+  ci_readings_.turret_trim_cw =
+      op_readings.pov == funkit::robot::XboxPOV::kLeft;
+  ci_readings_.turret_trim_ccw =
+      op_readings.pov == funkit::robot::XboxPOV::kRight;
 
   ci_readings_.pass_mode = dr_readings.right_bumper;
   ci_readings_.descend_l1 = op_readings.right_bumper;

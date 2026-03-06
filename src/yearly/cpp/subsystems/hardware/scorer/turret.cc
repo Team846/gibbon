@@ -50,6 +50,7 @@ TurretSubsystem::TurretSubsystem()
 
   RegisterPreference("icnor/IPG", 1.0);
   RegisterPreference("icnor/friction_nm", 5.0_Nm_);
+  RegisterPreference("icnor/load_nm", 3.0_Nm_);
   RegisterPreference("encoder/offset1", 0.0_rot_);
   RegisterPreference("encoder/offset2", 0.0_rot_);
   RegisterPreference("encoder/min_rots", -3.0_rot_);
@@ -83,7 +84,10 @@ void TurretSubsystem::Setup() {
 
   arm_sys_ = std::make_unique<DefArmSys>(
       def_bldc, 1, 58_rot_ / 16_rot_ * 90_rot_ / 10_rot_,
-      [](radian_t, radps_t) -> nm_t { return nm_t{0.0}; },
+      [&](radian_t x, radps_t v) -> nm_t {
+        return nm_t{std::tanh(x.value() * 2.0) *
+                    GetPreferenceValue_unit_type<nm_t>("icnor/load_nm")};
+      },
       14_lb_ * 0.13_m_ * 0.13_m_,
       GetPreferenceValue_unit_type<nm_t>("icnor/friction_nm"),
       1.0_Nm_ / 600_radps_, 10_ms_);
@@ -266,7 +270,8 @@ void TurretSubsystem::WriteToHardware(TurretTarget target) {
   }
 
   double output = icnor_controller_->getOutput(target_pos_native,
-      target_vel_native * GetPreferenceValue_double("fakevel_comp"), current_pos_native, current_vel_native);
+      target_vel_native * GetPreferenceValue_double("fakevel_comp"),
+      current_pos_native, current_vel_native);
 
   output *= GetPreferenceValue_double("icnor/IPG");
 
