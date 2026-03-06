@@ -1830,13 +1830,5 @@
     "properties": {
       "persistent": true
     }
-  },
-  {
-    "name": "/Preferences/pivot/pos_collapsed (deg)",
-    "type": "double",
-    "value": -10.0,
-    "properties": {
-      "persistent": true
-    }
   }
 ]

@@ -42,9 +42,9 @@ void HoptakeSuperstructure::WriteToHardware(HoptakeSSTarget target) {
   IntakeTarget intake_trgt{IntakeState::kIdle, 0.0_fps_};
   PivotTarget pivot_trgt{PivotState::kStow};
 
-  if (target.target_state == HoptakeState::kAgitate) {
-    pivot_trgt.target_state = PivotState::kAgitate;
-    intake_trgt.target_state = IntakeState::kIntake;
+  if (target.target_state == HoptakeState::kCollapsed) {
+    pivot_trgt.target_state = PivotState::kCollapsed;
+    intake_trgt.target_state = IntakeState::kEvac;
   } else if (target.target_state == HoptakeState::kEvac) {
     pivot_trgt.target_state = PivotState::kIntake;
     intake_trgt.target_state = IntakeState::kEvac;

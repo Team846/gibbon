@@ -9,7 +9,7 @@
 #include "funkit/wpilib/time.h"
 #include "pdcsu_control.h"
 
-enum class PivotState { kStow, kIntake, kAgitate };
+enum class PivotState { kStow, kIntake, kCollapsed };
 
 struct PivotReadings {
   degree_t pos_;
@@ -31,7 +31,9 @@ public:
 
   bool VerifyHardware() override;
 
-  void ZeroEncoders();
+  void ZeroSubsystem();
+
+  bool homed = false;
 
 private:
   PivotReadings ReadFromHardware() override;

@@ -10,8 +10,8 @@ PivotSubsystem::PivotSubsystem()
     : GenericSubsystem("pivot"),
       esc_{base::TALON_FX_KRAKENX60, ports::pivot_::kPivotParams} {
   RegisterPreference("pos_stow", 0.0_deg_);
-  RegisterPreference("pos_agitate", 80.0_deg_);
   RegisterPreference("pos_intake", 90.0_deg_);
+  RegisterPreference("pos_collapsed", -10.0_deg_);
 
   RegisterPreference("agigtate/on_loop_count", 10);
   RegisterPreference("agigtate/off_loop_count", 20);
@@ -55,6 +55,11 @@ PivotTarget PivotSubsystem::ZeroTarget() const {
   return PivotTarget{PivotState::kStow};
 }
 
+void PivotSubsystem::ZeroSubsystem() {
+  esc_.SetPosition(radian_t{0});
+  homed = true;
+}
+
 bool PivotSubsystem::VerifyHardware() {
   bool ok = true;
   FUNKIT_VERIFY(esc_.VerifyConnected(), ok, "Could not verify Pivot esc");
@@ -80,21 +85,11 @@ void PivotSubsystem::WriteToHardware(PivotTarget target) {
 
   if (target.target_state == PivotState::kStow) {
     trgt_pos_ = GetPreferenceValue_unit_type<degree_t>("pos_stow");
-  } else {  //(target.target_state == PivotState::kIntake) {
+  } else if (target.target_state == PivotState::kCollapsed) {
+    trgt_pos_ = GetPreferenceValue_unit_type<degree_t>("pos_collapsed");
+  } else {
     trgt_pos_ = GetPreferenceValue_unit_type<degree_t>("pos_intake");
-  } /*else if (target.target_state == PivotState::kAgitate) {
-    if (ctr_agitate < GetPreferenceValue_int("agigtate/on_loop_count")) {
-      trgt_pos_ = GetPreferenceValue_unit_type<degree_t>("pos_agitate");
-    } else {
-      trgt_pos_ = GetPreferenceValue_unit_type<degree_t>("pos_intake");
-    }
-    if (ctr_agitate >= GetPreferenceValue_int("agigtate/off_loop_count") +
-                           GetPreferenceValue_int("agigtate/on_loop_count")) {
-      ctr_agitate = 0;
-    } else {
-      ctr_agitate++;
-    }
-  }*/
+  }
 
   if (trgt_pos_ < GetReadings().pos_) {
     esc_.WriteDC((trgt_pos_ - GetReadings().pos_).value() * genome.gains.kP +

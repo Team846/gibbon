@@ -19,12 +19,14 @@ void HoptakeCommand::Periodic() {
 
   if (ci_readings_.intake) {
     target.target_state = HoptakeState::kIntake;
-  } else if (ci_readings_.agitate) {
-    target.target_state = HoptakeState::kAgitate;
   } else if (ci_readings_.evac_storage) {
     target.target_state = HoptakeState::kEvac;
   } else {
     target.target_state = HoptakeState::kIdle;
+  }
+
+  if (ci_readings_.descend_l1) { // TODO this is temporary, fix this later
+    target.target_state = HoptakeState::kCollapsed;
   }
 
   target.drivetrain_vel =

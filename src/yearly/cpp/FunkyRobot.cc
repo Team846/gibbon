@@ -174,6 +174,7 @@ void FunkyRobot::OnPeriodic() {
   }
 
   if (!home_switch_.Get() && !IsEnabled()) {
+    container_.hoptake_ss_.pivot.ZeroSubsystem();
     homing_count_ = GetPreferenceValue_int("homing_flash_loops");
   }
 
@@ -195,6 +196,10 @@ void FunkyRobot::OnPeriodic() {
   else if (coast_count_ > 0 && isDisabled)
     LEDsLogic::CoastingLEDs(&container_,
         (1.0 * coast_count_) / GetPreferenceValue_int("num_coasting_loops"));
+  else if (isDisabled && !container_.hoptake_ss_.pivot.homed)
+    LEDsLogic::SetLEDsState(&container_, kLEDsUnready);
+  else if (isDisabled)
+    LEDsLogic::SetLEDsState(&container_, kLEDsDisabled);
   else if (container_.scorer_ss_.GetReadings().will_make_shot &&
            container_.drivetrain_.variance < 16.0)
     LEDsLogic::SetLEDsState(&container_, kLEDsSequencing);

@@ -49,9 +49,9 @@ private:
     }
   }
 
-  frc::DigitalInput home_switch_{0};
+  frc::DigitalInput home_switch_{8};
   frc::DigitalInput coast_switch_{1};
-  frc::DigitalInput gyro_switch_{2};
+  frc::DigitalInput gyro_switch_{9};
 
   int coast_count_{0};
   int homing_count_gyro{0};
