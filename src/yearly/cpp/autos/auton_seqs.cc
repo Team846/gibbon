@@ -105,11 +105,11 @@ using FPT = funkit::math::FieldPoint;
 
 #define PASS() AutoScorerCommand(container, false, true)
 
-#define END_BUMPC1_PT MKPT(94_in_, 223.61_in_, 35_deg_, 8_fps_)
-#define START_BUMPC1_PT MKPT(94_in_, 110.61_in_, 35_deg_, 8_fps_)
+#define END_BUMPC1_PT MKPT(92_in_, 223.61_in_, 35_deg_, 8_fps_)
+#define START_BUMPC1_PT MKPT(92_in_, 110.61_in_, 35_deg_, 8_fps_)
 // 8_fps
-#define END_BUMPC23_PT MKPT(107_in_, 223.61_in_, 35_deg_, 8_fps_)
-#define START_BUMPC23_PT MKPT(107_in_, 110.61_in_, 35_deg_, 8_fps_)
+#define END_BUMPC23_PT MKPT(102_in_, 223.61_in_, 35_deg_, 8_fps_)
+#define START_BUMPC23_PT MKPT(102_in_, 110.61_in_, 35_deg_, 8_fps_)
 
 #define P1C1_INTAKE_PT MKPT(90.5_in_, 287.35_in_, 15_deg_, 11_fps_)
 #define P2C1_INTAKE_PT MKPT(103.25_in_, 312.6_in_, 20_deg_, 7_fps_)

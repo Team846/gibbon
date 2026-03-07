@@ -95,11 +95,11 @@ void DyeRotorSubsystem::WriteToHardware(DyeRotorTarget target) {
       stall_ctr_ = 0;
     }
     if (reset_ctr_ > 10 && reset_ctr_ <= 20) {
-      trgt_vel_ = GetPreferenceValue_unit_type<radps_t>("speed_reverse");
+      trgt_vel_ = GetPreferenceValue_unit_type<rpm_t>("speed_reverse");
     } else if (reset_ctr_ > 0) {
       // Let it spin up again - continue
     } else {
-      if (stall_ctr_ > 25) { reset_ctr_ = 20; }
+      if (stall_ctr_ > 60) { reset_ctr_ = 20; }
     }
     if (reset_ctr_ > 0) reset_ctr_--;
   }

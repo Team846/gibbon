@@ -67,8 +67,8 @@ ControlInputReadings ControlInputSubsystem::UpdateWithInput() {
     dr_readings = funkit::robot::XboxReadings{driver_, trigger_threshold};
   }
   funkit::robot::XboxReadings op_readings{operator_, trigger_threshold};
-  funkit::robot::GenericControllerReadings op_keyboard_readings{
-      operator_keyboard_};
+  // funkit::robot::GenericControllerReadings op_keyboard_readings{
+  //     operator_keyboard_};
 
   ci_readings_.zero_bearing = dr_readings.back_button;
   ci_readings_.translate_x = dr_readings.left_stick_x;
@@ -106,7 +106,7 @@ ControlInputReadings ControlInputSubsystem::UpdateWithInput() {
 
   previous_driver_ = dr_readings;
   previous_operator_ = op_readings;
-  previous_operator_keyboard_ = op_keyboard_readings;
+  // previous_operator_keyboard_ = op_keyboard_readings;
 
   return ci_readings_;
 }

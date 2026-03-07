@@ -63,11 +63,11 @@ private:
 
   funkit::robot::XboxReadings previous_driver_{};
   funkit::robot::XboxReadings previous_operator_{};
-  funkit::robot::GenericControllerReadings previous_operator_keyboard_{};
+  // funkit::robot::GenericControllerReadings previous_operator_keyboard_{};
 
   frc::XboxController driver_{0};
   frc::XboxController operator_{1};
-  frc::GenericHID operator_keyboard_{2};
+  // frc::GenericHID operator_keyboard_{2};
 
   ControlInputReadings ReadFromHardware() override;
 

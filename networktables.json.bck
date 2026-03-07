@@ -930,7 +930,7 @@
   {
     "name": "/Preferences/ShootingCalculator/2ptvel/kAdditive",
     "type": "double",
-    "value": 5.06846,
+    "value": 4.45,
     "properties": {
       "persistent": true
     }
@@ -938,7 +938,7 @@
   {
     "name": "/Preferences/ShootingCalculator/swim/twistGain",
     "type": "double",
-    "value": -0.074,
+    "value": -0.07,
     "properties": {
       "persistent": true
     }
@@ -1010,7 +1010,7 @@
   {
     "name": "/Preferences/SwerveDrivetrain/scalar_pigeon",
     "type": "double",
-    "value": 1.0101010101010102,
+    "value": 1.0,
     "properties": {
       "persistent": true
     }
@@ -1834,7 +1834,7 @@
   {
     "name": "/Preferences/pivot/pos_collapsed (deg)",
     "type": "double",
-    "value": -10.0,
+    "value": -5.0,
     "properties": {
       "persistent": true
     }

@@ -217,7 +217,12 @@ ATCalculatorOutput AprilTagCalculator::calculate(ATCalculatorInput input) {
                               .value() *
                           std::sqrt(distance_i.value()) / 25.0) +
               0.5;
-          if (camera.equiv_turret) { var_i *= 2.0; }
+          if (camera.equiv_turret) {
+            var_i *= 2.0;
+          } else {
+            var_i *= 4.0;
+          }
+          
           pure_variances.push_back(var_i);
         }
       }
@@ -242,7 +247,7 @@ ATCalculatorOutput AprilTagCalculator::calculate(ATCalculatorInput input) {
   // correction[1] = u_clamp(correction[1], -12_in_, 12_in_);
 
   // output.pos = input.pose.position + correction;
-  
+
   return output;
 }
 }

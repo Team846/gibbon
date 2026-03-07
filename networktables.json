@@ -1830,5 +1830,21 @@
     "properties": {
       "persistent": true
     }
+  },
+  {
+    "name": "/Preferences/turret/icnor/load_nm (m^2 kg s^-2)",
+    "type": "double",
+    "value": 3.0,
+    "properties": {
+      "persistent": true
+    }
+  },
+  {
+    "name": "/Preferences/pivot/pos_collapsed (deg)",
+    "type": "double",
+    "value": -10.0,
+    "properties": {
+      "persistent": true
+    }
   }
 ]
