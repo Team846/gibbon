@@ -113,7 +113,7 @@ using FPT = funkit::math::FieldPoint;
 
 #define P1C1_INTAKE_PT MKPT(90.5_in_, 287.35_in_, 15_deg_, 11_fps_)
 #define P2C1_INTAKE_PT MKPT(103.25_in_, 312.6_in_, 20_deg_, 7_fps_)
-#define P3C1_INTAKE_PT MKPT(113.75_in_, 324.2_in_, 35_deg_, 0_fps_)
+#define P3C1_INTAKE_PT MKPT(120.75_in_, 328.2_in_, 40_deg_, 0_fps_)
 
 #define P1C2_INTAKE_PT MKPT(135.1_in_, 280.5_in_, 15_deg_, 11_fps_)
 #define P2C2_INTAKE_PT MKPT(155.35_in_, 305.42_in_, 30_deg_, 7_fps_)
@@ -162,7 +162,7 @@ SEQUENCE {
           frc2::ParallelDeadlineGroup(
               frc2::SequentialCommandGroup{
                   DRIVE_PT_BEARING(CS2, DEPOT, SWIM), WAIT{5_s}},
-              SHOOT()),
+              frc2::SequentialCommandGroup{WAIT{0.9_s}, SHOOT()}),
           frc2::ParallelDeadlineGroup(WAIT{10_s}, SHOOT()),
           [left = is_left_side]() { return left; })
 }

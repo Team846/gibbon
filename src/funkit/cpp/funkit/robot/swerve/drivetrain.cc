@@ -287,7 +287,7 @@ pdcsu::units::degree_t DrivetrainSubsystem::GetBearing() {
 
 pdcsu::units::degree_t DrivetrainSubsystem::GetPitch() {
   if (pigeon_.has_value()) {
-    return pdcsu::units::degree_t{pigeon_->GetPitch().GetValueAsDouble()} -
+    return pdcsu::units::degree_t{pigeon_->GetRoll().GetValueAsDouble()} - // Note: intentionally switched
            zero_pitch;
   }
   if (navX_.has_value()) { return pdcsu::units::degree_t{navX_->GetPitch()}; }
@@ -296,7 +296,7 @@ pdcsu::units::degree_t DrivetrainSubsystem::GetPitch() {
 
 pdcsu::units::degree_t DrivetrainSubsystem::GetRoll() {
   if (pigeon_.has_value()) {
-    return pdcsu::units::degree_t{pigeon_->GetRoll().GetValueAsDouble()} -
+    return pdcsu::units::degree_t{pigeon_->GetPitch().GetValueAsDouble()} - // Note: intentionally switched
            zero_roll;
   }
   if (navX_.has_value()) { return pdcsu::units::degree_t{navX_->GetRoll()}; }
