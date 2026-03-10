@@ -36,6 +36,7 @@ GenericRobot::GenericRobot(GenericRobotContainer* container)
 
   HAL_SetNotifierName(notifier_, "Robot", &status);
 
+  RegisterPreference("sim_fms", false);
   RegisterPreference("update_tick_1", 100);
   RegisterPreference("update_tick_2", 201);
   RegisterPreference("update_reset_tick", 200);
@@ -139,8 +140,16 @@ void GenericRobot::StartCompetition() {
       mode = Mode::kTest;
     }
 
+    funkit::base::Loggable::SetFMSConnected(
+        (word.IsFMSAttached() && frc::RobotBase::IsReal()) ||
+        GetPreferenceValue_bool("sim_fms"));
+    Graph("fms_connected", word.IsFMSAttached(), true);
+
     // If mode changed
     if (last_mode_ != mode) {
+      cached_update_tick_1_ = GetPreferenceValue_int("update_tick_1");
+      cached_update_tick_2_ = GetPreferenceValue_int("update_tick_2");
+      cached_update_reset_tick_ = GetPreferenceValue_int("update_reset_tick");
       if (mode == Mode::kDisabled) {
         OnDisable();
         // Clear command scheduler
@@ -209,12 +218,10 @@ void GenericRobot::StartCompetition() {
 
     // Update dashboards
     update_tick_counter_ += 1;
-    if (update_tick_counter_ == GetPreferenceValue_int("update_tick_1")) {
+    if (update_tick_counter_ == cached_update_tick_1_) {
       frc::SmartDashboard::UpdateValues();
-    } else if (update_tick_counter_ ==
-               GetPreferenceValue_int("update_tick_2")) {
-    } else if (update_tick_counter_ >=
-               GetPreferenceValue_int("update_reset_tick")) {
+    } else if (update_tick_counter_ == cached_update_tick_2_) {
+    } else if (update_tick_counter_ >= cached_update_reset_tick_) {
       update_tick_counter_ = 0;
     }
 

@@ -60,6 +60,10 @@ private:
   std::unordered_map<std::string, frc2::Command*> autos_;
 
   int update_tick_counter_ = 0;
+
+  int cached_update_tick_1_ = 100;
+  int cached_update_tick_2_ = 201;
+  int cached_update_reset_tick_ = 200;
 };
 
 }  // namespace funkit::robot

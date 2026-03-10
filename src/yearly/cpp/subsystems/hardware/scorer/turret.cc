@@ -162,7 +162,7 @@ TurretReadings TurretSubsystem::ReadFromHardware() {
 
   degree_t error =
       funkit::math::CoterminalDifference(GetTarget().pos_, pos_real);
-  Graph("readings/pos", degree_t(pos_real));
+  Graph("readings/pos", degree_t(pos_real), true);
   Graph("debug/error", error);
 
   funkit::robot::calculators::AprilTagCalculator::turret_angle = pos_real;
@@ -236,7 +236,7 @@ void TurretSubsystem::WriteToHardware(TurretTarget target) {
     target.pos_ += 360_deg_;
   }
 
-  Graph("target/pos", target.pos_);
+  Graph("target/pos", target.pos_, true);
   Graph("target/vel", target.vel_);
 
   radian_t current_pos_real = esc_.GetPosition<radian_t>();
