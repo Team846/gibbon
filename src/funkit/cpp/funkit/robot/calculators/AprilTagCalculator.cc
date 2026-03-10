@@ -222,7 +222,7 @@ ATCalculatorOutput AprilTagCalculator::calculate(ATCalculatorInput input) {
           } else {
             var_i *= 4.0;
           }
-          
+
           pure_variances.push_back(var_i);
         }
       }

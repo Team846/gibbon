@@ -43,7 +43,6 @@ private:
 
   void WriteToHardware(IntakeTarget target) override;
 
-
   int reset_ctr_ = 0;
   int stall_ctr_ = 0;
 };

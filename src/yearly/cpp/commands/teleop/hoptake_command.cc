@@ -25,7 +25,7 @@ void HoptakeCommand::Periodic() {
     target.target_state = HoptakeState::kIdle;
   }
 
-  if (ci_readings_.descend_l1) { // TODO this is temporary, fix this later
+  if (ci_readings_.descend_l1) {  // TODO this is temporary, fix this later
     target.target_state = HoptakeState::kCollapsed;
   }
 

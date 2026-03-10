@@ -42,8 +42,8 @@ DrivetrainSubsystem::DrivetrainSubsystem(DrivetrainConfigs configs)
   }
 
   funkit::control::config::MotorGenome drive_genome_backup{
-      .motor_current_limit = pdcsu::units::amp_t{160.0},
-      .smart_current_limit = pdcsu::units::amp_t{120.0},
+      .motor_current_limit = pdcsu::units::amp_t{80.0},
+      .smart_current_limit = pdcsu::units::amp_t{80.0},
       .voltage_compensation = pdcsu::units::volt_t{16.0},
       .brake_mode = true,
       .gains = {.kP = 0.0, .kI = 0.0, .kD = 0.0, .kF = 0.0}};
@@ -51,10 +51,10 @@ DrivetrainSubsystem::DrivetrainSubsystem(DrivetrainConfigs configs)
       *this, "drive_genome", drive_genome_backup);
 
   funkit::control::config::MotorGenome steer_genome_backup{
-      .motor_current_limit = pdcsu::units::amp_t{40.0},
-      .smart_current_limit = pdcsu::units::amp_t{40.0},
-      .voltage_compensation = pdcsu::units::volt_t{8.0},
-      .brake_mode = true,
+      .motor_current_limit = pdcsu::units::amp_t{50.0},
+      .smart_current_limit = pdcsu::units::amp_t{50.0},
+      .voltage_compensation = pdcsu::units::volt_t{10.0},
+      .brake_mode = false,
       .gains = {.kP = 15.0, .kI = 0.0, .kD = 0.0, .kF = 0.0}};
   funkit::control::config::SubsystemGenomeHelper::CreateGenomePreferences(
       *this, "steer_genome", steer_genome_backup);
@@ -73,23 +73,23 @@ DrivetrainSubsystem::DrivetrainSubsystem(DrivetrainConfigs configs)
   RegisterPreference("max_omega", pdcsu::units::degps_t{180});
   RegisterPreference("max_omega_cut", pdcsu::units::degps_t{40});
 
-  RegisterPreference("odom_fudge_factor", 1.077);
+  RegisterPreference("odom_fudge_factor", 1.062855074);
   RegisterPreference("odom_variance", 0.2);
 
   RegisterPreference("steer_lag", pdcsu::units::second_t{0.05});
-  RegisterPreference("bearing_latency", pdcsu::units::second_t{0.01});
+  RegisterPreference("bearing_latency", pdcsu::units::second_t{0.0});
 
   RegisterPreference("pose_estimator/override", false);
 
-  RegisterPreference("april_tags/april_variance_coeff", 0.08);
-  RegisterPreference("april_tags/triangular_variance_coeff", 0.000139);
+  RegisterPreference("april_tags/april_variance_coeff", 0.2);
+  RegisterPreference("april_tags/triangular_variance_coeff", 1.0);
   for (const auto& config : configs.april_camera_configs) {
     RegisterPreference(
         "april_tags/fudge_latency" + std::to_string(config.camera_id),
-        pdcsu::units::ms_t{75.0});
+        pdcsu::units::ms_t{50.0});
   }
 
-  RegisterPreference("drive_to_point/kC", 5.0);
+  RegisterPreference("drive_to_point/kC", 0.5);
   RegisterPreference("drive_to_point/kA", 0.05);
   RegisterPreference("drive_to_point/kE", 5.0);
   RegisterPreference("drive_to_point/threshold", pdcsu::units::inch_t{6});
@@ -287,7 +287,7 @@ pdcsu::units::degree_t DrivetrainSubsystem::GetBearing() {
 
 pdcsu::units::degree_t DrivetrainSubsystem::GetPitch() {
   if (pigeon_.has_value()) {
-    return pdcsu::units::degree_t{pigeon_->GetRoll().GetValueAsDouble()} - // Note: intentionally switched
+    return pdcsu::units::degree_t{pigeon_->GetPitch().GetValueAsDouble()} -
            zero_pitch;
   }
   if (navX_.has_value()) { return pdcsu::units::degree_t{navX_->GetPitch()}; }
@@ -296,7 +296,7 @@ pdcsu::units::degree_t DrivetrainSubsystem::GetPitch() {
 
 pdcsu::units::degree_t DrivetrainSubsystem::GetRoll() {
   if (pigeon_.has_value()) {
-    return pdcsu::units::degree_t{pigeon_->GetPitch().GetValueAsDouble()} - // Note: intentionally switched
+    return pdcsu::units::degree_t{pigeon_->GetRoll().GetValueAsDouble()} -
            zero_roll;
   }
   if (navX_.has_value()) { return pdcsu::units::degree_t{navX_->GetRoll()}; }

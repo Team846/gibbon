@@ -10,9 +10,9 @@ DyeRotorSubsystem::DyeRotorSubsystem()
     : GenericSubsystem("DyeRotor"),
       esc_{base::TALON_FX_KRAKENX60, ports::dye_rotor_::kDyeRotorParams} {
   // Theoretical 171.43 RPM maximum speed
-  RegisterPreference("speed_84bps", 300_rpm_);
+  RegisterPreference("speed_84bps", 150_rpm_);
   RegisterPreference("speed_slow_feed", 120_rpm_);
-  RegisterPreference("speed_reverse", -200_rpm_);
+  RegisterPreference("speed_reverse", -25_rpm_);
   RegisterPreference("speed_idle", 0_rpm_);
 }
 
@@ -31,11 +31,11 @@ radps_t DyeRotorSubsystem::getTargetRotorSpeed(DyeRotorState rotor_state) {
 DyeRotorSubsystem::~DyeRotorSubsystem() = default;
 
 void DyeRotorSubsystem::Setup() {
-  MotorGenome genome_backup{.motor_current_limit = 90_A_,
-      .smart_current_limit = 90_A_,
+  MotorGenome genome_backup{.motor_current_limit = 80_A_,
+      .smart_current_limit = 80_A_,
       .voltage_compensation = 12_V_,
       .brake_mode = true,
-      .gains = {.kP = 0.0, .kI = 0.0, .kD = 0.0, .kF = 0.0}};
+      .gains = {.kP = 0.0, .kI = 0.0, .kD = 0.0, .kF = 0.00177}};
 
   funkit::control::config::SubsystemGenomeHelper::CreateGenomePreferences(
       *this, "genome", genome_backup);

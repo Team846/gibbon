@@ -10,7 +10,7 @@ ShooterSubsystem::ShooterSubsystem()
     : GenericSubsystem("shooter"),
       esc_1_{base::TALON_FX_KRAKENX60, ports::shooter_::kShooter1Params},
       esc_2_{base::TALON_FX_KRAKENX60, ports::shooter_::kShooter2Params} {
-  RegisterPreference("velocity_tolerance", 0.5_fps_);
+  RegisterPreference("velocity_tolerance", 5.0_fps_);
 
   RegisterPreference("coast_down_tolerance", 5_fps_);
 }
@@ -18,11 +18,11 @@ ShooterSubsystem::ShooterSubsystem()
 ShooterSubsystem::~ShooterSubsystem() = default;
 
 void ShooterSubsystem::Setup() {
-  MotorGenome genome_backup{.motor_current_limit = 120_A_,
-      .smart_current_limit = 120_A_,
+  MotorGenome genome_backup{.motor_current_limit = 140_A_,
+      .smart_current_limit = 140_A_,
       .voltage_compensation = 12_V_,
       .brake_mode = true,
-      .gains = {.kP = 0.001, .kI = 0.0, .kD = 0.0, .kF = 0.22}};
+      .gains = {.kP = 0.45, .kI = 0.0, .kD = 0.0, .kF = 0.118}};
 
   funkit::control::config::SubsystemGenomeHelper::CreateGenomePreferences(
       *this, "genome", genome_backup);

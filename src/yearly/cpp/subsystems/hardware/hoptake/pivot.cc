@@ -9,8 +9,8 @@ using namespace funkit::control::config;
 PivotSubsystem::PivotSubsystem()
     : GenericSubsystem("pivot"),
       esc_{base::TALON_FX_KRAKENX60, ports::pivot_::kPivotParams} {
-  RegisterPreference("pos_stow", 0.0_deg_);
-  RegisterPreference("pos_intake", 90.0_deg_);
+  RegisterPreference("pos_stow", -64.0_deg_);
+  RegisterPreference("pos_intake", -74.0_deg_);
   RegisterPreference("pos_collapsed", -10.0_deg_);
 
   RegisterPreference("agigtate/on_loop_count", 10);
@@ -20,11 +20,11 @@ PivotSubsystem::PivotSubsystem()
 PivotSubsystem::~PivotSubsystem() = default;
 
 void PivotSubsystem::Setup() {
-  MotorGenome genome_backup{.motor_current_limit = 50_A_,
-      .smart_current_limit = 50_A_,
+  MotorGenome genome_backup{.motor_current_limit = 200_A_,
+      .smart_current_limit = 200_A_,
       .voltage_compensation = 12_V_,
-      .brake_mode = true,
-      .gains = {.kP = 0.0, .kI = 0.0, .kD = 0.0, .kF = 0.0}};
+      .brake_mode = false,
+      .gains = {.kP = 0.007, .kI = -0.03, .kD = 0.0, .kF = -0.12}};
 
   funkit::control::config::SubsystemGenomeHelper::CreateGenomePreferences(
       *this, "genome", genome_backup);

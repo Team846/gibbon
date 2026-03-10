@@ -19,11 +19,11 @@ const foot_t fullEffortDistance = 235.0_in_;
 void ShootingCalculator::Setup() {
   if (loggable_opt.has_value()) { return; }
   loggable_opt.emplace(funkit::base::Loggable("ShootingCalculator"));
-  loggable_opt->RegisterPreference("2ptvel/kPointBlank", 23_fps_);
-  loggable_opt->RegisterPreference("2ptvel/kAdditive", 3.68);
-  loggable_opt->RegisterPreference("swim/twistGain", 0.0);
-  loggable_opt->RegisterPreference("swim/tofGain", 0.0);
-  loggable_opt->RegisterPreference("swim/twistVelCompensation", 0.416);
+  loggable_opt->RegisterPreference("2ptvel/kPointBlank", 23.7_fps_);
+  loggable_opt->RegisterPreference("2ptvel/kAdditive", 5.06846);
+  loggable_opt->RegisterPreference("swim/twistGain", -0.074);
+  loggable_opt->RegisterPreference("swim/tofGain", 0.023);
+  loggable_opt->RegisterPreference("swim/twistVelCompensation", 0.54);
 }
 
 degree_t ShootingCalculator::GetShotAngle(foot_t shot_distance) {
@@ -75,12 +75,12 @@ void ShootingCalculator::Calculate(
                       // considered zero
 
   const Vector2D odelta = target - shooter_pos;
-  Vector2D delta = odelta;
 
   if (odelta.magnitude() < 0.03_in_) { return; }
 
   fps_t vel_in_dir = odelta.dot(vel_at_shooter) / odelta.magnitude();
-  fps_t vel_perp = odelta.rotate(90_deg_, true).dot(vel_at_shooter) / odelta.magnitude();
+  fps_t vel_perp =
+      odelta.rotate(90_deg_, true).dot(vel_at_shooter) / odelta.magnitude();
   foot_t delta_mag = odelta.magnitude();
 
   second_t tof = odelta.magnitude() / 100_in_ *
@@ -107,11 +107,13 @@ void ShootingCalculator::Calculate(
     tof = delta_mag / (shot_vel * u_cos(shot_angle));
   }
 
-  delta = target - shooter_pos -
-          Vector2D{vel_at_shooter[0] * tof *
-                       loggable.GetPreferenceValue_double("swim/tofGain"),
-              vel_at_shooter[1] * tof *
-                  loggable.GetPreferenceValue_double("swim/tofGain")}; /*loggable.GetPreferenceValue_double("swim/tofGain")
+  Vector2D delta =
+      target - shooter_pos -
+      Vector2D{vel_at_shooter[0] * tof *
+                   loggable.GetPreferenceValue_double("swim/tofGain"),
+          vel_at_shooter[1] * tof *
+              loggable.GetPreferenceValue_double(
+                  "swim/tofGain")}; /*loggable.GetPreferenceValue_double("swim/tofGain")
 * delta
 + (1.0 - loggable.GetPreferenceValue_double("swim/tofGain")) * odelta;*/
   delta_mag = delta.magnitude();
@@ -131,7 +133,11 @@ void ShootingCalculator::Calculate(
           (shot_vel - shot_ptbvel);
 
   /* Calculate and apply turret targets */
-  outputs_.aim_angle = odelta.angle(true) + u_asin(std::clamp(loggable.GetPreferenceValue_double("swim/twistGain") * (vel_perp / outputs_.shooter_vel).value(), -1.0, 1.0));
+  outputs_.aim_angle =
+      odelta.angle(true) +
+      u_asin(std::clamp(loggable.GetPreferenceValue_double("swim/twistGain") *
+                            (vel_perp / outputs_.shooter_vel).value(),
+          -1.0, 1.0));
 
   auto cross_product =
       delta[0] * vel_at_shooter[1] - delta[1] * vel_at_shooter[0];

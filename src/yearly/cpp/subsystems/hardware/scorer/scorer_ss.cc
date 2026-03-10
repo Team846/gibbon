@@ -15,13 +15,13 @@ ScorerSuperstructure::ScorerSuperstructure()
   RegisterPreference("init_dye_rotor", true);
 
   RegisterPreference("passing/left_x", 70.0_in_);
-  RegisterPreference("passing/left_y", 70.0_in_);
+  RegisterPreference("passing/left_y", 130.0_in_);
   RegisterPreference("passing/right_x", 247.8_in_);
-  RegisterPreference("passing/right_y", 70.0_in_);
+  RegisterPreference("passing/right_y", 130.0_in_);
 
   RegisterPreference("point_blank/turret_angle", 0_deg_);
-  RegisterPreference("point_blank/hood_angle", 85_deg_);
-  RegisterPreference("point_blank/shooter_vel", 24_fps_);
+  RegisterPreference("point_blank/hood_angle", 65_deg_);
+  RegisterPreference("point_blank/shooter_vel", 32.5_fps_);
 
   RegisterPreference("will_make_shot_hysteresis/on_percent", 70.0);
   RegisterPreference("will_make_shot_hysteresis/on_window_loops", 40);
@@ -29,7 +29,7 @@ ScorerSuperstructure::ScorerSuperstructure()
   RegisterPreference("will_make_shot_hysteresis/off_window_loops", 20);
   RegisterPreference("will_make_shot_hysteresis/off_recent_window_loops", 10);
 
-  RegisterPreference("rotor_reset_loops", 10);
+  RegisterPreference("rotor_reset_loops", 13);
 }
 
 ScorerSuperstructure::~ScorerSuperstructure() = default;
@@ -166,7 +166,7 @@ void ScorerSuperstructure::AdjustTurret(bool cw) {
 
 void ScorerSuperstructure::AdjustHood(bool up) {
   (up) ? hood_adjustment_ += 0.05_deg_ : hood_adjustment_ -= 0.05_deg_;
-  turret_adjustment_ = 0_deg_; // TODO fix
+  turret_adjustment_ = 0_deg_;  // TODO fix
 }
 
 void ScorerSuperstructure::ClearAdjustments() {

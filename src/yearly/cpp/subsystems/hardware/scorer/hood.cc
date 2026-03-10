@@ -37,7 +37,7 @@ HoodSubsystem::HoodSubsystem()
   RegisterPreference("icnor/IPG", 1.0);
   RegisterPreference("icnor/friction_nm", 0.0_Nm_);
   RegisterPreference("encoder/offset", 0.0_rot_);
-  RegisterPreference("tolerance", 1.5_deg_);
+  RegisterPreference("tolerance", 3.0_deg_);
 }
 
 HoodSubsystem::~HoodSubsystem() = default;

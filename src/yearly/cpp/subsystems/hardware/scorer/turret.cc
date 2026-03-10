@@ -49,28 +49,28 @@ TurretSubsystem::TurretSubsystem()
   cancoder_2_.GetAbsolutePosition().SetUpdateFrequency(20_Hz);
 
   RegisterPreference("icnor/IPG", 1.0);
-  RegisterPreference("icnor/friction_nm", 5.0_Nm_);
-  RegisterPreference("icnor/load_nm", 3.0_Nm_);
+  RegisterPreference("icnor/friction_nm", 2.0_Nm_);
+  RegisterPreference("icnor/load_nm", 2.5_Nm_);
   RegisterPreference("encoder/offset1", 0.0_rot_);
   RegisterPreference("encoder/offset2", 0.0_rot_);
   RegisterPreference("encoder/min_rots", -3.0_rot_);
   RegisterPreference("encoder/max_rots", 3.0_rot_);
   RegisterPreference("encoder/max_tolerance", 0.015_rot_);
-  RegisterPreference("tolerance", 2_deg_);
+  RegisterPreference("tolerance", 20_deg_);
 
-  RegisterPreference("wrap/positive", 260_deg_);
-  RegisterPreference("wrap/negative", -260_deg_);
+  RegisterPreference("wrap/positive", 220_deg_);
+  RegisterPreference("wrap/negative", -240_deg_);
 
-  RegisterPreference("fakevel_comp", 0.35);
+  RegisterPreference("fakevel_comp", 1.69);
 }
 
 TurretSubsystem::~TurretSubsystem() = default;
 
 void TurretSubsystem::Setup() {
-  MotorGenome genome_backup{.motor_current_limit = 120_A_,
-      .smart_current_limit = 120_A_,
+  MotorGenome genome_backup{.motor_current_limit = 50_A_,
+      .smart_current_limit = 50_A_,
       .voltage_compensation = 12_V_,
-      .brake_mode = false,
+      .brake_mode = true,
       .gains = {.kP = 0.0, .kI = 0.0, .kD = 0.0, .kF = 0.0}};
 
   funkit::control::config::SubsystemGenomeHelper::CreateGenomePreferences(

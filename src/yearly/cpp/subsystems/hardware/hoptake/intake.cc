@@ -9,17 +9,17 @@ using namespace funkit::control::config;
 IntakeSubsystem::IntakeSubsystem()
     : GenericSubsystem("Intake"),
       esc_{base::TALON_FX_KRAKENX44, ports::intake_::kIntakeParams} {
-  RegisterPreference("speed_idle", 0.0_fps_);
-  RegisterPreference("speed_intake", 35.0_fps_);
+  RegisterPreference("speed_idle", 27.0_fps_);
+  RegisterPreference("speed_intake", 40.0_fps_);
   RegisterPreference("speed_evac", -25.0_fps_);
-  RegisterPreference("dynamic_intake_gain", 0.25);
+  RegisterPreference("dynamic_intake_gain", 0.2);
 }
 
 IntakeSubsystem::~IntakeSubsystem() = default;
 
 void IntakeSubsystem::Setup() {
-  MotorGenome genome_backup{.motor_current_limit = 50_A_,
-      .smart_current_limit = 50_A_,
+  MotorGenome genome_backup{.motor_current_limit = 80_A_,
+      .smart_current_limit = 80_A_,
       .voltage_compensation = 12_V_,
       .brake_mode = true,
       .gains = {.kP = 0.001, .kI = 0.0, .kD = 0.0, .kF = 0.00127}};
