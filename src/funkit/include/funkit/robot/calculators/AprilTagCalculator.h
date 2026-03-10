@@ -2,6 +2,7 @@
 
 #include <networktables/NetworkTable.h>
 
+#include <deque>
 #include <map>
 #include <memory>
 
@@ -14,36 +15,14 @@ namespace funkit::robot::calculators {
 
 using Vector2D = pdcsu::util::math::uVec<pdcsu::units::inch_t, 2>;
 
-struct Line {
-  Vector2D point;
-  pdcsu::units::degree_t angle;
-
-  [[nodiscard]] Vector2D intersect(const Line& other) const {
-    double x_val = (point[1].value() - other.point[1].value() +
-                       std::tan(pdcsu::units::radian_t{other.angle}.value()) *
-                           other.point[0].value() -
-                       std::tan(pdcsu::units::radian_t{angle}.value()) *
-                           point[0].value()) /
-                   (std::tan(pdcsu::units::radian_t{other.angle}.value()) -
-                       std::tan(pdcsu::units::radian_t{angle}.value()));
-    double y_val = std::tan(pdcsu::units::radian_t{angle}.value()) *
-                       (x_val - point[0].value()) +
-                   point[1].value();
-    return {pdcsu::units::inch_t{x_val}, pdcsu::units::inch_t{y_val}};
-  }
-
-  void translate(const Vector2D& addend) { point += addend; }
-};
-
 struct ATCalculatorInput {
   funkit::robot::swerve::odometry::SwervePose pose;
-  funkit::robot::swerve::odometry::SwervePose old_pose;
+  funkit::robot::swerve::odometry::SwervePose odom_pose;
   pdcsu::units::degps_t angular_velocity;
 
   double aprilVarianceCoeff;
   double triangularVarianceCoeff;
   std::map<size_t, pdcsu::units::second_t> fudge_latency;
-  pdcsu::units::second_t bearing_latency;
 };
 
 struct ATCalculatorOutput {
@@ -65,11 +44,26 @@ struct AprilTagCameraConfig {
 struct AprilTagCamera {
   AprilTagCameraConfig config;
   std::shared_ptr<nt::NetworkTable> table;
+  bool equiv_turret = false;
+};
+
+struct TurretTagCameraConfig {
+  size_t camera_id;
+  pdcsu::units::inch_t turret_x_offset;
+  pdcsu::units::inch_t turret_y_offset;
+  pdcsu::units::inch_t x_offset;
+  pdcsu::units::inch_t y_offset;
+};
+
+struct TurretTagCamera {
+  TurretTagCameraConfig config;
+  std::shared_ptr<nt::NetworkTable> table;
 };
 
 struct ATCalculatorConstants {
   std::map<size_t, AprilTagData> tag_locations;
   std::vector<AprilTagCamera> cameras;
+  std::optional<TurretTagCamera> turret_camera;
 };
 
 class AprilTagCalculator : public funkit::math::Calculator<ATCalculatorInput,
@@ -79,10 +73,30 @@ public:
 
   ATCalculatorOutput calculate(ATCalculatorInput input) override;
 
-private:
+  static pdcsu::units::degree_t turret_angle;
+  static pdcsu::units::degps_t turret_vel;
+
+  static inch_t view_turret_off_x;
+  static inch_t view_turret_off_y;
+  static degree_t view_full_turret_angle;
+
+  struct HistoryEntry {
+    pdcsu::units::second_t time;
+    Vector2D position;
+    pdcsu::units::degree_t bearing;
+    pdcsu::units::degree_t turret_angle;
+  };
+  std::deque<HistoryEntry> odom_history_{};
+  static constexpr size_t kMaxHistorySize = 500;
+
+  void AddToHistory(pdcsu::units::second_t time, Vector2D position,
+      pdcsu::units::degree_t bearing, pdcsu::units::degree_t turret_angle);
+  Vector2D InterpolatePosition(pdcsu::units::second_t time) const;
+  pdcsu::units::degree_t InterpolateRobotBearing(
+      pdcsu::units::second_t time) const;
+  pdcsu::units::degree_t InterpolateTurretAngle(
+      pdcsu::units::second_t time) const;
+
   Vector2D correction;
-  Vector2D getPos(pdcsu::units::degree_t bearing, pdcsu::units::degree_t theta,
-      pdcsu::units::inch_t distance, int tag,
-      const AprilTagCameraConfig& config);
 };
 }

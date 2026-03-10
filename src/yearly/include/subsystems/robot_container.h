@@ -4,13 +4,14 @@
 #include "subsystems/abstract/control_input.h"
 #include "subsystems/abstract/gpd.h"
 #include "subsystems/hardware/DrivetrainConstructor.h"
-#include "subsystems/hardware/intake.h"
+#include "subsystems/hardware/hoptake/hoptake_ss.h"
 #include "subsystems/hardware/leds.h"
-#include "subsystems/hardware/shooter.h"
-#include "subsystems/hardware/testcrt.h"
+#include "subsystems/hardware/scorer/scorer_ss.h"
 
 class RobotContainer : public funkit::robot::GenericRobotContainer {
 public:
+  ControlInputSubsystem control_input_{&drivetrain_};
+
   LEDsSubsystem leds_{};
 
   DrivetrainConstructor drivetrain_constructor_{};
@@ -19,20 +20,13 @@ public:
 
   GPDSubsystem GPD_{&drivetrain_};
 
-  ControlInputSubsystem control_input_{&drivetrain_};
-
-  TurretTestSubsystem turr_test{};
-
-  ShooterSubsystem shooter_{};
-
-  IntakeSubsystem intake_{};
+  ScorerSuperstructure scorer_ss_{};
+  HoptakeSuperstructure hoptake_ss_{};
 
   RobotContainer() {
     RegisterPreference("init_drivetrain", true);
     RegisterPreference("init_leds", true);
     RegisterPreference("init_gpd", true);
-    RegisterPreference("init_shooter", true);
-    RegisterPreference("init_intake", true);
 
     bool drivetrain_init = (GetPreferenceValue_bool("init_drivetrain"));
     bool leds_init = (GetPreferenceValue_bool("init_leds"));
@@ -44,12 +38,13 @@ public:
     RegisterSubsystemGroupAB({{&drivetrain_, drivetrain_init}});
     RegisterSubsystemGroupAB({{&GPD_, gpd_init}});
 
-    // bool shooter_init = (GetPreferenceValue_bool("init_shooter"));
-    // bool intake_init = (GetPreferenceValue_bool("init_intake"));
+    RegisterPreference("init_scorer_ss", true);
+    RegisterPreference("init_hoptake_ss", true);
 
-    // RegisterSubsystemGroupAB({{&shooter_, shooter_init}});
-    // RegisterSubsystemGroupAB({{&intake_, intake_init}});
+    bool scorer_ss_init = (GetPreferenceValue_bool("init_scorer_ss"));
+    bool hoptake_ss_init = (GetPreferenceValue_bool("init_hoptake_ss"));
 
-    // RegisterSubsystemGroupAB({{&turr_test, true}});
+    RegisterSubsystemGroupAB({{&scorer_ss_, scorer_ss_init}});
+    RegisterSubsystemGroupB({{&hoptake_ss_, hoptake_ss_init}});
   }
 };

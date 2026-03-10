@@ -1,0 +1,3 @@
+#!/bin/bash
+
+scp ./networktables.json lvuser@10.8.46.2:/home/lvuser/networktables.json

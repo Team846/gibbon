@@ -15,8 +15,8 @@
 #include "autos/auton_seqs.h"
 #include "calculators/ShootingCalculator.h"
 #include "commands/teleop/drive_command.h"
-#include "commands/teleop/intake_command.h"
-#include "commands/teleop/shooter_command.h"
+#include "commands/teleop/hoptake_command.h"
+#include "commands/teleop/scorer_command.h"
 #include "control_triggers.h"
 #include "funkit/wpilib/NTAction.h"
 #include "rsighandler.h"
@@ -52,7 +52,11 @@ void FunkyRobot::OnInitialize() {
 
   frc::SmartDashboard::PutData("zero_turret_encoders",
       new funkit::wpilib::NTAction(
-          [this] { container_.turr_test.ZeroEncoders(); }));
+          [this] { container_.scorer_ss_.turret.ZeroEncoders(); }));
+
+  frc::SmartDashboard::PutData("zero_turret_with_CRT",
+      new funkit::wpilib::NTAction(
+          [this] { container_.scorer_ss_.turret.ZeroWithCRT(); }));
 
   // Add path recording controls
   frc::SmartDashboard::PutData(
@@ -78,43 +82,49 @@ void FunkyRobot::OnInitialize() {
 
 void FunkyRobot::OnEnable() {
   // Start path recording
-  if (container_.drivetrain_.IsPathRecording()) {
-    auto now = std::chrono::system_clock::now();
-    auto time_t_now = std::chrono::system_clock::to_time_t(now);
+  // if (container_.drivetrain_.IsPathRecording()) {
+  //   auto now = std::chrono::system_clock::now();
+  //   auto time_t_now = std::chrono::system_clock::to_time_t(now);
 
-    // Format time as month-day-year-hour-minute-second
-    std::tm* tm_now = std::localtime(&time_t_now);
+  //   // Format time as month-day-year-hour-minute-second
+  //   std::tm* tm_now = std::localtime(&time_t_now);
 
-    char time_buffer[64];
-    std::strftime(
-        time_buffer, sizeof(time_buffer), "%m-%d-%Y_%H-%M-%S", tm_now);
-    std::string filename = "pathlogs_" + std::string(time_buffer);
+  //   char time_buffer[64];
+  //   std::strftime(
+  //       time_buffer, sizeof(time_buffer), "%m-%d-%Y_%H-%M-%S", tm_now);
+  //   std::string filename = "pathlogs_" + std::string(time_buffer);
 
-    container_.drivetrain_.StartPathRecording(filename);
-    Log("Started recording auto path data to {}.csv", filename);
-  }
+  // container_.drivetrain_.StartPathRecording(filename);
+  // Log("Started recording auto path data to {}.csv", filename);
+  // }
 }
 
 void FunkyRobot::OnDisable() {
   // Stop path recording
-  bool success = container_.drivetrain_.StopPathRecording();
-  if (success) {
-    Log("Successfully stopped recording path data");
-  } else {
-    Warn("Failed to stop recording path data or no recording in progress");
-  }
+  // bool success = container_.drivetrain_.StopPathRecording();
+  // if (success) {
+  //   Log("Successfully stopped recording path data");
+  // } else {
+  //   Warn("Failed to stop recording path data or no recording in progress");
+  // }
 }
 
 void FunkyRobot::InitTeleop() {
   container_.drivetrain_.SetDefaultCommand(DriveCommand{container_});
-  container_.shooter_.SetDefaultCommand(ShooterCommand{container_});
-  container_.intake_.SetDefaultCommand(IntakeCommand{container_});
-
+  container_.scorer_ss_.SetDefaultCommand(ScorerCommand{container_});
+  container_.hoptake_ss_.SetDefaultCommand(HoptakeCommand{container_});
   ControlTriggerInitializer::InitTeleopTriggers(container_);
 }
 
+void FunkyRobot::ClearDefaultCommands() {
+  container_.drivetrain_.RemoveDefaultCommand();
+  container_.scorer_ss_.RemoveDefaultCommand();
+  container_.hoptake_ss_.RemoveDefaultCommand();
+}
+
 void FunkyRobot::OnPeriodic() {
-  ShootingCalculator::Calculate(&container_);
+  ShootingCalculator::Calculate(
+      &container_, container_.control_input_.GetReadings().pass_mode);
 
   if (frc::RobotBase::IsSimulation()) {
     auto instance = nt::NetworkTableInstance::GetDefault();
@@ -150,12 +160,21 @@ void FunkyRobot::OnPeriodic() {
     }
   }
 
+  if (container_.scorer_ss_.turret.is_initialized() &&
+      container_.drivetrain_.is_initialized()) {
+    container_.drivetrain_.SetFieldObjectPose("turret",
+        container_.drivetrain_.GetReadings().estimated_pose.position,
+        container_.scorer_ss_.turret.GetReadings().pos_ +
+            container_.drivetrain_.GetReadings().pose.bearing);
+  }
+
   if (!gyro_switch_.Get() && !IsEnabled()) {
     container_.drivetrain_.SetBearing(degree_t{0});
     homing_count_gyro = GetPreferenceValue_int("homing_flash_loops");
   }
 
   if (!home_switch_.Get() && !IsEnabled()) {
+    container_.hoptake_ss_.pivot.ZeroSubsystem();
     homing_count_ = GetPreferenceValue_int("homing_flash_loops");
   }
 
@@ -177,14 +196,22 @@ void FunkyRobot::OnPeriodic() {
   else if (coast_count_ > 0 && isDisabled)
     LEDsLogic::CoastingLEDs(&container_,
         (1.0 * coast_count_) / GetPreferenceValue_int("num_coasting_loops"));
+  else if (isDisabled && !container_.hoptake_ss_.pivot.homed)
+    LEDsLogic::SetLEDsState(&container_, kLEDsUnready);
+  else if (isDisabled)
+    LEDsLogic::SetLEDsState(&container_, kLEDsDisabled);
+  else if (container_.scorer_ss_.GetReadings().will_make_shot &&
+           container_.drivetrain_.variance < 16.0)
+    LEDsLogic::SetLEDsState(&container_, kLEDsSequencing);
   else
     LEDsLogic::UpdateLEDs(&container_);
 }
 
 void FunkyRobot::InitTest() {
   container_.drivetrain_.SetDefaultCommand(DriveCommand{container_});
-  container_.shooter_.SetDefaultCommand(ShooterCommand{container_});
-  container_.intake_.SetDefaultCommand(IntakeCommand{container_});
+  container_.scorer_ss_.SetDefaultCommand(ScorerCommand{container_});
+  container_.hoptake_ss_.SetDefaultCommand(HoptakeCommand{container_});
+  ControlTriggerInitializer::InitTeleopTriggers(container_);
 }
 
 #ifndef RUNNING_FRC_TESTS

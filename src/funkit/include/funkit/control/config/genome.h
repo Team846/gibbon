@@ -69,9 +69,9 @@ struct MotorGenome {
 
   bool brake_mode{true};
 
-  Gains gains;
+  Gains gains{.kP = 0.0, .kI = 0.0, .kD = 0.0, .kF = 0.0};
 
-  FollowerConfig follower_config;
+  FollowerConfig follower_config{-1, false};
 };
 
 /*

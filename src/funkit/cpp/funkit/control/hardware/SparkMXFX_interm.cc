@@ -56,8 +56,8 @@ void SparkMXFX_interm::Tick() {
   }
   if (double* dc = std::get_if<double>(&last_command_)) {
     double dc_u = *dc;
-    dc_u = cooked.Record(dc_u, radps_t(Read(ReadType::kReadVelocity)),
-        Read(ReadType::kTemperature));
+    // dc_u = cooked.Record(dc_u, radps_t(Read(ReadType::kReadVelocity)),
+    //     Read(ReadType::kTemperature));
     last_status_code = pid_controller_->SetSetpoint(
         dc_u, rev::spark::SparkBase::ControlType::kDutyCycle);
     esc_->Set(dc_u);

@@ -18,8 +18,10 @@ TurretPositionCalculator::CrtSolution TurretPositionCalculator::GetPosition(
       funkit::math::lcm(inputs.teethA, inputs.teethB) / inputs.mainTeeth};
   rotation_t searchMax = inputs.maxRots;
   if (period < searchMax) { searchMax = period; }
-  int minN_A = u_floor((inputs.minRots * ratioA) - inputs.absA).value();
-  int maxN_A = u_ceil((searchMax * ratioA) - inputs.absA).value();
+  int minN_A = static_cast<int>(
+      std::floor((inputs.minRots * ratioA - inputs.absA).value()));
+  int maxN_A =
+      static_cast<int>(std::ceil((searchMax * ratioA - inputs.absA).value()));
   minN_A -= 1;
   maxN_A += 1;
   for (int n = minN_A; n <= maxN_A; ++n) {
@@ -30,8 +32,10 @@ TurretPositionCalculator::CrtSolution TurretPositionCalculator::GetPosition(
       candidatesA.push_back(t_rot);
     }
   }
-  int minN_B = u_floor((inputs.minRots * ratioB) - inputs.absB).value();
-  int maxN_B = u_ceil((searchMax * ratioB) - inputs.absB).value();
+  int minN_B = static_cast<int>(
+      std::floor(((inputs.minRots * ratioB) - inputs.absB).value()));
+  int maxN_B =
+      static_cast<int>(std::ceil(((searchMax * ratioB) - inputs.absB).value()));
   minN_B -= 1;
   maxN_B += 1;
   for (int n = minN_B; n <= maxN_B; ++n) {

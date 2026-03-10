@@ -1,10 +1,13 @@
 #include "autos/auton_seqs.h"
 
+#include <frc2/command/ConditionalCommand.h>
 #include <frc2/command/ParallelDeadlineGroup.h>
 #include <frc2/command/ParallelRaceGroup.h>
 #include <frc2/command/WaitCommand.h>
 #include <frc2/command/WaitUntilCommand.h>
 
+#include "commands/general/auto_intake_command.h"
+#include "commands/general/auto_scorer_command.h"
 #include "funkit/robot/swerve/drive_to_point_command.h"
 #include "funkit/robot/swerve/wait_until_close.h"
 #include "pdcsu_units.h"
@@ -35,13 +38,9 @@ using FPT = funkit::math::FieldPoint;
 #define MAX_DECEL_CS2_BUMP 35_fps2_
 #define MAX_VEL_CS2_BUMP 15_fps_
 
-#define MAX_ACCEL_LEAVE 10_fps2_
-#define MAX_DECEL_LEAVE 10_fps2_
-#define MAX_VEL_LEAVE 5_fps_
-
-#define MAX_ACCEL_SIMTEST 30_fps2_
-#define MAX_DECEL_SIMTEST 30_fps2_
-#define MAX_VEL_SIMTEST 15_fps_
+#define MAX_ACCEL_CS2_SWIM 10_fps2_
+#define MAX_DECEL_CS2_SWIM 10_fps2_
+#define MAX_VEL_CS2_SWIM 8.5_fps_
 
 #define START_Y (298.5_in_ - 16.5_in_)
 
@@ -54,6 +53,11 @@ using FPT = funkit::math::FieldPoint;
 #define SEQUENCE(action1, action2) \
   frc2::SequentialCommandGroup { action1, action2 }
 
+#define INSTANT(action)             \
+  {                                 \
+    frc2::InstantCommand { action } \
+  }
+
 #define AUTO_NAME(default_name)                                \
   std::string(default_name) + (is_blue_side ? "_B_" : "_R_") + \
       (is_left_side ? "L" : "R")
@@ -64,6 +68,7 @@ using FPT = funkit::math::FieldPoint;
 #define START2(x, y, start_bearing)                              \
   INSTANT {                                                      \
     [&, blue = is_blue_side, left = is_left_side]() {            \
+      if (!frc::RobotBase::IsSimulation()) return;               \
       FPT start_point{{x, y}, start_bearing, 0_fps_};            \
       start_point = start_point.mirror(blue).mirrorOnlyX(!left); \
       container.drivetrain_.UpdateReadings();                    \
@@ -71,12 +76,6 @@ using FPT = funkit::math::FieldPoint;
           {start_point.point[0], start_point.point[1]});         \
       Log("Auto Start");                                         \
     }                                                            \
-  }
-
-#define DRIVE(auto_name, x, y, bearing, final_velocity)                   \
-  funkit::robot::swerve::DriveToPointCommand {                            \
-    &(container.drivetrain_), MKPT(x, y, bearing, final_velocity),        \
-        MAX_VEL_##auto_name, MAX_ACCEL_##auto_name, MAX_DECEL_##auto_name \
   }
 
 #define DRIVE(auto_name, x, y, bearing, final_velocity)                   \
@@ -98,51 +97,29 @@ using FPT = funkit::math::FieldPoint;
         funkit::robot::swerve::DriveToPointFlags::kRequireBearing             \
   }
 
-#define END_BUMPC1_PT MKPT(90_in_, 223.61_in_, 35_deg_, 0_fps_)
-#define START_BUMPC1_PT MKPT(90_in_, 110.61_in_, 35_deg_, 0_fps_)
+#define INTAKE(where) AutoIntakeCommand(container, where)
+
+#define SHOOT() AutoScorerCommand(container, true, false)
+
+#define TRACK() AutoScorerCommand(container, false, false)
+
+#define PASS() AutoScorerCommand(container, false, true)
+
+#define END_BUMPC1_PT MKPT(92_in_, 223.61_in_, 35_deg_, 8_fps_)
+#define START_BUMPC1_PT MKPT(92_in_, 110.61_in_, 35_deg_, 8_fps_)
 // 8_fps
-#define END_BUMPC23_PT MKPT(102_in_, 223.61_in_, 35_deg_, 0_fps_)
-#define START_BUMPC23_PT MKPT(102_in_, 110.61_in_, 35_deg_, 0_fps_)
+#define END_BUMPC23_PT MKPT(102_in_, 223.61_in_, 35_deg_, 8_fps_)
+#define START_BUMPC23_PT MKPT(102_in_, 110.61_in_, 35_deg_, 8_fps_)
 
-#define P1C1_INTAKE_PT MKPT(76.5_in_, 287.35_in_, 0_deg_, 11_fps_)
-#define P2C1_INTAKE_PT MKPT(87.25_in_, 312.6_in_, 7_deg_, 7_fps_)
-#define P3C1_INTAKE_PT MKPT(93.75_in_, 324.2_in_, 15_deg_, 0_fps_)
+#define P1C1_INTAKE_PT MKPT(90.5_in_, 287.35_in_, 15_deg_, 11_fps_)
+#define P2C1_INTAKE_PT MKPT(103.25_in_, 312.6_in_, 20_deg_, 7_fps_)
+#define P3C1_INTAKE_PT MKPT(120.75_in_, 328.2_in_, 40_deg_, 0_fps_)
 
-#define P1C2_INTAKE_PT MKPT(121.1_in_, 260.5_in_, 0_deg_, 11_fps_)
-#define P2C2_INTAKE_PT MKPT(129.35_in_, 300.42_in_, 7_deg_, 7_fps_)
-#define P3C2_INTAKE_PT MKPT(134.85_in_, 324.35_in_, 15_deg_, 0_fps_)
+#define P1C2_INTAKE_PT MKPT(135.1_in_, 280.5_in_, 15_deg_, 11_fps_)
+#define P2C2_INTAKE_PT MKPT(155.35_in_, 305.42_in_, 30_deg_, 7_fps_)
+#define P3C2_INTAKE_PT MKPT(170.85_in_, 324.35_in_, 45_deg_, 0_fps_)
 
-#define P1C3_INTAKE_PT MKPT(111.1_in_, 254.5_in_, 20_deg_, 11_fps_)
-#define P2C3_INTAKE_PT MKPT(118.35_in_, 280.42_in_, 40_deg_, 11_fps_)
-#define P3C3_INTAKE_PT MKPT(124.85_in_, 290.65_in_, 60_deg_, 7_fps_)
-#define P4C3_INTAKE_PT MKPT(146.85_in_, 295.35_in_, 90_deg_, 0_fps_)
-
-#define FPC_EXPECTED_START_UF \
-  FPT { {92.5_in_, 144.54_in_}, 0_deg_, 0_fps_ }
-#define SIM_EXP_START_UF \
-  FPT { {20_in_, 20_in_}, 0_deg_, 0_fps_ }
-
-#define FPC_SIM_START()                                                      \
-  INSTANT {                                                                  \
-    [&, blue = is_blue_side, left = is_left_side] {                          \
-      if (!frc::RobotBase::IsSimulation()) return;                           \
-      FPT exp_start = FPC_EXPECTED_START_UF.mirror(blue).mirrorOnlyX(!left); \
-      container.drivetrain_.SetPosition(exp_start.point);                    \
-      container.drivetrain_.SetOdomBearing(exp_start.bearing);               \
-      Log("FPC Simulated Auto Start");                                       \
-    }                                                                        \
-  }
-
-#define SIM_TEST_START()                                                \
-  INSTANT {                                                             \
-    [&, blue = is_blue_side, left = is_left_side] {                     \
-      if (!frc::RobotBase::IsSimulation()) return;                      \
-      FPT exp_start = SIM_EXP_START_UF.mirror(blue).mirrorOnlyX(!left); \
-      container.drivetrain_.SetPosition(exp_start.point);               \
-      container.drivetrain_.SetOdomBearing(exp_start.bearing);          \
-      Log("Simulated Auto Start");                                      \
-    }                                                                   \
-  }
+#define DEPOT MKPT(87_in_, 28_in_, 180_deg_, 0_fps_)
 
 #define __AUTO__(codeName, stringName)                                 \
   codeName::codeName(                                                  \
@@ -165,77 +142,29 @@ END DEFINE MACROS
 | ---------------------- |
 *************************/
 
-__AUTO__(LeaveAuto, "LEAVE")
-SEQUENCE {
-  START2(158.5_in_, START_Y, 180_deg_), WAIT{0.25_s},
-      DRIVE(LEAVE, 158.5_in_, START_Y - 3_ft_, 180_deg_, 0_fps_),
-}
-}
-{}
-
 __AUTO__(CS2Auto, "CS2")
 SEQUENCE {
-  START2(92.5_in_, 144.54_in_, 0_deg_),
-      DRIVE_PT_BEARING(CS2, END_BUMPC1_PT, BUMP),
+  START2(92.5_in_, 144.54_in_, 0_deg_), DRIVE_PT(CS2, END_BUMPC1_PT, BUMP),
+      TRACK(), INTAKE(HoptakeState::kIntake),
       DRIVE_PT(CS2, P1C1_INTAKE_PT, NORM), DRIVE_PT(CS2, P2C1_INTAKE_PT, NORM),
-      DRIVE_PT(CS2, P3C1_INTAKE_PT, NORM), DRIVE_PT(CS2, P2C1_INTAKE_PT, NORM),
-      DRIVE_PT(CS2, P1C1_INTAKE_PT, NORM),
-      // driveuntilfull
-      DRIVE_PT_BEARING(CS2, END_BUMPC1_PT, NORM),
-      DRIVE_PT_BEARING(CS2, START_BUMPC1_PT, BUMP),
-      DRIVE_PT(CS2, END_BUMPC1_PT, NORM), DRIVE_PT(CS2, P1C2_INTAKE_PT, NORM),
-      DRIVE_PT(CS2, P2C2_INTAKE_PT, NORM), DRIVE_PT(CS2, P3C2_INTAKE_PT, NORM),
-      DRIVE_PT(CS2, P2C2_INTAKE_PT, NORM), DRIVE_PT(CS2, P1C2_INTAKE_PT, NORM),
-      // driveuntilfull
-      DRIVE_PT_BEARING(CS2, END_BUMPC23_PT, NORM),
-      DRIVE_PT_BEARING(CS2, START_BUMPC23_PT, BUMP),
-      DRIVE_PT(CS2, END_BUMPC23_PT, BUMP), DRIVE_PT(CS2, P1C3_INTAKE_PT, NORM),
-      DRIVE_PT(CS2, P2C3_INTAKE_PT, NORM), DRIVE_PT(CS2, P3C3_INTAKE_PT, NORM),
-      DRIVE_PT(CS2, P4C3_INTAKE_PT, NORM), DRIVE_PT(CS2, P3C3_INTAKE_PT, NORM),
-      DRIVE_PT(CS2, P2C3_INTAKE_PT, NORM), DRIVE_PT(CS2, P1C3_INTAKE_PT, NORM),
-      // driveuntilfull
-      DRIVE_PT_BEARING(CS2, END_BUMPC23_PT, NORM),
-      DRIVE_PT_BEARING(CS2, START_BUMPC23_PT, BUMP),
-      DRIVE_PT_BEARING(CS2, END_BUMPC23_PT, BUMP),
-}
-}
-{}
-
-__AUTO__(SimTestAuto, "SIMTEST")
-SEQUENCE {
-  SIM_TEST_START(), DRIVE(SIMTEST, 42_in_, 51.66_in_, 0_deg_, 4_fps_),
-      DRIVE(SIMTEST, 49_in_, 63.43_in_, 0_deg_, 6_fps_),
-      DRIVE(SIMTEST, 57_in_, 70.01_in_, 0_deg_, 6_fps_),
-      DRIVE(SIMTEST, 65_in_, 73.54_in_, 0_deg_, 6_fps_),
-      DRIVE(SIMTEST, 75_in_, 75_in_, 0_deg_, 6_fps_),
-      DRIVE(SIMTEST, 85_in_, 76.45_in_, 0_deg_, 6_fps_),
-      DRIVE(SIMTEST, 94_in_, 80.60_in_, 0_deg_, 6_fps_),
-      DRIVE(SIMTEST, 101_in_, 86.56_in_, 0_deg_, 6_fps_),
-      DRIVE(SIMTEST, 107_in_, 95.82_in_, 0_deg_, 6_fps_),
-      DRIVE(SIMTEST, 110_in_, 110_in_, 0_deg_, 6_fps_),
-      DRIVE(SIMTEST, 108_in_, 121.66_in_, 0_deg_, 6_fps_),
-      DRIVE(SIMTEST, 101_in_, 133.43_in_, 0_deg_, 6_fps_),
-      DRIVE(SIMTEST, 89_in_, 142.07_in_, 0_deg_, 6_fps_),
-      DRIVE(SIMTEST, 75_in_, 145_in_, 0_deg_, 6_fps_),
-      DRIVE(SIMTEST, 61_in_, 142.07_in_, 0_deg_, 6_fps_),
-      DRIVE(SIMTEST, 49_in_, 133.43_in_, 0_deg_, 6_fps_),
-      DRIVE(SIMTEST, 42_in_, 121.66_in_, 0_deg_, 6_fps_),
-      DRIVE(SIMTEST, 40_in_, 110_in_, 0_deg_, 6_fps_),
-      DRIVE(SIMTEST, 43_in_, 95.82_in_, 0_deg_, 6_fps_),
-      DRIVE(SIMTEST, 49_in_, 86.56_in_, 0_deg_, 6_fps_),
-      DRIVE(SIMTEST, 56_in_, 80.60_in_, 0_deg_, 6_fps_),
-      DRIVE(SIMTEST, 65_in_, 76.45_in_, 0_deg_, 6_fps_),
-      DRIVE(SIMTEST, 75_in_, 75_in_, 0_deg_, 6_fps_),
-      DRIVE(SIMTEST, 85_in_, 73.54_in_, 0_deg_, 6_fps_),
-      DRIVE(SIMTEST, 93_in_, 70.01_in_, 0_deg_, 6_fps_),
-      DRIVE(SIMTEST, 101_in_, 63.43_in_, 0_deg_, 6_fps_),
-      DRIVE(SIMTEST, 108_in_, 51.66_in_, 0_deg_, 6_fps_),
-      DRIVE(SIMTEST, 110_in_, 40_in_, 0_deg_, 6_fps_),
-      DRIVE(SIMTEST, 108_in_, 28.34_in_, 0_deg_, 6_fps_),
-      DRIVE(SIMTEST, 101_in_, 16.57_in_, 0_deg_, 6_fps_),
-      DRIVE(SIMTEST, 93_in_, 9.99_in_, 0_deg_, 6_fps_),
-      DRIVE(SIMTEST, 85_in_, 6.46_in_, 0_deg_, 4_fps_),
-      DRIVE(SIMTEST, 75_in_, 5_in_, 0_deg_, 0_fps_),
+      TRACK(), DRIVE_PT(CS2, P3C1_INTAKE_PT, NORM), TRACK(),
+      DRIVE_PT(CS2, P1C1_INTAKE_PT, NORM), INTAKE(HoptakeState::kBump),
+      DRIVE_PT(CS2, END_BUMPC1_PT, NORM), TRACK(),
+      DRIVE_PT(CS2, START_BUMPC1_PT, BUMP),
+      PARALLEL_DEADLINE(WAIT{2.2_s}, SHOOT()), TRACK(),
+      DRIVE_PT(CS2, END_BUMPC1_PT, NORM), INTAKE(HoptakeState::kIntake),
+      DRIVE_PT(CS2, P1C2_INTAKE_PT, NORM), DRIVE_PT(CS2, P2C2_INTAKE_PT, NORM),
+      TRACK(), DRIVE_PT(CS2, P3C2_INTAKE_PT, NORM),
+      DRIVE_PT(CS2, P1C2_INTAKE_PT, NORM), INTAKE(HoptakeState::kBump),
+      DRIVE_PT(CS2, END_BUMPC23_PT, NORM),
+      DRIVE_PT(CS2, START_BUMPC23_PT, BUMP), INTAKE(HoptakeState::kIntake),
+      frc2::ConditionalCommand(
+          frc2::ParallelDeadlineGroup(
+              frc2::SequentialCommandGroup{
+                  DRIVE_PT_BEARING(CS2, DEPOT, SWIM), WAIT{5_s}},
+              frc2::SequentialCommandGroup{WAIT{0.9_s}, SHOOT()}),
+          frc2::ParallelDeadlineGroup(WAIT{10_s}, SHOOT()),
+          [left = is_left_side]() { return left; })
 }
 }
 {}

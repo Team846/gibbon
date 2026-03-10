@@ -155,6 +155,19 @@ private:
   };
 
   static std::queue<MotorMessage> control_messages;
+
+  static int skip_loops_remaining_[CONTROLLER_REGISTRY_SIZE];
+  static bool skip_decided_this_loop_[CONTROLLER_REGISTRY_SIZE];
+  static bool skip_this_loop_[CONTROLLER_REGISTRY_SIZE];
+  static bool last_attempt_was_error_[CONTROLLER_REGISTRY_SIZE];
+
+  static bool set_genome_pending_retry_[CONTROLLER_REGISTRY_SIZE];
+  static bool set_genome_force_set_[CONTROLLER_REGISTRY_SIZE];
+
+  static bool GetSkipDecisionForSlotThisLoop(size_t slot_id);
+  static void RecordDeviceError(size_t slot_id);
+  static void RecordDeviceSuccess(size_t slot_id);
+  static void RetrySetGenomeIfPending();
 };
 
 }  // namespace funkit::control

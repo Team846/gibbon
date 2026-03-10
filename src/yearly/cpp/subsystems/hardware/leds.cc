@@ -66,7 +66,7 @@ void LEDsSubsystem::WriteToHardware(TLTGT target) {
       SetStrip(BLUE);
     } else if (tgt->state == kLEDsSequencing) {
       SetStrip(LIGHT_BLUE);
-      Flash(RAPID_FLASH);
+      Flash(SLOW_FLASH);
     } else if (tgt->state == kLEDsTeleop) {
       SetStrip(ORANGE);
       Flash(SLOW_FLASH);
@@ -79,7 +79,7 @@ void LEDsSubsystem::WriteToHardware(TLTGT target) {
       SetStrip(GREEN);
     } else if (tgt->state == kisCompletelyLinedUp) {
       SetStrip(GREEN);
-      Flash(MED_FLASH);
+      Flash(SLOW_FLASH);
     }
   } else if (auto* tgt = std::get_if<LEDsCoastingTarget>(&target)) {
     for (int i = 0; i < (int)(kLength * tgt->percent); i++) {

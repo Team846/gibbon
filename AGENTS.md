@@ -678,7 +678,7 @@ pdcsu::units::inch_t distance = pdcsu::units::inch_t{24};
 pdcsu::units::meter_t length = pdcsu::units::meter_t{1.5};
 ```
 
-**Note**: PDCSU supports user-defined literals (e.g. `45_deg_`, `10_fps_`, `1_rad_`, `12_V_`, `20_A_`, `5_in_`, `1.5_m_`) and explicit constructors; use whichever keeps expressions in unit form and readable.
+**CRITICAL**: Always use **PDCSU unit literals** (e.g. `45_deg_`, `10_fps_`, `1_rad_`, `12_V_`, `20_A_`, `5_in_`, `1.5_m_`) or PDCSU explicit constructors (e.g. `pdcsu::units::degree_t{45}`). **NEVER use WPILib unit literals** (e.g. `45_deg`, `10_fps`, `1_rad`, `12_V`, `20_A`, `5_in`, `1.5_m` without trailing underscore). PDCSU literals end with a trailing underscore (`_`), WPILib literals do not. This is a common mistake—always double-check that your literals have the trailing underscore.
 
 #### Common PDCSU Unit Types
 
@@ -931,7 +931,7 @@ The drivetrain includes path recording functionality:
 
 15. **Register preferences**: All configurable values should be preferences
 
-16. **Use unit types**: Prefer `units::unit_t` types over raw doubles (see [Units Library](#units-library) section for details)
+16. **Use PDCSU unit types and literals**: Prefer PDCSU `units::unit_t` types over raw doubles (see [Units Library](#units-library) section for details). **ALWAYS use PDCSU literals with trailing underscore** (e.g. `45_deg_`, `10_fps_`, `1_rad_`), **NEVER use WPILib literals without trailing underscore** (e.g. `45_deg`, `10_fps`, `1_rad`). This is a critical distinction—WPILib and PDCSU literals look similar but are incompatible.
 
 17. **Follow naming conventions**: See [Naming Conventions](#naming-conventions) section below
 

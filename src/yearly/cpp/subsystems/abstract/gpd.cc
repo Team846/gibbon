@@ -28,8 +28,6 @@ void GPDSubsystem::Setup() {}
 GPDReadings GPDSubsystem::ReadFromHardware() {
   GPDReadings readings{};
 
-  readings.locked_target = locked_target_;
-
   funkit::robot::swerve::DrivetrainReadings drivetrain_readings =
       drivetrain_->GetReadings();
 
@@ -47,7 +45,7 @@ GPDReadings GPDSubsystem::ReadFromHardware() {
   if (optimal_point.size() == 0U) {
     drivetrain_->SetFieldObjectPose(
         "optimal_gp", {5000_in_, 5000_in_}, gp_spin_);
-    return {0_deg_, false, locked_target_};
+    return {0_deg_, false};
   }
 
   double distance = std::abs(optimal_point[0]);

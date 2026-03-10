@@ -4,12 +4,14 @@
 
 #include "frc/DriverStation.h"
 #include "frc/RobotBase.h"
+#include "frc/Timer.h"
 #include "frc/smartdashboard/SmartDashboard.h"
 #include "funkit/control/config/genome.h"
 #include "funkit/math/constants.h"
 #include "funkit/math/fieldpoints.h"
 #include "funkit/robot/swerve/control/swerve_ol_calculator.h"
 #include "funkit/robot/swerve/swerve_module.h"
+#include "funkit/wpilib/time.h"
 
 namespace funkit::robot::swerve {
 
@@ -18,7 +20,7 @@ DrivetrainSubsystem::DrivetrainSubsystem(DrivetrainConfigs configs)
   if (std::holds_alternative<PigeonConnection>(configs_.imu_connection)) {
     const auto& pigeon_conn =
         std::get<PigeonConnection>(configs_.imu_connection);
-    pigeon_.emplace(pigeon_conn.canID, ctre::phoenix6::CANBus{""});
+    pigeon_.emplace(pigeon_conn.canID, configs.module_common_config.bus);
     pigeon_->OptimizeBusUtilization();
     pigeon_->GetYaw().SetUpdateFrequency(100_Hz);
     pigeon_->GetPitch().SetUpdateFrequency(100_Hz);
@@ -49,13 +51,15 @@ DrivetrainSubsystem::DrivetrainSubsystem(DrivetrainConfigs configs)
       *this, "drive_genome", drive_genome_backup);
 
   funkit::control::config::MotorGenome steer_genome_backup{
-      .motor_current_limit = pdcsu::units::amp_t{120.0},
-      .smart_current_limit = pdcsu::units::amp_t{80.0},
-      .voltage_compensation = pdcsu::units::volt_t{10.0},
+      .motor_current_limit = pdcsu::units::amp_t{40.0},
+      .smart_current_limit = pdcsu::units::amp_t{40.0},
+      .voltage_compensation = pdcsu::units::volt_t{8.0},
       .brake_mode = true,
       .gains = {.kP = 15.0, .kI = 0.0, .kD = 0.0, .kF = 0.0}};
   funkit::control::config::SubsystemGenomeHelper::CreateGenomePreferences(
       *this, "steer_genome", steer_genome_backup);
+
+  RegisterPreference("scalar_pigeon", 1.010101010101010101010101010101);
 
   RegisterPreference("bearing_gains/_kP", 9);
   RegisterPreference("bearing_gains/_kI", 0.0);
@@ -63,10 +67,9 @@ DrivetrainSubsystem::DrivetrainSubsystem(DrivetrainConfigs configs)
   RegisterPreference("bearing_gains/_kF", -0.3);
   RegisterPreference("bearing_gains/deadband", pdcsu::units::degps_t{3.0});
 
-  RegisterPreference("april_bearing_latency", pdcsu::units::ms_t{0});
   RegisterPreference("drive_latency", pdcsu::units::ms_t{0});
 
-  RegisterPreference("max_speed", pdcsu::units::fps_t{15});
+  RegisterPreference("max_speed", pdcsu::units::fps_t{17.4});
   RegisterPreference("max_omega", pdcsu::units::degps_t{180});
   RegisterPreference("max_omega_cut", pdcsu::units::degps_t{40});
 
@@ -76,9 +79,6 @@ DrivetrainSubsystem::DrivetrainSubsystem(DrivetrainConfigs configs)
   RegisterPreference("steer_lag", pdcsu::units::second_t{0.05});
   RegisterPreference("bearing_latency", pdcsu::units::second_t{0.01});
 
-  RegisterPreference("pose_estimator/pose_variance", 0.1);
-  RegisterPreference("pose_estimator/velocity_variance", 1.0);
-  RegisterPreference("pose_estimator/accel_variance", 1.0);
   RegisterPreference("pose_estimator/override", false);
 
   RegisterPreference("april_tags/april_variance_coeff", 0.08);
@@ -110,8 +110,17 @@ DrivetrainSubsystem::DrivetrainSubsystem(DrivetrainConfigs configs)
         {config, nt::NetworkTableInstance::GetDefault().GetTable(
                      "AprilTagsCam" + std::to_string(config.camera_id))});
   }
-  tag_pos_calculator.setConstants(
-      {.tag_locations = configs.april_locations, .cameras = cameras});
+  std::optional<funkit::robot::calculators::TurretTagCamera> turret_tag_camera;
+  if (configs.turret_camera_config.has_value()) {
+    const auto& tc = configs.turret_camera_config.value();
+    turret_tag_camera.emplace(
+        funkit::robot::calculators::TurretTagCamera{.config = tc,
+            .table = nt::NetworkTableInstance::GetDefault().GetTable(
+                "AprilTagsCam" + std::to_string(tc.camera_id))});
+  }
+  tag_pos_calculator.setConstants({.tag_locations = configs.april_locations,
+      .cameras = cameras,
+      .turret_camera = turret_tag_camera});
 
 #ifndef _WIN32
   for (int i = 0; i < 20; i++) {
@@ -265,8 +274,10 @@ pdcsu::units::degps_t DrivetrainSubsystem::ApplyBearingPID(
 pdcsu::units::degree_t DrivetrainSubsystem::GetBearing() {
   if (pigeon_.has_value()) {
     auto bearing_wpi =
-        -1 * ctre::phoenix6::BaseStatusSignal::GetLatencyCompensatedValue(
-                 pigeon_->GetYaw(), pigeon_->GetAngularVelocityZWorld());
+        -1 *
+        ctre::phoenix6::BaseStatusSignal::GetLatencyCompensatedValue(
+            pigeon_->GetYaw(), pigeon_->GetAngularVelocityZWorld()) *
+        GetPreferenceValue_double("scalar_pigeon");
     return pdcsu::units::degree_t{bearing_wpi.to<double>()};
   } else if (navX_.has_value()) {
     return pdcsu::units::degree_t{navX_->GetAngle()};
@@ -276,7 +287,7 @@ pdcsu::units::degree_t DrivetrainSubsystem::GetBearing() {
 
 pdcsu::units::degree_t DrivetrainSubsystem::GetPitch() {
   if (pigeon_.has_value()) {
-    return pdcsu::units::degree_t{pigeon_->GetPitch().GetValueAsDouble()} -
+    return pdcsu::units::degree_t{pigeon_->GetRoll().GetValueAsDouble()} - // Note: intentionally switched
            zero_pitch;
   }
   if (navX_.has_value()) { return pdcsu::units::degree_t{navX_->GetPitch()}; }
@@ -285,7 +296,7 @@ pdcsu::units::degree_t DrivetrainSubsystem::GetPitch() {
 
 pdcsu::units::degree_t DrivetrainSubsystem::GetRoll() {
   if (pigeon_.has_value()) {
-    return pdcsu::units::degree_t{pigeon_->GetRoll().GetValueAsDouble()} -
+    return pdcsu::units::degree_t{pigeon_->GetPitch().GetValueAsDouble()} - // Note: intentionally switched
            zero_roll;
   }
   if (navX_.has_value()) { return pdcsu::units::degree_t{navX_->GetRoll()}; }
@@ -320,14 +331,7 @@ DrivetrainSubsystem::GetAcceleration() {
 }
 
 DrivetrainReadings DrivetrainSubsystem::ReadFromHardware() {
-  cached_pose_variance_ =
-      GetPreferenceValue_double("pose_estimator/pose_variance");
-  cached_velocity_variance_ =
-      GetPreferenceValue_double("pose_estimator/velocity_variance");
-  cached_accel_variance_ =
-      GetPreferenceValue_double("pose_estimator/accel_variance");
-  pose_estimator.Update(
-      cached_pose_variance_, cached_velocity_variance_, cached_accel_variance_);
+  pose_estimator.Update();
 
   pdcsu::units::degree_t bearing = GetBearing();
   pdcsu::units::degps_t yaw_rate = GetYawRate();
@@ -374,6 +378,20 @@ DrivetrainReadings DrivetrainSubsystem::ReadFromHardware() {
       odometry_.calculate({bearing, steer_positions, drive_positions,
           cached_odom_fudge_factor_});
 
+  if (frc::RobotBase::IsSimulation()) {
+    second_t now = funkit::wpilib::CurrentFPGATime();
+    if (prev_odom_bearing_time_ > 0_s_) {
+      second_t dt = now - prev_odom_bearing_time_;
+      if (dt > 0_s_) {
+        yaw_rate = funkit::math::CoterminalDifference(
+                       odom_output.odom_bearing, prev_odom_bearing_) /
+                   dt;
+      }
+    }
+    prev_odom_bearing_ = odom_output.odom_bearing;
+    prev_odom_bearing_time_ = now;
+  }
+
   Vector2D delta_pos = odom_output.position - GetReadings().pose.position;
 
   pdcsu::units::degree_t pitch = GetPitch();
@@ -411,13 +429,15 @@ DrivetrainReadings DrivetrainSubsystem::ReadFromHardware() {
             "april_tags/fudge_latency" + std::to_string(config.camera_id));
   }
 
-  cached_april_bearing_latency_ =
-      GetPreferenceValue_unit_type<pdcsu::units::ms_t>("april_bearing_latency");
-
+  funkit::robot::swerve::odometry::SwervePose odom_pose{
+      .position = odom_output.position,
+      .bearing = bearing,
+      .velocity = velocity,
+  };
   funkit::robot::calculators::ATCalculatorOutput tag_pos =
-      tag_pos_calculator.calculate({new_pose, GetReadings().pose, yaw_rate,
-          cached_april_variance_coeff_, cached_triangular_variance_coeff_,
-          cached_fudge_latencies_, cached_april_bearing_latency_});
+      tag_pos_calculator.calculate(
+          {new_pose, odom_pose, yaw_rate, cached_april_variance_coeff_,
+              cached_triangular_variance_coeff_, cached_fudge_latencies_});
 
   if (tag_pos.variance >= 0) {
     pose_estimator.AddVisionMeasurement(
@@ -432,6 +452,8 @@ DrivetrainReadings DrivetrainSubsystem::ReadFromHardware() {
   Graph("april_tags/april_pos_x", tag_pos.pos[0]);
   Graph("april_tags/april_pos_y", tag_pos.pos[1]);
   Graph("april_tags/april_variance", tag_pos.variance);
+
+  Graph("pose_estimator/latency_est", pose_estimator.getLatency());
 
   if (first_loop) {
     pose_estimator.SetPoint(
@@ -461,6 +483,7 @@ DrivetrainReadings DrivetrainSubsystem::ReadFromHardware() {
   Graph("estimated_pose/velocity_x", estimated_pose.velocity[0]);
   Graph("estimated_pose/velocity_y", estimated_pose.velocity[1]);
   Graph("estimated_pose/variance", pose_estimator.getVariance());
+  variance = pose_estimator.getVariance();
 
   Graph("readings/position_x", new_pose.position[0]);
   Graph("readings/position_y", new_pose.position[1]);
@@ -472,8 +495,6 @@ DrivetrainReadings DrivetrainSubsystem::ReadFromHardware() {
   Graph("readings/accel_y", accl[1]);
 
   accl = accl.rotate(bearing_offset_);
-  pose_estimator.AddAccelerationMeasurement({accl[0].value(), accl[1].value()});
-
   pdcsu::units::fps2_t accel_mag{std::sqrt(
       accl[0].value() * accl[0].value() + accl[1].value() * accl[1].value())};
   // Graph("readings/accel_mag", accel_mag);
@@ -564,7 +585,7 @@ void DrivetrainSubsystem::WriteToHardware(DrivetrainTarget target) {
       SubsystemGenomeHelper::LoadGenomePreferences(*this, "drive_genome");
 
   for (int i = 0; i < 4; i++) {
-    modules_[i]->ModifySwerveGenome(steer_genome, drive_genome);
+    modules_[i]->ModifySwerveGenome(drive_genome, steer_genome);
   }
 
   cached_max_omega_cut_ =
@@ -606,14 +627,26 @@ bool DrivetrainSubsystem::IsPathRecording() const {
 void DrivetrainSubsystem::SetFieldObjectPose(const std::string& name,
     pdcsu::util::math::uVec<pdcsu::units::inch_t, 2> position,
     pdcsu::units::degree_t rotation) {
-#ifndef _WIN32
+  // #ifndef _WIN32
   units::inch_t pos_x_wpi(position[0].value());
   units::inch_t pos_y_wpi(
       (funkit::math::FieldPoint::field_size_y - position[1]).value());
-  units::degree_t rotation_wpi(rotation.value());
-  auto* obj = MainField_.GetObject(name);
-  if (obj) { obj->SetPose(pos_y_wpi, pos_x_wpi, rotation_wpi); }
+  units::degree_t rotation_wpi((degree_t{180} - rotation).value());
+#ifdef _WIN32
+#undef GetObject
 #endif
+  auto* mainfield_object = MainField_.GetObject(name);
+#ifdef _WIN32
+#define GetObject GetObjectA
+#endif
+  if (mainfield_object) {
+    mainfield_object->SetPose(pos_y_wpi, pos_x_wpi, rotation_wpi);
+  }
+  // #endif
+}
+void DrivetrainSubsystem::SetFieldTrajectory(Vector2D A, Vector2D B) {
+  SetFieldObjectPose("trajA", A, 0_deg_);
+  SetFieldObjectPose("trajB", B, 0_deg_);
 }
 
 }  // namespace funkit::robot::swerve

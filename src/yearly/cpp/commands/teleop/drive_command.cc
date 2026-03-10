@@ -52,14 +52,15 @@ void DriveCommand::Periodic() {
 
   target.angular_velocity = degps_t{rotation * max_omega.value()};
 
+  Graph("target_angular_velocity", target.angular_velocity);
+
   /* For shooting while in motion */
-  if (ci_readings_.prepare_shot) {
+  if (ci_readings_.turret_no_spin) {
     ShootingCalculatorOutputs shooting_outputs =
         ShootingCalculator::GetOutputs();
     if (shooting_outputs.is_valid) {
       target.angular_velocity = container_.drivetrain_.ApplyBearingPID(
-          shooting_outputs.aim_angle + 4_deg_,
-          shooting_outputs.vel_aim_compensation);
+          shooting_outputs.aim_angle, shooting_outputs.vel_aim_compensation);
     }
   }
 
@@ -70,13 +71,11 @@ void DriveCommand::Periodic() {
 
   if (isBlue) target.velocity = target.velocity.rotate(degree_t{180});
 
+  /* Intake GPD assist */
   GPDReadings gpd_readings = container_.GPD_.GetReadings();
-  gpd_readings.locked_target = false;
 
-  if (ci_readings_.gpd_drive_button && target.velocity.magnitude() > 1.0_fps_) {
-    gpd_readings.locked_target = true;
-    Graph("locked_target", gpd_readings.locked_target);
-
+  if (ci_readings_.intake && target.velocity.magnitude() > 1.0_fps_ &&
+      gpd_readings.has_target) {
     radian_t x_off = gpd_readings.optimal_pos - target.velocity.angle(true);
 
     fps_t x_off_comp = target.velocity.magnitude() / 2.0 *
@@ -102,7 +101,7 @@ void DriveCommand::Periodic() {
               ema_comp_gpd_ * u_abs(ema_comp_gpd_) / 1_fps_, dir_xoff, true};
     }
 
-  } else if (ci_readings_.gpd_drive_button) {
+  } else if (ci_readings_.intake) {
     ema_comp_gpd_ = 0.95 * ema_comp_gpd_;
   } else {
     ema_comp_gpd_ = 0.0_fps_;

@@ -9,20 +9,32 @@ struct ControlInputReadings {
   // Driving
   double translate_x;
   double translate_y;
-
   double rotation;
 
   bool zero_bearing;
 
-  bool gpd_drive_button;
-
-  // ICTest controls
-  bool ictest_x_button;
-  bool ictest_y_button;
-  // Shooting controls
-  bool prepare_shot;
-  bool shoot;
+  bool diagonalize_bump;
   double intake;
+  bool climb_align;
+  bool point_blank_shot;
+
+  // Operator Inputs
+  bool override_autoshoot;
+  bool force_shoot;
+  bool agitate;
+  bool hood_trim_cw;
+  bool hood_trim_ccw;
+  bool turret_trim_cw;
+  bool turret_trim_ccw;
+  bool pass_mode;
+  bool descend_l1;
+  bool override_force_assist;
+  bool evac_storage;
+  bool rev_dye_rotor;
+  bool home;
+
+  // Operator Keyboard Overrides
+  bool turret_no_spin;
 };
 
 struct ControlInputTarget {
@@ -51,11 +63,11 @@ private:
 
   funkit::robot::XboxReadings previous_driver_{};
   funkit::robot::XboxReadings previous_operator_{};
-  funkit::robot::GenericControllerReadings previous_operator_keyboard_{};
+  // funkit::robot::GenericControllerReadings previous_operator_keyboard_{};
 
   frc::XboxController driver_{0};
   frc::XboxController operator_{1};
-  frc::GenericHID operator_keyboard_{2};
+  // frc::GenericHID operator_keyboard_{2};
 
   ControlInputReadings ReadFromHardware() override;
 

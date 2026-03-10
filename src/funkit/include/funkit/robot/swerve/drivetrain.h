@@ -58,6 +58,8 @@ struct DrivetrainConfigs {
       april_camera_configs;
 
   std::map<size_t, funkit::robot::calculators::AprilTagData> april_locations;
+  std::optional<funkit::robot::calculators::TurretTagCameraConfig>
+      turret_camera_config;
   pdcsu::units::fps2_t max_accel;
 };
 
@@ -137,6 +139,10 @@ public:
       pdcsu::util::math::uVec<pdcsu::units::inch_t, 2> position,
       pdcsu::units::degree_t rotation);
 
+  void SetFieldTrajectory(Vector2D A, Vector2D B);
+
+  double variance = 1000.0;
+
 private:
   DrivetrainReadings ReadFromHardware() override;
 
@@ -170,8 +176,7 @@ private:
   funkit::robot::calculators::AprilTagCalculator tag_pos_calculator;
   funkit::robot::swerve::odometry::PoseEstimator pose_estimator{
       {pdcsu::units::foot_t{0}, pdcsu::units::foot_t{0}},
-      {pdcsu::units::fps_t{0}, pdcsu::units::fps_t{0}},
-      {pdcsu::units::fps2_t{0}, pdcsu::units::fps2_t{0}}};
+      {pdcsu::units::fps_t{0}, pdcsu::units::fps_t{0}}};
 
   // Path logger for recording odometry data
   PathLogger path_logger_;
@@ -188,19 +193,18 @@ private:
   pdcsu::units::second_t cached_bearing_latency_{pdcsu::units::second_t{0}};
   double cached_odom_fudge_factor_ = 0.0;
   double cached_odom_variance_ = 0.0;
-  double cached_pose_variance_ = 0.0;
-  double cached_velocity_variance_ = 0.0;
-  double cached_accel_variance_ = 0.0;
   bool cached_pose_override_ = false;
   double cached_april_variance_coeff_ = 0.0;
   double cached_triangular_variance_coeff_ = 0.0;
   std::map<size_t, pdcsu::units::second_t> cached_fudge_latencies_{};
-  pdcsu::units::ms_t cached_april_bearing_latency_{pdcsu::units::ms_t{0}};
 
   frc::Field2d MainField_;
 
   degree_t zero_pitch;
   degree_t zero_roll;
+
+  pdcsu::units::degree_t prev_odom_bearing_{0};
+  second_t prev_odom_bearing_time_{-1};
 };
 
 }  // namespace funkit::robot::swerve

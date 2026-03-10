@@ -13,6 +13,8 @@
 #include <hal/Notifier.h>
 #include <units/time.h>
 
+#include <ctre/phoenix6/SignalLogger.hpp>
+
 #include "frc2/command/ParallelDeadlineGroup.h"
 #include "frc2/command/WaitCommand.h"
 #include "funkit/base/Loggable.h"
@@ -88,6 +90,9 @@ void GenericRobot::StartCompetition() {
 
   OnInitialize();
 
+  // Disable Phoenix Signal Logger
+  ctre::phoenix6::SignalLogger::Stop();
+
   // Report to driver station that robot is ready
   Log("\n********** Robot initialized **********\n");
   HAL_ObserveUserProgramStarting();
@@ -143,6 +148,7 @@ void GenericRobot::StartCompetition() {
         frc2::CommandScheduler::GetInstance().CancelAll();
         frc::EventLoop loop;
         loop.Clear();
+        ClearDefaultCommands();
       } else if (mode == Mode::kAutonomous) {
         // Get and run selected auto command
         OnEnable();
@@ -185,11 +191,11 @@ void GenericRobot::StartCompetition() {
     // Update subsystem readings
     generic_robot_container_->UpdateReadings();
 
-    // Special-case periodic implemented in FunkyRobot
-    OnPeriodic();
-
     // Tick command scheduler
     frc2::CommandScheduler::GetInstance().Run();
+
+    // Special-case periodic implemented in FunkyRobot
+    OnPeriodic();
 
     // Update subsystem hardware
     generic_robot_container_->UpdateHardware();
