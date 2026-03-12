@@ -75,15 +75,18 @@ ControlInputReadings ControlInputSubsystem::UpdateWithInput() {
   ci_readings_.translate_y = dr_readings.left_stick_y;
   ci_readings_.rotation = dr_readings.right_stick_x;
 
+
   Graph("translate_x", ci_readings_.translate_x);
   Graph("translate_y", ci_readings_.translate_y);
 
-  ci_readings_.diagonalize_bump = dr_readings.rsb;
+  // ci_readings_.diagonalize_bump = dr_readings.rsb;
   ci_readings_.intake = dr_readings.left_trigger;
   ci_readings_.climb_align = dr_readings.left_bumper;
   ci_readings_.point_blank_shot = dr_readings.right_trigger;
 
-  ci_readings_.override_autoshoot = op_readings.left_trigger;
+  ci_readings_.drive_test = dr_readings.a_button && dr_readings.b_button;
+
+  // ci_readings_.override_autoshoot = op_readings.left_trigger;
   ci_readings_.force_shoot = op_readings.left_bumper;
   ci_readings_.agitate = op_readings.lsb;
 

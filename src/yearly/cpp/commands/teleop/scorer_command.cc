@@ -102,7 +102,7 @@ void ScorerCommand::Periodic() {
           container_.drivetrain_.GetReadings().yaw_rate};
   target.shoot =
       ci_readings_.point_blank_shot ||
-      (shooting_outputs.is_valid && !ci_readings_.override_autoshoot &&
+      (shooting_outputs.is_valid && false &&
           container_.scorer_ss_.GetReadings().will_make_shot &&
           !frc::DriverStation::IsTest() &&
           container_.drivetrain_.variance < 16.0) ||  // TODO fix variance case

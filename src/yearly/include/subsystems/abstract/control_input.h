@@ -10,16 +10,22 @@ struct ControlInputReadings {
   double translate_x;
   double translate_y;
   double rotation;
-
   bool zero_bearing;
+  bool gpd_drive_button;
+  bool drive_test;
 
-  bool diagonalize_bump;
+  // ICTest controls
+  bool ictest_x_button;
+  bool ictest_y_button;
+  // Shooting controls
+  bool prepare_shot;
+  bool shoot;
   double intake;
   bool climb_align;
   bool point_blank_shot;
 
   // Operator Inputs
-  bool override_autoshoot;
+  // bool override_autoshoot;
   bool force_shoot;
   bool agitate;
   bool hood_trim_cw;

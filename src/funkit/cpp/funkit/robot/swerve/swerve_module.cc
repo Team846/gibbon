@@ -6,6 +6,7 @@
 #include <units/torque.h>
 
 #include <optional>
+#include <iostream>
 #include <thread>
 
 #include "frc/RobotBase.h"
@@ -228,7 +229,12 @@ void SwerveModuleSubsystem::WriteToHardware(SwerveModuleTarget target) {
 
   Graph("target/drive_dc", drive_duty_cycle);
 
-  drive_.WriteDC(drive_duty_cycle);
+  if (target.use_dc_) {
+    drive_.WriteDC(0.2);
+    // std::cout << "dc2 " << target.dc_ << std::endl;
+  } else {
+    drive_.WriteDC(drive_duty_cycle);    
+  }
 
   if (std::abs(target.drive.value()) > 0.04 || last_rezero < 50) {
     radian_t steer_dir_rad{steer_dir};

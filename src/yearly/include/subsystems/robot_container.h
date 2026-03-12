@@ -36,15 +36,15 @@ public:
     RegisterSubsystemGroupA({{&leds_, leds_init}});
 
     RegisterSubsystemGroupAB({{&drivetrain_, drivetrain_init}});
-    RegisterSubsystemGroupAB({{&GPD_, gpd_init}});
+    // RegisterSubsystemGroupAB({{&GPD_, gpd_init}});
 
-    RegisterPreference("init_scorer_ss", true);
-    RegisterPreference("init_hoptake_ss", true);
+    // RegisterPreference("init_scorer_ss", true);
+    // RegisterPreference("init_hoptake_ss", true);
 
-    bool scorer_ss_init = (GetPreferenceValue_bool("init_scorer_ss"));
-    bool hoptake_ss_init = (GetPreferenceValue_bool("init_hoptake_ss"));
+    // bool scorer_ss_init = (GetPreferenceValue_bool("init_scorer_ss"));
+    // bool hoptake_ss_init = (GetPreferenceValue_bool("init_hoptake_ss"));
 
-    RegisterSubsystemGroupAB({{&scorer_ss_, scorer_ss_init}});
-    RegisterSubsystemGroupB({{&hoptake_ss_, hoptake_ss_init}});
+    // RegisterSubsystemGroupAB({{&scorer_ss_, scorer_ss_init}});
+    // RegisterSubsystemGroupB({{&hoptake_ss_, hoptake_ss_init}});
   }
 };

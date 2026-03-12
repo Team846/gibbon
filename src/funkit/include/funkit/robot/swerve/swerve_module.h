@@ -19,6 +19,8 @@ struct SwerveModuleReadings {
 struct SwerveModuleOLControlTarget {
   pdcsu::units::fps_t drive;
   pdcsu::units::degree_t steer;
+  double dc_ = 0.0;
+  bool use_dc_ = false;
 };
 
 using SwerveModuleTarget = SwerveModuleOLControlTarget;  // TODO: remove

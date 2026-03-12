@@ -1,5 +1,6 @@
 #include "funkit/robot/swerve/drivetrain.h"
 
+#include <iostream>
 #include <thread>
 
 #include "frc/DriverStation.h"
@@ -588,18 +589,27 @@ void DrivetrainSubsystem::WriteToHardware(DrivetrainTarget target) {
     modules_[i]->ModifySwerveGenome(drive_genome, steer_genome);
   }
 
-  cached_max_omega_cut_ =
-      GetPreferenceValue_unit_type<pdcsu::units::degps_t>("max_omega_cut");
-  cached_max_speed_ =
-      GetPreferenceValue_unit_type<pdcsu::units::fps_t>("max_speed");
+  if (!target.use_dc) {
+    cached_max_omega_cut_ =
+        GetPreferenceValue_unit_type<pdcsu::units::degps_t>("max_omega_cut");
+    cached_max_speed_ =
+        GetPreferenceValue_unit_type<pdcsu::units::fps_t>("max_speed");
 
-  pdcsu::units::degps_t cut_angular_vel = pdcsu::units::u_min(
-      pdcsu::units::u_max(target.angular_velocity, -cached_max_omega_cut_),
-      cached_max_omega_cut_);
+    pdcsu::units::degps_t cut_angular_vel = pdcsu::units::u_min(
+        pdcsu::units::u_max(target.angular_velocity, -cached_max_omega_cut_),
+        cached_max_omega_cut_);
 
-  WriteVelocitiesHelper(accelClampHelper(target.velocity, target.accel_clamp),
-      target.cut_excess_steering ? cut_angular_vel : target.angular_velocity,
-      target.cut_excess_steering, cached_max_speed_);
+    WriteVelocitiesHelper(accelClampHelper(target.velocity, target.accel_clamp),
+        target.cut_excess_steering ? cut_angular_vel : target.angular_velocity,
+        target.cut_excess_steering, cached_max_speed_);
+
+  } else {
+    SwerveModuleTarget trg{0.0_fps_, 0.0_deg_, 0.2, true};
+    // std::cout << "dc1 " << 0.2 << std::endl;
+    for (int i = 0; i < 4; i++)
+      modules_[i]->SetTarget(trg);
+    // std::cout << "dc1 " << 0.2 << std::endl;
+  }
 
   for (int i = 0; i < 4; i++)
     modules_[i]->UpdateHardware();

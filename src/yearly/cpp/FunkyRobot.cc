@@ -15,6 +15,7 @@
 #include "autos/auton_seqs.h"
 #include "calculators/ShootingCalculator.h"
 #include "commands/teleop/drive_command.h"
+#include "commands/teleop/drive_test.h"
 #include "commands/teleop/hoptake_command.h"
 #include "commands/teleop/scorer_command.h"
 #include "control_triggers.h"
@@ -208,10 +209,7 @@ void FunkyRobot::OnPeriodic() {
 }
 
 void FunkyRobot::InitTest() {
-  container_.drivetrain_.SetDefaultCommand(DriveCommand{container_});
-  container_.scorer_ss_.SetDefaultCommand(ScorerCommand{container_});
-  container_.hoptake_ss_.SetDefaultCommand(HoptakeCommand{container_});
-  ControlTriggerInitializer::InitTeleopTriggers(container_);
+  container_.drivetrain_.SetDefaultCommand(DriveTest{container_});
 }
 
 #ifndef RUNNING_FRC_TESTS
