@@ -198,7 +198,7 @@ swerve::DrivetrainConfigs DrivetrainConstructor::getDrivetrainConfigs() {
 
   control_config::MotorConstructionParameters steer_params;
   steer_params.can_id = 999;
-  steer_params.inverted = true;
+  steer_params.inverted = false;
   steer_params.bus = "";
 
   using namespace pdcsu::units;
