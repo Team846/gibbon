@@ -139,8 +139,9 @@ void GenericRobot::StartCompetition() {
       mode = Mode::kTest;
     }
 
-    // If mode changed
-    if (last_mode_ != mode) {
+    bool mode_changed = last_mode_ != mode;
+
+    if (mode_changed) {
       if (mode == Mode::kDisabled) {
         OnDisable();
         // Clear command scheduler
@@ -203,7 +204,7 @@ void GenericRobot::StartCompetition() {
     // Tick MonkeyMaster
     funkit::control::MonkeyMaster::Tick(mode == Mode::kDisabled);
 
-    if (update_tick_counter_ % 300 == 0) {
+    if (update_tick_counter_ % 300 == 0 && !mode_changed) {
       funkit::control::MonkeyMaster::CheckForResets();
     }
 
@@ -241,11 +242,8 @@ void GenericRobot::StartCompetition() {
     ms_t loop_time = funkit::wpilib::CurrentFPGATime() - loop_start_time;
     Graph("loop_time", loop_time);
 
-    // Flush all queued SmartDashboard values to NetworkTables
-    frc::SmartDashboard::UpdateValues();
-
     // Check loop time
-    if (loop_time > 2.5 * kPeriod) {
+    if (loop_time > 2.5 * kPeriod && !mode_changed) {
       Warn("Loop overrun: {} ms (loop period: {} ms)", loop_time.value(),
           kPeriod.value() * 1000.0);
 

@@ -429,14 +429,9 @@ DrivetrainReadings DrivetrainSubsystem::ReadFromHardware() {
             "april_tags/fudge_latency" + std::to_string(config.camera_id));
   }
 
-  funkit::robot::swerve::odometry::SwervePose odom_pose{
-      .position = odom_output.position,
-      .bearing = bearing,
-      .velocity = velocity,
-  };
   funkit::robot::calculators::ATCalculatorOutput tag_pos =
       tag_pos_calculator.calculate(
-          {new_pose, odom_pose, yaw_rate, cached_april_variance_coeff_,
+          {new_pose, yaw_rate, cached_april_variance_coeff_,
               cached_triangular_variance_coeff_, cached_fudge_latencies_});
 
   if (tag_pos.variance >= 0) {

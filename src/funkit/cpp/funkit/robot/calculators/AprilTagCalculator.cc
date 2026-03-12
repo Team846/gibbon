@@ -4,6 +4,7 @@
 #include <iostream>
 
 #include "funkit/math/collection.h"
+#include "funkit/math/fieldpoints.h"
 #include "funkit/robot/GenericRobot.h"
 #include "funkit/wpilib/time.h"
 #include "pdcsu_units.h"
@@ -101,7 +102,7 @@ pdcsu::units::degree_t AprilTagCalculator::InterpolateTurretAngle(
 ATCalculatorOutput AprilTagCalculator::calculate(ATCalculatorInput input) {
   ATCalculatorOutput output;
   pdcsu::units::second_t now = funkit::wpilib::CurrentFPGATime();
-  AddToHistory(now, input.odom_pose.position, input.odom_pose.bearing,
+  AddToHistory(now, input.pose.position, input.pose.bearing,
       AprilTagCalculator::turret_angle);
 
   std::vector<funkit::robot::calculators::AprilTagCamera> temp_cameras{};
@@ -190,19 +191,28 @@ ATCalculatorOutput AprilTagCalculator::calculate(ATCalculatorInput input) {
             constants_.tag_locations[tags.at(j)].y_pos};
         Vector2D uncomp_cam_pos = tag_pos - cam_to_tag;
 
-        Vector2D center_to_cam =
-            Vector2D{
-                config.x_offset,
-                config.y_offset,
-            }
-                .rotate(imuBearingAtCapture, true);
+        Vector2D center_to_cam;
+        if (camera.equiv_turret && constants_.turret_camera.has_value()) {
+          const auto& tc = constants_.turret_camera.value();
+          pdcsu::units::degree_t turret_at_capture =
+              InterpolateTurretAngle(capture_time);
+          Vector2D cam_offset_at_capture =
+              Vector2D{tc.config.turret_x_offset, tc.config.turret_y_offset} +
+              Vector2D{tc.config.x_offset, tc.config.y_offset}.rotate(
+                  turret_at_capture, true);
+          center_to_cam =
+              cam_offset_at_capture.rotate(imuBearingAtCapture, true);
+        } else {
+          center_to_cam = Vector2D{config.x_offset, config.y_offset}.rotate(
+              imuBearingAtCapture, true);
+        }
 
         Vector2D position_at_capture = uncomp_cam_pos - center_to_cam;
 
         Vector2D position_at_capture_from_history =
             InterpolatePosition(capture_time);
         Vector2D position_map =
-            input.odom_pose.position - position_at_capture_from_history;
+            input.pose.position - position_at_capture_from_history;
         Vector2D position_compensated = position_at_capture + position_map;
 
         if (distances.at(j).value() < 300.0) {
@@ -213,7 +223,7 @@ ATCalculatorOutput AprilTagCalculator::calculate(ATCalculatorInput input) {
                   (std::sqrt(distances.at(j).value() + 1.0) / 30.0 +
                       input.pose.velocity.magnitude().value() / 12.0 +
                       (input.angular_velocity +
-                          (camera.equiv_turret ? turret_vel : 0_degps_))
+                          (camera.equiv_turret ? 4.0 * turret_vel : 0_degps_))
                               .value() *
                           std::sqrt(distance_i.value()) / 25.0) +
               0.5;
@@ -229,7 +239,7 @@ ATCalculatorOutput AprilTagCalculator::calculate(ATCalculatorInput input) {
     }
   }
 
-  if (m_positions.size() == 0) { return {input.odom_pose.position, -1}; }
+  if (m_positions.size() == 0) { return {input.pose.position, -1}; }
 
   double sum_w = 0;
   Vector2D sum_wp{0_in_, 0_in_};
@@ -242,11 +252,14 @@ ATCalculatorOutput AprilTagCalculator::calculate(ATCalculatorInput input) {
   output.pos = sum_wp / sum_w;
 
   output.variance = 1.0 / sum_w;
-  correction = output.pos - input.odom_pose.position;
-  // correction[0] = u_clamp(correction[0], -12_in_, 12_in_);
-  // correction[1] = u_clamp(correction[1], -12_in_, 12_in_);
 
-  // output.pos = input.pose.position + correction;
+  if (output.pos[0] < 0_in_ || output.pos[1] < 0_in_ ||
+      output.pos[0] > funkit::math::FieldPoint::field_size_x ||
+      output.pos[1] > funkit::math::FieldPoint::field_size_y) {
+    output.variance *= 5.0;
+  }
+
+  correction = output.pos - input.pose.position;
 
   return output;
 }

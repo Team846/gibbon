@@ -41,7 +41,11 @@ public:
 
   static pdcsu::util::math::Vector2D target;
 
+  static double GetYawRateFactor();
+
 private:
   static ShootingCalculatorOutputs outputs_;
   static std::optional<funkit::base::Loggable> loggable_opt;
+
+  static degree_t swim_accum_angle_reduc;
 };

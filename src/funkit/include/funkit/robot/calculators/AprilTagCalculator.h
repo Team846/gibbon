@@ -17,7 +17,6 @@ using Vector2D = pdcsu::util::math::uVec<pdcsu::units::inch_t, 2>;
 
 struct ATCalculatorInput {
   funkit::robot::swerve::odometry::SwervePose pose;
-  funkit::robot::swerve::odometry::SwervePose odom_pose;
   pdcsu::units::degps_t angular_velocity;
 
   double aprilVarianceCoeff;

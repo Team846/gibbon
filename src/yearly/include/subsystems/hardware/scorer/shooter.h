@@ -32,6 +32,8 @@ public:
 
   void ZeroEncoders();
 
+  void StartGraph();
+
 private:
   funkit::control::HigherMotorController esc_1_;
   funkit::control::HigherMotorController esc_2_;
@@ -41,4 +43,9 @@ private:
   ShooterReadings ReadFromHardware() override;
 
   void WriteToHardware(ShooterTarget target) override;
+
+  bool filling_graph = false;
+
+  std::array<double, 300> errors_graph{};
+  size_t errors_graph_pos = 0U;
 };

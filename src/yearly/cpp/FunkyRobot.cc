@@ -126,6 +126,10 @@ void FunkyRobot::OnPeriodic() {
   ShootingCalculator::Calculate(
       &container_, container_.control_input_.GetReadings().pass_mode);
 
+  if (container_.control_input_.GetReadings().hood_trim_ccw) {
+    container_.scorer_ss_.shooter.StartGraph();
+  }
+
   if (frc::RobotBase::IsSimulation()) {
     auto instance = nt::NetworkTableInstance::GetDefault();
     auto funkyFMSTable = instance.GetTable("FunkyFMS");
