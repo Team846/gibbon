@@ -21,6 +21,7 @@ public:
 private:
   // timer
   frc::Timer timer;
+  double timer_count;
   int cntr_{0};
   pdcsu::util::math::uVec<pdcsu::units::fps_t, 2u> highestVel;
   pdcsu::units::fps2_t highestAccel;

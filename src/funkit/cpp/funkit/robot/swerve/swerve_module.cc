@@ -5,8 +5,8 @@
 #include <units/current.h>
 #include <units/torque.h>
 
-#include <optional>
 #include <iostream>
+#include <optional>
 #include <thread>
 
 #include "frc/RobotBase.h"
@@ -233,7 +233,7 @@ void SwerveModuleSubsystem::WriteToHardware(SwerveModuleTarget target) {
     drive_.WriteDC(0.2);
     // std::cout << "dc2 " << target.dc_ << std::endl;
   } else {
-    drive_.WriteDC(drive_duty_cycle);    
+    drive_.WriteDC(drive_duty_cycle);
   }
 
   if (std::abs(target.drive.value()) > 0.04 || last_rezero < 50) {
