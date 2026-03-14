@@ -602,7 +602,7 @@ void DrivetrainSubsystem::WriteToHardware(DrivetrainTarget target) {
   WriteVelocitiesHelper(accelClampHelper(target.velocity, target.accel_clamp),
       target.cut_excess_steering ? cut_angular_vel : target.angular_velocity,
       target.cut_excess_steering, cached_max_speed_);
-
+    
   for (int i = 0; i < 4; i++)
     modules_[i]->UpdateHardware();
 
