@@ -14,7 +14,8 @@ enum DriveToPointFlags {
   kNone = 0,
   kLockToPoint = 1 << 0,
   kRequireBearing = 1 << 1,
-  kNoTimeout = 1 << 2
+  kNoTimeout = 1 << 2,
+  kTankMode = 1 << 3
 };
 inline DriveToPointFlags operator|(DriveToPointFlags a, DriveToPointFlags b) {
   return static_cast<DriveToPointFlags>(

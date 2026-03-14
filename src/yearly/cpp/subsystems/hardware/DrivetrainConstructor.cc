@@ -64,7 +64,7 @@ UserSettableValues GetUserSettableValues() {
       .imu_connection =
           swerve::PigeonConnection{ports::drivetrain_::kPIGEON_CANID},
       .wheel_diameter = inch_t{4},
-      .drive_gear_ratio = 6.03,
+      .drive_gear_ratio = 7.03,
       .steer_reduction = 26_rot_ / 1_rot_,
       .wheel_contact_radius = inch_t{0.4},
       .steer_inertia_coeff = 0.00285,

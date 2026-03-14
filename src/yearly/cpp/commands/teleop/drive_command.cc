@@ -107,6 +107,8 @@ void DriveCommand::Periodic() {
     ema_comp_gpd_ = 0.0_fps_;
   }
 
+  target.kill_robot = ci_readings_.die_robot_die;
+
   container_.drivetrain_.SetTarget({target});
 }
 

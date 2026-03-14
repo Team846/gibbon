@@ -32,6 +32,12 @@ void DriveToPointCommand::Initialize() {
   const auto [new_target_point, is_valid] = GetTargetPoint();
   if (is_valid) { target_ = new_target_point; }
   if (!(flags_ & kLockToPoint)) { target_.velocity = pdcsu::units::fps_t{0}; }
+  if (flags_ & kTankMode) {
+    auto delta_vec = target_.point - start_point_;
+    if (delta_vec.magnitude() > 6_in_) {
+      target_.bearing = delta_vec.angle(true);
+    }
+  }
 
   auto initial_distance = (target_.point - start_point_).magnitude();
   auto initial_velocity = readings.estimated_pose.velocity.magnitude();
@@ -49,6 +55,9 @@ void DriveToPointCommand::Execute() {
   const double kC = drivetrain_->GetPreferenceValue_double("drive_to_point/kC");
   const double kA = drivetrain_->GetPreferenceValue_double("drive_to_point/kA");
   const double kE = drivetrain_->GetPreferenceValue_double("drive_to_point/kE");
+
+  const fps_t max_vel =
+      drivetrain_->GetPreferenceValue_unit_type<fps_t>("max_speed");
 
   DrivetrainTarget dt_target{{pdcsu::units::fps_t{0}, pdcsu::units::fps_t{0}},
       pdcsu::units::degps_t{0}};
@@ -74,15 +83,17 @@ void DriveToPointCommand::Execute() {
       std::cos(O_rad);
 
   double vel_lat_target_val =
-      std::sin(O_rad) * std::sqrt(std::max(5.0, vel_mag) * 1.0) * kC;
+      std::sin(O_rad) *
+      std::sqrt(std::max(0.25 * max_vel.value(), vel_mag) * 1.0) * kC;
 
-  vel_lat_target_val = std::min(5.0, std::max(-5.0, vel_lat_target_val));
+  vel_lat_target_val = std::min(0.25 * max_vel.value(),
+      std::max(-0.25 * max_vel.value(), vel_lat_target_val));
 
   double vel_dir_target_controlled_val =
       vel_dir_target_val + (vel_dir_target_val - vel_mag) * kA;
 
-  vel_dir_target_controlled_val =
-      std::min(17.4, std::max(-17.4, vel_dir_target_controlled_val));
+  vel_dir_target_controlled_val = std::min(0.9 * max_vel.value(),
+      std::max(-0.9 * max_vel.value(), vel_dir_target_controlled_val));
 
   pdcsu::util::math::uVec<pdcsu::units::fps_t, 2> vel_target{
       pdcsu::units::fps_t{vel_lat_target_val},
@@ -91,7 +102,13 @@ void DriveToPointCommand::Execute() {
 
   dt_target.velocity = vel_target;
   dt_target.angular_velocity = drivetrain_->ApplyBearingPID(target_.bearing);
-  dt_target.cut_excess_steering = true;
+  degps_t max_omega_cut =
+      drivetrain_->GetPreferenceValue_unit_type<degps_t>("max_omega_cut");
+  if (pdcsu::units::u_abs(dt_target.angular_velocity) > max_omega_cut) {
+    dt_target.angular_velocity =
+        pdcsu::units::u_copysign(max_omega_cut, dt_target.angular_velocity);
+  }
+  dt_target.cut_excess_steering = false;
   dt_target.accel_clamp = max_acceleration_;
 
   if (delta_vec.magnitude().value() < 0.75) {

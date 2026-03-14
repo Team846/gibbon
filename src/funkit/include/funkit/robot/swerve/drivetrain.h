@@ -77,6 +77,8 @@ struct DrivetrainTarget {
   pdcsu::units::degps_t angular_velocity;
   pdcsu::units::fps2_t accel_clamp = pdcsu::units::fps2_t{-1};
   bool cut_excess_steering = false;
+
+  bool kill_robot = false;
 };
 
 /*

@@ -101,7 +101,7 @@ public:
   // Set the subsystem to its zero state.
   void SetTargetZero() override { target_ = ZeroTarget(); }
 
-  auto GetTarget() { return target_; }
+  auto GetTarget() const { return target_; }
 
 private:
   Readings readings_;

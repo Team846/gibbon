@@ -69,7 +69,7 @@ DrivetrainSubsystem::DrivetrainSubsystem(DrivetrainConfigs configs)
 
   RegisterPreference("drive_latency", pdcsu::units::ms_t{0});
 
-  RegisterPreference("max_speed", pdcsu::units::fps_t{17.4});
+  RegisterPreference("max_speed", pdcsu::units::fps_t{14.9});
   RegisterPreference("max_omega", pdcsu::units::degps_t{180});
   RegisterPreference("max_omega_cut", pdcsu::units::degps_t{40});
 
@@ -589,6 +589,12 @@ void DrivetrainSubsystem::WriteToHardware(DrivetrainTarget target) {
       SubsystemGenomeHelper::LoadGenomePreferences(*this, "steer_genome");
   auto drive_genome =
       SubsystemGenomeHelper::LoadGenomePreferences(*this, "drive_genome");
+
+  if (target.kill_robot) {
+    drive_genome.brake_mode = false;
+    target.velocity = {0_fps_, 0_fps_};
+    target.angular_velocity = 0_degps_;
+  }
 
   for (int i = 0; i < 4; i++) {
     modules_[i]->ModifySwerveGenome(drive_genome, steer_genome);

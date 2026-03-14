@@ -35,6 +35,9 @@ struct ControlInputReadings {
 
   // Operator Keyboard Overrides
   bool turret_no_spin;
+
+  // Die
+  bool die_robot_die;
 };
 
 struct ControlInputTarget {
