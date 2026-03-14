@@ -12,10 +12,10 @@ volt_t SupremeLimiter::ema_v_batt_ = 0_V_;
 amp_t SupremeLimiter::ema_total_current_ = 0_A_;
 size_t SupremeLimiter::current_samples_ = 0;
 
-amp_t SupremeLimiter::current_limit_ = 250_A_;
+amp_t SupremeLimiter::current_limit_ = 350_A_;
 
 static amp_t ema_current_threshold = 50_A_;
-static volt_t tolerable_drop = 4.0_V_;
+static volt_t tolerable_drop = 6.0_V_;
 
 std::map<size_t, double> SupremeLimiter::Limit(
     std::vector<PerDeviceInformation> inputs, volt_t v_batt) {

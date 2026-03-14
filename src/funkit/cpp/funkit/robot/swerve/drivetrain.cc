@@ -67,6 +67,8 @@ DrivetrainSubsystem::DrivetrainSubsystem(DrivetrainConfigs configs)
   RegisterPreference("bearing_gains/_kD", -0.6);
   RegisterPreference("bearing_gains/_kF", -0.3);
   RegisterPreference("bearing_gains/deadband", pdcsu::units::degps_t{3.0});
+  RegisterPreference("drive_test/duty_cycle", 0.0);
+  RegisterPreference("drive_test/distance", pdcsu::units::foot_t{0.0});
 
   RegisterPreference("drive_latency", pdcsu::units::ms_t{0});
 

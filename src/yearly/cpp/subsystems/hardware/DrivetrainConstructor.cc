@@ -63,7 +63,7 @@ UserSettableValues GetUserSettableValues() {
   return UserSettableValues{
       .imu_connection =
           swerve::NavXConnection{swerve::NavXConnectionType::kMXP},
-      .wheel_diameter = inch_t{4},
+      .wheel_diameter = inch_t{3.5},
       .drive_gear_ratio = 8.14,
       .steer_reduction = 150_rot_ / 7_rot_,
       .wheel_contact_radius = inch_t{0.4},

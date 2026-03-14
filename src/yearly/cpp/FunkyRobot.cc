@@ -209,7 +209,8 @@ void FunkyRobot::OnPeriodic() {
 }
 
 void FunkyRobot::InitTest() {
-  container_.drivetrain_.SetDefaultCommand(DriveTest{container_});
+  // container_.drivetrain_.SetDefaultCommand(DriveTest{container_});
+  ControlTriggerInitializer::InitTeleopTriggers(container_);
 }
 
 #ifndef RUNNING_FRC_TESTS
