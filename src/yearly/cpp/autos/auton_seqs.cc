@@ -38,9 +38,9 @@ using FPT = funkit::math::FieldPoint;
 #define MAX_DECEL_CS2_BUMP 35_fps2_
 #define MAX_VEL_CS2_BUMP 15_fps_
 
-#define MAX_ACCEL_CS2_SWIM 10_fps2_
-#define MAX_DECEL_CS2_SWIM 10_fps2_
-#define MAX_VEL_CS2_SWIM 8.5_fps_
+#define MAX_ACCEL_CS2_SWIM 7_fps2_
+#define MAX_DECEL_CS2_SWIM 7_fps2_
+#define MAX_VEL_CS2_SWIM 6_fps_
 
 #define START_Y (298.5_in_ - 16.5_in_)
 
@@ -109,17 +109,19 @@ using FPT = funkit::math::FieldPoint;
 #define START_BUMPC1_PT MKPT(92_in_, 110.61_in_, 35_deg_, 8_fps_)
 // 8_fps
 #define END_BUMPC23_PT MKPT(102_in_, 223.61_in_, 35_deg_, 8_fps_)
-#define START_BUMPC23_PT MKPT(102_in_, 110.61_in_, 35_deg_, 8_fps_)
+#define START_BUMPC23_PT MKPT(92_in_, 110.61_in_, 35_deg_, 8_fps_)
 
-#define P1C1_INTAKE_PT MKPT(90.5_in_, 287.35_in_, 15_deg_, 11_fps_)
-#define P2C1_INTAKE_PT MKPT(103.25_in_, 312.6_in_, 20_deg_, 7_fps_)
-#define P3C1_INTAKE_PT MKPT(120.75_in_, 328.2_in_, 40_deg_, 0_fps_)
+#define P1C1_INTAKE_PT MKPT(100.5_in_, 287.35_in_, 45_deg_, 11_fps_)
+#define P2C1_INTAKE_PT MKPT(115.25_in_, 300.6_in_, 55_deg_, 7_fps_)
+#define P3C1_INTAKE_PT MKPT(125.75_in_, 318.2_in_, 70_deg_, 0_fps_)
 
 #define P1C2_INTAKE_PT MKPT(135.1_in_, 280.5_in_, 15_deg_, 11_fps_)
 #define P2C2_INTAKE_PT MKPT(155.35_in_, 305.42_in_, 30_deg_, 7_fps_)
 #define P3C2_INTAKE_PT MKPT(170.85_in_, 324.35_in_, 45_deg_, 0_fps_)
 
-#define DEPOT MKPT(87_in_, 28_in_, 180_deg_, 0_fps_)
+#define DEPOT                                                            \
+  MKPT(funkit::math::FieldPoint::field_size_x / 2.0 - 87.38_in_, 30_in_, \
+      180_deg_, 0_fps_)
 
 #define __AUTO__(codeName, stringName)                                 \
   codeName::codeName(                                                  \
@@ -162,7 +164,7 @@ SEQUENCE {
           frc2::ParallelDeadlineGroup(
               frc2::SequentialCommandGroup{
                   DRIVE_PT_BEARING(CS2, DEPOT, SWIM), WAIT{5_s}},
-              frc2::SequentialCommandGroup{WAIT{0.9_s}, SHOOT()}),
+              frc2::SequentialCommandGroup{WAIT{0.2_s}, SHOOT()}),
           frc2::ParallelDeadlineGroup(WAIT{10_s}, SHOOT()),
           [left = is_left_side]() { return left; })
 }

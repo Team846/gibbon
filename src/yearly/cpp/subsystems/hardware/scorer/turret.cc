@@ -110,6 +110,12 @@ void TurretSubsystem::Setup() {
       frc::filesystem::GetDeployDirectory() + "/ictest.iclearn";
   icnor_controller_->attachLearner(learner_path);
   if (!frc::RobotBase::IsSimulation()) { ZeroWithCRT(); }
+
+  esc_.SetControllerSoftLimits(
+      arm_sys_->toNative(
+          GetPreferenceValue_unit_type<degree_t>("wrap/positive")),
+      arm_sys_->toNative(
+          GetPreferenceValue_unit_type<degree_t>("wrap/negative")));
 }
 
 TurretTarget TurretSubsystem::ZeroTarget() const {
@@ -251,11 +257,9 @@ void TurretSubsystem::WriteToHardware(TurretTarget target) {
   radps2_t accel_inst = 0.0_radps2_;
 
   if (last_time_ > 0.0_ms_) {
-    auto dt = u_max(
-        9.0_ms_, (funkit::wpilib::CurrentFPGATime() - last_time_));
-    accel_inst =
-        (target_vel_native - last_vel_) / dt *
-        GetPreferenceValue_double("accel_factor");
+    auto dt = u_max(9.0_ms_, (funkit::wpilib::CurrentFPGATime() - last_time_));
+    accel_inst = (target_vel_native - last_vel_) / dt *
+                 GetPreferenceValue_double("accel_factor");
   }
   last_vel_ = target_vel_native;
   last_time_ = funkit::wpilib::CurrentFPGATime();
@@ -264,9 +268,8 @@ void TurretSubsystem::WriteToHardware(TurretTarget target) {
   if (accel_alpha < 0.0) { accel_alpha = 0.0; }
   if (accel_alpha > 1.0) { accel_alpha = 1.0; }
 
-  accel_est_ = radps2_t{
-      accel_alpha * accel_inst.to_base() +
-      (1.0 - accel_alpha) * accel_est_.to_base()};
+  accel_est_ = radps2_t{accel_alpha * accel_inst.to_base() +
+                        (1.0 - accel_alpha) * accel_est_.to_base()};
 
   Graph("debug/accel_inst", accel_inst);
   Graph("debug/accel", accel_est_);
@@ -284,8 +287,7 @@ void TurretSubsystem::WriteToHardware(TurretTarget target) {
   }
 
   double output = icnor_controller_->getOutput(target_pos_native,
-      target_vel_native,
-      current_pos_native, current_vel_native);
+      target_vel_native, current_pos_native, current_vel_native);
 
   output *= GetPreferenceValue_double("icnor/IPG");
 

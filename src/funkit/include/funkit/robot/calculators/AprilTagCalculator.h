@@ -27,6 +27,8 @@ struct ATCalculatorInput {
 struct ATCalculatorOutput {
   Vector2D pos;
   double variance;
+  pdcsu::units::degree_t bearing_from_tags;
+  bool bearing_from_tags_valid;
 };
 
 struct AprilTagData {

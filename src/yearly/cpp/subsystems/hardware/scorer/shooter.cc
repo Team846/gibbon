@@ -16,6 +16,9 @@ ShooterSubsystem::ShooterSubsystem()
   RegisterPreference("velocity_tolerance", 5.0_fps_);
 
   RegisterPreference("coast_down_tolerance", 5_fps_);
+
+  RegisterPreference("accel_factor", 3.0);
+  RegisterPreference("accel_alpha", 0.3);
 }
 
 ShooterSubsystem::~ShooterSubsystem() = default;
@@ -119,6 +122,28 @@ void ShooterSubsystem::WriteToHardware(ShooterTarget target) {
   Graph("debug/target", target.target_vel);
 
   Graph("debug/velocity_error", target.target_vel - GetReadings().vel);
+
+  fps2_t accel_inst = 0.0_fps2_;
+
+  if (last_time_ > 0.0_ms_) {
+    auto dt = u_max(9.0_ms_, (funkit::wpilib::CurrentFPGATime() - last_time_));
+    accel_inst = (target.target_vel - last_vel_) / dt *
+                 GetPreferenceValue_double("accel_factor");
+  }
+  last_vel_ = target.target_vel;
+  last_time_ = funkit::wpilib::CurrentFPGATime();
+
+  double accel_alpha = GetPreferenceValue_double("accel_alpha");
+  if (accel_alpha < 0.0) { accel_alpha = 0.0; }
+  if (accel_alpha > 1.0) { accel_alpha = 1.0; }
+
+  accel_est_ = fps2_t{accel_alpha * accel_inst.to_base() +
+                        (1.0 - accel_alpha) * accel_est_.to_base()};
+
+  Graph("debug/accel_inst", accel_inst);
+  Graph("debug/accel", accel_est_);
+
+  target.target_vel += accel_est_ * 0.1_s_;
 
   if ((target.target_vel < 5_fps_) &&
       (u_abs(GetReadings().vel) - u_abs(target.target_vel)) >=
