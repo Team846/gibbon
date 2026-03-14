@@ -145,11 +145,11 @@ void GenericRobot::StartCompetition() {
         GetPreferenceValue_bool("sim_fms"));
     Graph("fms_connected", word.IsFMSAttached(), true);
 
-    // If mode changed
     if (last_mode_ != mode) {
       cached_update_tick_1_ = GetPreferenceValue_int("update_tick_1");
       cached_update_tick_2_ = GetPreferenceValue_int("update_tick_2");
       cached_update_reset_tick_ = GetPreferenceValue_int("update_reset_tick");
+    }
     bool mode_changed = last_mode_ != mode;
 
     if (mode_changed) {

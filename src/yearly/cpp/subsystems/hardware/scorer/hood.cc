@@ -193,7 +193,8 @@ void HoodSubsystem::WriteToHardware(HoodTarget target) {
   radian_t current_pos_real = esc_.GetPosition<radian_t>();
 
   if ((current_pos_real > hood_absolute_max ||
-      current_pos_real < hood_absolute_min) && !frc::RobotBase::IsSimulation()) {
+          current_pos_real < hood_absolute_min) &&
+      !frc::RobotBase::IsSimulation()) {
     ZeroWithAbsoluteEncoder(false);
     esc_.WriteDC(0.0);
     return;
