@@ -7,6 +7,8 @@ ShootingCalculatorOutputs ShootingCalculator::outputs_{
 std::optional<funkit::base::Loggable> ShootingCalculator::loggable_opt;
 pdcsu::util::math::Vector2D ShootingCalculator::target{0_in_, 0_in_};
 
+degree_t ShootingCalculator::swim_accum_angle_reduc = 0_deg_;
+
 const inch_t kDeltaHeight = 57.9_in_ - 24.9_in_;
 
 const degree_t kShotAngleMax = 75_deg_;
@@ -16,6 +18,10 @@ const foot_t kPointblankDistance = 41.925_in_;
 
 const foot_t fullEffortDistance = 235.0_in_;
 
+const degree_t kSWIM_max_angle_reduc = 8_deg_;
+const auto kSWIM_reduc_accum_fac = 5_deg_ / (15_fps_ * 1_s_);
+const fps_t kSWIM_minvel_reduc = 5_fps_;
+
 void ShootingCalculator::Setup() {
   if (loggable_opt.has_value()) { return; }
   loggable_opt.emplace(funkit::base::Loggable("ShootingCalculator"));
@@ -24,11 +30,19 @@ void ShootingCalculator::Setup() {
   loggable_opt->RegisterPreference("swim/twistGain", -0.074);
   loggable_opt->RegisterPreference("swim/tofGain", 0.023);
   loggable_opt->RegisterPreference("swim/twistVelCompensation", 0.54);
+  loggable_opt->RegisterPreference("swim/yawRateFactor", 1.01);
+}
+
+double ShootingCalculator::GetYawRateFactor() {
+  return loggable_opt->GetPreferenceValue_double("swim/yawRateFactor");
 }
 
 degree_t ShootingCalculator::GetShotAngle(foot_t shot_distance) {
-  return kShotAngleMax - (kShotAngleMax - kShotAngleMin) *
-                             (shot_distance / kShotMaxDist).value();
+  return u_clamp(kShotAngleMax -
+                     (swim_accum_angle_reduc * shot_distance / kShotMaxDist) -
+                     (kShotAngleMax - kShotAngleMin) *
+                         (shot_distance / kShotMaxDist).value(),
+      kShotAngleMin, kShotAngleMax);
 }
 radps_t ShootingCalculator::GetShotAngleVel(
     foot_t shot_distance, fps_t vel_in_dir) {
@@ -57,6 +71,13 @@ void ShootingCalculator::Calculate(
 
   auto drivetrain_readings = container_->drivetrain_.GetReadings();
 
+  swim_accum_angle_reduc +=
+      kSWIM_reduc_accum_fac * 10_ms_ *
+      (drivetrain_readings.estimated_pose.velocity.magnitude() -
+          kSWIM_minvel_reduc);
+  swim_accum_angle_reduc =
+      u_clamp(swim_accum_angle_reduc, 0_deg_, kSWIM_max_angle_reduc);
+
   /*
   The shooter may not be at the robot's center of rotation. The following code
   calculates the position of the shooter and the velocity at the shooter.
@@ -81,19 +102,23 @@ void ShootingCalculator::Calculate(
   fps_t vel_in_dir = odelta.dot(vel_at_shooter) / odelta.magnitude();
   fps_t vel_perp =
       odelta.rotate(90_deg_, true).dot(vel_at_shooter) / odelta.magnitude();
-  foot_t delta_mag = odelta.magnitude();
 
-  second_t tof = odelta.magnitude() / 100_in_ *
-                 0.375_s_;  // Initial guess (likely lower than actual)
+  Vector2D delta = {odelta[0], odelta[1]};
+  foot_t delta_mag = delta.magnitude();
+
+  second_t tof =
+      delta_mag / 100_in_ * 0.375_s_ *
+      loggable.GetPreferenceValue_double(
+          "swim/tofGain");  // Initial guess (likely lower than actual)
                             //   degree_t shot_angle = 75_deg_;
 
   // Recursive iteration to find TOF
-  for (int i = 0; i < 7; i++) {
-    auto delta2 =
-        odelta - Vector2D{vel_at_shooter[0] * tof, vel_at_shooter[1] * tof};
-    auto delta_mag2 = delta2.magnitude();
+  for (int i = 0; i < 10; i++) {
+    delta = odelta - Vector2D{vel_at_shooter[0] * tof, vel_at_shooter[1] * tof};
+    delta_mag = delta.magnitude();
 
-    if (delta_mag2 < kPointblankDistance) {
+    if (delta_mag < kPointblankDistance) {
+      outputs_.is_valid = false;
       return;
     }  // Works when approaching TOF from below
 
@@ -104,18 +129,10 @@ void ShootingCalculator::Calculate(
     auto shot_angle = GetShotAngle(delta_mag - kPointblankDistance);
     auto shot_vel = GetBaseVelocity(shot_angle, delta_mag);
 
-    tof = delta_mag / (shot_vel * u_cos(shot_angle));
+    tof = delta_mag / (shot_vel * u_cos(shot_angle)) *
+          loggable.GetPreferenceValue_double("swim/tofGain");
   }
 
-  Vector2D delta =
-      target - shooter_pos -
-      Vector2D{vel_at_shooter[0] * tof *
-                   loggable.GetPreferenceValue_double("swim/tofGain"),
-          vel_at_shooter[1] * tof *
-              loggable.GetPreferenceValue_double(
-                  "swim/tofGain")}; /*loggable.GetPreferenceValue_double("swim/tofGain")
-* delta
-+ (1.0 - loggable.GetPreferenceValue_double("swim/tofGain")) * odelta;*/
   delta_mag = delta.magnitude();
 
   /* Apply shooter and hood targets */
@@ -135,9 +152,11 @@ void ShootingCalculator::Calculate(
   /* Calculate and apply turret targets */
   outputs_.aim_angle =
       odelta.angle(true) +
-      u_asin(std::clamp(loggable.GetPreferenceValue_double("swim/twistGain") *
-                            (vel_perp / outputs_.shooter_vel).value(),
-          -1.0, 1.0));
+      u_asin(std::clamp(
+          loggable.GetPreferenceValue_double("swim/twistGain") *
+              (vel_perp / (outputs_.shooter_vel * u_cos(outputs_.shot_angle)))
+                  .value(),
+          -0.99, 0.99));
 
   auto cross_product =
       delta[0] * vel_at_shooter[1] - delta[1] * vel_at_shooter[0];
@@ -152,7 +171,7 @@ void ShootingCalculator::Calculate(
 
   if (delta_mag > fullEffortDistance) {
     if (effort_when_invald) {
-      outputs_.shooter_vel = 50_fps_;
+      outputs_.shooter_vel = 70_fps_;
     } else {
       outputs_.shooter_vel = 20_fps_;
     }
@@ -179,14 +198,11 @@ pdcsu::util::math::Vector2D ShootingCalculator::SimulateTrajectory(
 
   fps_t vertical_vel = effective_launch_speed *
                        u_sin(container_->scorer_ss_.hood.GetReadings().pos_);
-  second_t time_to_apex = vertical_vel / 32.2_fps2_;
+  second_t time_to_apex = vertical_vel / 32.0_fps2_;
   foot_t height_at_apex = vertical_vel / 2.0 * time_to_apex;
 
-  const foot_t target_height =
-      38.5_in_;  // Roughly the delta between target height and shooter
-
   second_t time_apex_to_target =
-      u_sqrt(2 * u_max(0_in_, height_at_apex - target_height) / 32.2_fps2_);
+      u_sqrt(2 * u_max(0_in_, height_at_apex - kDeltaHeight) / 32.0_fps2_);
 
   return {compl_vel[0] * u_max(0.25_s_, time_apex_to_target + time_to_apex),
       compl_vel[1] * u_max(0.25_s_, time_apex_to_target + time_to_apex)};

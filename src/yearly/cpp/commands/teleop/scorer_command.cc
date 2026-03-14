@@ -99,7 +99,8 @@ void ScorerCommand::Periodic() {
   target.turret_target = {shooting_outputs.aim_angle -
                               container_.drivetrain_.GetReadings().pose.bearing,
       shooting_outputs.vel_aim_compensation -
-          container_.drivetrain_.GetReadings().yaw_rate};
+          container_.drivetrain_.GetReadings().yaw_rate *
+              ShootingCalculator::GetYawRateFactor()};
   target.shoot =
       ci_readings_.point_blank_shot ||
       (shooting_outputs.is_valid && !ci_readings_.override_autoshoot &&

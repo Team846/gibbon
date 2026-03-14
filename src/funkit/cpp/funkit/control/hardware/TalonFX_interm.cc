@@ -26,12 +26,8 @@ void TalonFX_interm::Tick() {
   ctre::phoenix::StatusCode last_status_code = ctre::phoenix::StatusCode::OK;
   if (last_follower_config_.has_value() &&
       last_follower_config_.value().leader_CAN_id >= 0) {
-    ctre::phoenix6::controls::Follower follower_msg{
-        last_follower_config_.value().leader_CAN_id,
-        (last_follower_config_.value().inverted)
-            ? ctre::phoenix6::signals::MotorAlignmentValue::Opposed
-            : ctre::phoenix6::signals::MotorAlignmentValue::Aligned};
-    follower_msg.WithUpdateFreqHz(0_Hz);
+    ctre::phoenix6::controls::StrictFollower follower_msg(
+        last_follower_config_.value().leader_CAN_id);
     last_status_code = talon_.SetControl(follower_msg);
   } else if (double* dc = std::get_if<double>(&last_command_)) {
     ctre::phoenix6::controls::DutyCycleOut dc_msg{*dc};
@@ -41,6 +37,7 @@ void TalonFX_interm::Tick() {
                  std::get_if<pdcsu::units::radps_t>(&last_command_)) {
     ctre::phoenix6::controls::VelocityVoltage vel_msg{
         units::radians_per_second_t{vel->value()}};
+    vel_msg.EnableFOC = false;
     vel_msg.WithUpdateFreqHz(0_Hz);
     last_status_code = talon_.SetControl(vel_msg);
   } else if (pdcsu::units::radian_t* pos =
@@ -151,6 +148,13 @@ void TalonFX_interm::EnableStatusFrames(config::StatusFrameSelections frames,
       last_status_code = talon_.GetAcceleration().SetUpdateFrequency(
           units::hertz_t{1.0 / (velocity_ms.value() / 1000.0)}, max_wait_time_);
       break;
+    case funkit::control::config::StatusFrame::kLeader:
+      last_status_code =
+          talon_.GetMotorVoltage().SetUpdateFrequency(400_Hz, max_wait_time_);
+      if (last_status_code != ctre::phoenix::StatusCode::OK) break;
+      last_status_code =
+          talon_.GetDutyCycle().SetUpdateFrequency(400_Hz, max_wait_time_);
+      break;
 
     default: break;
     }
@@ -180,6 +184,13 @@ void TalonFX_interm::OverrideStatusFramePeriod(
     if (last_status_code != ctre::phoenix::StatusCode::OK) break;
     last_status_code = talon_.GetAcceleration().SetUpdateFrequency(
         units::hertz_t{1.0 / (period.value() / 1000.0)}, max_wait_time_);
+    break;
+  case funkit::control::config::StatusFrame::kLeader:
+    last_status_code =
+        talon_.GetMotorVoltage().SetUpdateFrequency(400_Hz, max_wait_time_);
+    if (last_status_code != ctre::phoenix::StatusCode::OK) break;
+    last_status_code =
+        talon_.GetDutyCycle().SetUpdateFrequency(400_Hz, max_wait_time_);
     break;
   default: break;
   }

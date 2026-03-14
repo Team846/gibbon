@@ -37,6 +37,7 @@ HoodSubsystem::HoodSubsystem()
   RegisterPreference("icnor/IPG", 1.0);
   RegisterPreference("icnor/friction_nm", 0.0_Nm_);
   RegisterPreference("encoder/offset", 0.0_rot_);
+  RegisterPreference("encoder/scale", 1.0);
   RegisterPreference("tolerance", 3.0_deg_);
 }
 
@@ -122,7 +123,9 @@ void HoodSubsystem::ZeroWithAbsoluteEncoder(bool retry) {
       }
       continue;
     } else {
-      esc_.SetPosition(abs);
+      auto delta = abs - 81_deg_;
+      delta *= GetPreferenceValue_double("encoder/scale");
+      esc_.SetPosition(81_deg_ + delta);
       Log("Zeroed hood encoders to {}", abs.value());
       return;
     }
@@ -166,6 +169,9 @@ HoodReadings HoodSubsystem::ReadFromHardware() {
   degree_t offset_deg =
       degree_t(GetPreferenceValue_unit_type<rotation_t>("encoder/offset"));
   degree_t abs = UnwrapHoodAbsolute(raw - offset_deg);
+  auto delta = abs - 81_deg_;
+  delta *= GetPreferenceValue_double("encoder/scale");
+  abs = 81_deg_ + delta;
   Graph("readings/absolute_encoder_pos", abs);
 
   return readings;
@@ -186,8 +192,8 @@ void HoodSubsystem::WriteToHardware(HoodTarget target) {
 
   radian_t current_pos_real = esc_.GetPosition<radian_t>();
 
-  if (current_pos_real > hood_absolute_max ||
-      current_pos_real < hood_absolute_min) {
+  if ((current_pos_real > hood_absolute_max ||
+      current_pos_real < hood_absolute_min) && !frc::RobotBase::IsSimulation()) {
     ZeroWithAbsoluteEncoder(false);
     esc_.WriteDC(0.0);
     return;

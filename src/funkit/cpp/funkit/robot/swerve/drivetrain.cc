@@ -81,6 +81,8 @@ DrivetrainSubsystem::DrivetrainSubsystem(DrivetrainConfigs configs)
 
   RegisterPreference("pose_estimator/override", false);
 
+  RegisterPreference("pitch_roll_thresh", pdcsu::units::degree_t{10});
+
   RegisterPreference("april_tags/april_variance_coeff", 0.2);
   RegisterPreference("april_tags/triangular_variance_coeff", 1.0);
   for (const auto& config : configs.april_camera_configs) {
@@ -413,6 +415,12 @@ DrivetrainReadings DrivetrainSubsystem::ReadFromHardware() {
 
   if (compensated_delta.magnitude().value() < 10.0) {
     cached_odom_variance_ = GetPreferenceValue_double("odom_variance");
+    if (u_abs(pitch) > GetPreferenceValue_unit_type<pdcsu::units::degree_t>(
+                           "pitch_roll_thresh") ||
+        u_abs(roll) > GetPreferenceValue_unit_type<pdcsu::units::degree_t>(
+                          "pitch_roll_thresh")) {
+      cached_odom_variance_ = 1000000.0;
+    }
     pose_estimator.AddOdometryMeasurement(
         {compensated_delta[0].value(), compensated_delta[1].value()},
         cached_odom_variance_);
@@ -429,14 +437,9 @@ DrivetrainReadings DrivetrainSubsystem::ReadFromHardware() {
             "april_tags/fudge_latency" + std::to_string(config.camera_id));
   }
 
-  funkit::robot::swerve::odometry::SwervePose odom_pose{
-      .position = odom_output.position,
-      .bearing = bearing,
-      .velocity = velocity,
-  };
   funkit::robot::calculators::ATCalculatorOutput tag_pos =
       tag_pos_calculator.calculate(
-          {new_pose, odom_pose, yaw_rate, cached_april_variance_coeff_,
+          {new_pose, yaw_rate, cached_april_variance_coeff_,
               cached_triangular_variance_coeff_, cached_fudge_latencies_});
 
   if (tag_pos.variance >= 0) {
@@ -452,6 +455,9 @@ DrivetrainReadings DrivetrainSubsystem::ReadFromHardware() {
   Graph("april_tags/april_pos_x", tag_pos.pos[0]);
   Graph("april_tags/april_pos_y", tag_pos.pos[1]);
   Graph("april_tags/april_variance", tag_pos.variance);
+  if (tag_pos.bearing_from_tags_valid) {
+    Graph("april_tags/bearing_from_tags", tag_pos.bearing_from_tags);
+  }
 
   Graph("pose_estimator/latency_est", pose_estimator.getLatency());
 

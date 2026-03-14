@@ -4,6 +4,7 @@
 #include <iostream>
 
 #include "funkit/math/collection.h"
+#include "funkit/math/fieldpoints.h"
 #include "funkit/robot/GenericRobot.h"
 #include "funkit/wpilib/time.h"
 #include "pdcsu_units.h"
@@ -99,9 +100,9 @@ pdcsu::units::degree_t AprilTagCalculator::InterpolateTurretAngle(
 }
 
 ATCalculatorOutput AprilTagCalculator::calculate(ATCalculatorInput input) {
-  ATCalculatorOutput output;
+  ATCalculatorOutput output{};
   pdcsu::units::second_t now = funkit::wpilib::CurrentFPGATime();
-  AddToHistory(now, input.odom_pose.position, input.odom_pose.bearing,
+  AddToHistory(now, input.pose.position, input.pose.bearing,
       AprilTagCalculator::turret_angle);
 
   std::vector<funkit::robot::calculators::AprilTagCamera> temp_cameras{};
@@ -132,6 +133,9 @@ ATCalculatorOutput AprilTagCalculator::calculate(ATCalculatorInput input) {
 
   std::vector<Vector2D> m_positions{};
   std::vector<double> pure_variances{};
+  std::vector<Vector2D> cam_vectors{};
+  std::vector<Vector2D> field_positions{};
+  std::vector<double> bearing_weights{};
 
   for (size_t i = 0; i < temp_cameras.size(); i++) {
     const auto& camera = temp_cameras[i];
@@ -185,24 +189,34 @@ ATCalculatorOutput AprilTagCalculator::calculate(ATCalculatorInput input) {
     for (size_t j = 0; j < tags.size(); j++) {
       if (constants_.tag_locations.contains(tags.at(j)) &&
           distances.at(j).value() < 300.0) {
-        Vector2D cam_to_tag{distances.at(j), tx.at(j) + bearingAtCapture, true};
+        Vector2D cam_to_tag_field_frame{
+            distances.at(j), tx.at(j) + bearingAtCapture, true};
         Vector2D tag_pos{constants_.tag_locations[tags.at(j)].x_pos,
             constants_.tag_locations[tags.at(j)].y_pos};
-        Vector2D uncomp_cam_pos = tag_pos - cam_to_tag;
+        Vector2D uncomp_cam_pos = tag_pos - cam_to_tag_field_frame;
 
-        Vector2D center_to_cam =
-            Vector2D{
-                config.x_offset,
-                config.y_offset,
-            }
-                .rotate(imuBearingAtCapture, true);
+        Vector2D center_to_cam;
+        if (camera.equiv_turret && constants_.turret_camera.has_value()) {
+          const auto& tc = constants_.turret_camera.value();
+          pdcsu::units::degree_t turret_at_capture =
+              InterpolateTurretAngle(capture_time);
+          Vector2D cam_offset_at_capture =
+              Vector2D{tc.config.turret_x_offset, tc.config.turret_y_offset} +
+              Vector2D{tc.config.x_offset, tc.config.y_offset}.rotate(
+                  turret_at_capture, true);
+          center_to_cam =
+              cam_offset_at_capture.rotate(imuBearingAtCapture, true);
+        } else {
+          center_to_cam = Vector2D{config.x_offset, config.y_offset}.rotate(
+              imuBearingAtCapture, true);
+        }
 
         Vector2D position_at_capture = uncomp_cam_pos - center_to_cam;
 
         Vector2D position_at_capture_from_history =
             InterpolatePosition(capture_time);
         Vector2D position_map =
-            input.odom_pose.position - position_at_capture_from_history;
+            input.pose.position - position_at_capture_from_history;
         Vector2D position_compensated = position_at_capture + position_map;
 
         if (distances.at(j).value() < 300.0) {
@@ -213,7 +227,7 @@ ATCalculatorOutput AprilTagCalculator::calculate(ATCalculatorInput input) {
                   (std::sqrt(distances.at(j).value() + 1.0) / 30.0 +
                       input.pose.velocity.magnitude().value() / 12.0 +
                       (input.angular_velocity +
-                          (camera.equiv_turret ? turret_vel : 0_degps_))
+                          (camera.equiv_turret ? 4.0 * turret_vel : 0_degps_))
                               .value() *
                           std::sqrt(distance_i.value()) / 25.0) +
               0.5;
@@ -224,12 +238,29 @@ ATCalculatorOutput AprilTagCalculator::calculate(ATCalculatorInput input) {
           }
 
           pure_variances.push_back(var_i);
+
+          Vector2D cam_to_tag_cam_frame{distances.at(j),
+              tx.at(j) + (camera.equiv_turret
+                                 ? InterpolateTurretAngle(capture_time)
+                                 : 0_deg_),
+              true};
+          cam_vectors.push_back(cam_to_tag_cam_frame);
+          field_positions.push_back(tag_pos);
+
+          double w_bearing = 1.0 / std::max(var_i, 1e-9);
+          bearing_weights.push_back(w_bearing);
         }
       }
     }
   }
 
-  if (m_positions.size() == 0) { return {input.odom_pose.position, -1}; }
+  if (m_positions.size() == 0) {
+    output.pos = input.pose.position;
+    output.variance = -1;
+    output.bearing_from_tags = 0_deg_;
+    output.bearing_from_tags_valid = false;
+    return output;
+  }
 
   double sum_w = 0;
   Vector2D sum_wp{0_in_, 0_in_};
@@ -242,11 +273,63 @@ ATCalculatorOutput AprilTagCalculator::calculate(ATCalculatorInput input) {
   output.pos = sum_wp / sum_w;
 
   output.variance = 1.0 / sum_w;
-  correction = output.pos - input.odom_pose.position;
-  // correction[0] = u_clamp(correction[0], -12_in_, 12_in_);
-  // correction[1] = u_clamp(correction[1], -12_in_, 12_in_);
 
-  // output.pos = input.pose.position + correction;
+  output.bearing_from_tags_valid = false;
+  output.bearing_from_tags = 0_deg_;
+  if (cam_vectors.size() >= 2) {
+    std::vector<pdcsu::units::degree_t> pair_bearings{};
+    std::vector<double> pair_weights{};
+
+    for (size_t a = 0; a + 1 < cam_vectors.size(); ++a) {
+      for (size_t b = a + 1; b < cam_vectors.size(); ++b) {
+        Vector2D field_vec = field_positions[b] - field_positions[a];
+        Vector2D cam_vec = cam_vectors[b] - cam_vectors[a];
+
+        auto field_len = field_vec.magnitude();
+        auto cam_len = cam_vec.magnitude();
+        if (field_len.value() <= 20.0 || cam_len.value() <= 20.0) { continue; }
+
+        degree_t field_angle = field_vec.angle(true);
+        degree_t cam_angle = cam_vec.angle(true);
+
+        degree_t delta = field_angle - cam_angle;
+        if (delta > 180.0_deg_) { delta -= 360.0_deg_; }
+        if (delta < -180.0_deg_) { delta += 360.0_deg_; }
+
+        double w = (field_len.value() * cam_len.value()) *
+                   (0.5 * (bearing_weights[a] + bearing_weights[b]));
+        if (w <= 0.0) { continue; }
+
+        pair_bearings.push_back(delta);
+        pair_weights.push_back(w);
+      }
+    }
+
+    if (!pair_bearings.empty()) {
+      double sum_w_bearing = 0.0;
+      double sum_cos = 0.0;
+      double sum_sin = 0.0;
+      for (size_t i = 0; i < pair_bearings.size(); i++) {
+        double w = pair_weights[i];
+        sum_w_bearing += w;
+        sum_cos += w * u_cos(pair_bearings[i]);
+        sum_sin += w * u_sin(pair_bearings[i]);
+      }
+      if (sum_w_bearing > 0.0) {
+        double mean_rad = std::atan2(sum_sin, sum_cos);
+        output.bearing_from_tags = pdcsu::units::radian_t{mean_rad};
+        output.bearing_from_tags_valid = true;
+      }
+    }
+  }
+
+  if (output.pos[0] < 0_in_ || output.pos[1] < 0_in_ ||
+      output.pos[0] > funkit::math::FieldPoint::field_size_x ||
+      output.pos[1] > funkit::math::FieldPoint::field_size_y) {
+    output.variance *= 5.0;
+  }
+
+  correction = output.pos - input.pose.position;
 
   return output;
 }

@@ -61,7 +61,8 @@ TurretSubsystem::TurretSubsystem()
   RegisterPreference("wrap/positive", 220_deg_);
   RegisterPreference("wrap/negative", -240_deg_);
 
-  RegisterPreference("fakevel_comp", 1.69);
+  RegisterPreference("accel_factor", 4.0);
+  RegisterPreference("accel_alpha", 0.3);
 }
 
 TurretSubsystem::~TurretSubsystem() = default;
@@ -85,7 +86,7 @@ void TurretSubsystem::Setup() {
   arm_sys_ = std::make_unique<DefArmSys>(
       def_bldc, 1, 58_rot_ / 16_rot_ * 90_rot_ / 10_rot_,
       [&](radian_t x, radps_t v) -> nm_t {
-        return nm_t{std::tanh(x.value() * 2.0) *
+        return nm_t{std::tanh((x.value() + radian_t{20_deg_}.value()) * 1.2) *
                     GetPreferenceValue_unit_type<nm_t>("icnor/load_nm")};
       },
       14_lb_ * 0.13_m_ * 0.13_m_,
@@ -109,6 +110,12 @@ void TurretSubsystem::Setup() {
       frc::filesystem::GetDeployDirectory() + "/ictest.iclearn";
   icnor_controller_->attachLearner(learner_path);
   if (!frc::RobotBase::IsSimulation()) { ZeroWithCRT(); }
+
+  esc_.SetControllerSoftLimits(
+      arm_sys_->toNative(
+          GetPreferenceValue_unit_type<degree_t>("wrap/positive")),
+      arm_sys_->toNative(
+          GetPreferenceValue_unit_type<degree_t>("wrap/negative")));
 }
 
 TurretTarget TurretSubsystem::ZeroTarget() const {
@@ -247,15 +254,25 @@ void TurretSubsystem::WriteToHardware(TurretTarget target) {
   radian_t target_pos_native = arm_sys_->toNative(target.pos_);
   radps_t target_vel_native = arm_sys_->toNative(target.vel_);
 
-  radps2_t accel = 0.0_radps2_;
+  radps2_t accel_inst = 0.0_radps2_;
 
   if (last_time_ > 0.0_ms_) {
-    accel = (target_vel_native - last_vel_) /
-            u_max(9.0_ms_, (funkit::wpilib::CurrentFPGATime() - last_time_));
+    auto dt = u_max(9.0_ms_, (funkit::wpilib::CurrentFPGATime() - last_time_));
+    accel_inst = (target_vel_native - last_vel_) / dt *
+                 GetPreferenceValue_double("accel_factor");
   }
   last_vel_ = target_vel_native;
   last_time_ = funkit::wpilib::CurrentFPGATime();
-  Graph("debug/accel", accel);
+
+  double accel_alpha = GetPreferenceValue_double("accel_alpha");
+  if (accel_alpha < 0.0) { accel_alpha = 0.0; }
+  if (accel_alpha > 1.0) { accel_alpha = 1.0; }
+
+  accel_est_ = radps2_t{accel_alpha * accel_inst.to_base() +
+                        (1.0 - accel_alpha) * accel_est_.to_base()};
+
+  Graph("debug/accel_inst", accel_inst);
+  Graph("debug/accel", accel_est_);
 
   radian_t native_error = target_pos_native - current_pos_native;
   radps_t avg_vel =
@@ -265,13 +282,12 @@ void TurretSubsystem::WriteToHardware(TurretTarget target) {
 
     Graph("debug/accel_comp_time", comp_time);
 
-    target_vel_native += comp_time * accel;
-    target_pos_native += 0.5 * comp_time * comp_time * accel;
+    target_vel_native += comp_time * accel_est_;
+    target_pos_native += 0.5 * comp_time * comp_time * accel_est_;
   }
 
   double output = icnor_controller_->getOutput(target_pos_native,
-      target_vel_native * GetPreferenceValue_double("fakevel_comp"),
-      current_pos_native, current_vel_native);
+      target_vel_native, current_pos_native, current_vel_native);
 
   output *= GetPreferenceValue_double("icnor/IPG");
 

@@ -59,5 +59,7 @@ private:
   radps_t last_vel_ = 0.0_radps_;
   ms_t last_time_ = -1.0_ms_;
 
+  radps2_t accel_est_ = 0.0_radps2_;
+
   size_t zero_walk_ctr_ = 0;
 };
