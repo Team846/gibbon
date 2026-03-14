@@ -17,4 +17,6 @@ public:
   bool IsFinished() override;
 
 private:
+    double timer;
+    bool do_stop;
 };

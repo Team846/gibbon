@@ -12,6 +12,7 @@ struct ControlInputReadings {
   double rotation;
 
   bool zero_bearing;
+  bool stop_test;
 
   bool diagonalize_bump;
   double intake;

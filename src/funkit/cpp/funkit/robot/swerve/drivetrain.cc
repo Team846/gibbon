@@ -75,6 +75,8 @@ DrivetrainSubsystem::DrivetrainSubsystem(DrivetrainConfigs configs)
 
   RegisterPreference("odom_fudge_factor", 1.062855074);
   RegisterPreference("odom_variance", 0.2);
+  RegisterPreference("stop_test/duty_cycle", 0.5);
+  RegisterPreference("stop_test/target_velocity", 10);
 
   RegisterPreference("steer_lag", pdcsu::units::second_t{0.05});
   RegisterPreference("bearing_latency", pdcsu::units::second_t{0.0});
