@@ -138,7 +138,7 @@ void ShooterSubsystem::WriteToHardware(ShooterTarget target) {
   if (accel_alpha > 1.0) { accel_alpha = 1.0; }
 
   accel_est_ = fps2_t{accel_alpha * accel_inst.to_base() +
-                        (1.0 - accel_alpha) * accel_est_.to_base()};
+                      (1.0 - accel_alpha) * accel_est_.to_base()};
 
   Graph("debug/accel_inst", accel_inst);
   Graph("debug/accel", accel_est_);

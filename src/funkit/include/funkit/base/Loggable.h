@@ -2,6 +2,7 @@
 
 #include <fmt/core.h>
 #include <frc/Preferences.h>
+#include <frc/RobotBase.h>
 #include <frc/smartdashboard/SmartDashboard.h>
 #include <networktables/NetworkTableInstance.h>
 
@@ -55,22 +56,30 @@ public:
     error_count_++;
   }
 
+  static void SetFMSConnected(bool connected) { fms_connected_ = connected; }
+  static bool IsFMSConnected() { return fms_connected_; }
+
+  static bool ShouldGraph() { return !fms_connected_; }
+
   // Puts a double entry on the smart dashboard.
-  void Graph(std::string_view key, double value) const;
+  void Graph(std::string_view key, double value, bool persist = false) const;
 
   // Puts an integer entry on the smart dashboard.
-  void Graph(std::string_view key, int value) const;
+  void Graph(std::string_view key, int value, bool persist = false) const;
 
   // Puts a boolean entry on the smart dashboard.
-  void Graph(std::string_view key, bool value) const;
+  void Graph(std::string_view key, bool value, bool persist = false) const;
 
   // Puts a string entry on the smart dashboard.
-  void Graph(std::string_view key, const std::string& value) const;
+  void Graph(std::string_view key, const std::string& value,
+      bool persist = false) const;
 
-  template <typename U> void Graph(std::string_view key, U value) const {
+  template <typename U>
+  void Graph(std::string_view key, U value, bool persist = false) const {
     if constexpr (detail::is_pdcsu_unit_v<U>) {
+      if (!persist && !ShouldGraph()) return;
       std::string modkey = fmt::format("{} ({})", key, value.dims());
-      Graph(modkey, value.value());
+      Graph(modkey, value.value(), persist);
     } else {
       static_assert(detail::is_pdcsu_unit_v<U>, "must be a PDCSU unit type");
     }
@@ -159,6 +168,8 @@ private:
 
   static unsigned int warn_count_;
   static unsigned int error_count_;
+
+  static bool fms_connected_;
 
   funkit::base::FunkyLogger logger;
 };

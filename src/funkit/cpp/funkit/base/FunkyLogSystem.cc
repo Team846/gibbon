@@ -8,6 +8,7 @@
 #include <string>
 #include <thread>
 
+#include "funkit/base/Loggable.h"
 #include "funkit/base/compression.h"
 
 namespace funkit::base {
@@ -70,7 +71,10 @@ void FunkyLogSystem::LogThread(int rateLimit, std::string logFileName) {
 
     int runningCharCounter = 0;
 
-    std::string logBundle{};
+    std::string fileBundle{};
+    std::string networkBundle{};
+
+    bool fms_on_rio = Loggable::IsFMSConnected();
 
     mtx.lock();
 
@@ -79,13 +83,15 @@ void FunkyLogSystem::LogThread(int rateLimit, std::string logFileName) {
       runningCharCounter += msg.char_count;
       if (runningCharCounter > rateLimit) { break; }
 
-      logBundle += msg.pack() + '\n';
+      std::string packed = msg.pack() + '\n';
+      fileBundle += packed;
+      if (!fms_on_rio || msg.type == 2) { networkBundle += packed; }
       FunkyLogSystem::messages.pop();
     }
 
     mtx.unlock();
 
-    if (logBundle.size() > 1) {
+    if (fileBundle.size() > 1) {
       if (!log_out.good()) {
         log_out.close();
         log_out.clear();
@@ -95,9 +101,11 @@ void FunkyLogSystem::LogThread(int rateLimit, std::string logFileName) {
                     << std::endl;
         }
       }
-      log_out << logBundle << std::endl;
+      log_out << fileBundle << std::endl;
 
-      server.AddMessage(Compression::compress(logBundle));
+      if (networkBundle.size() > 1) {
+        server.AddMessage(Compression::compress(networkBundle));
+      }
     }
 
     std::this_thread::sleep_for(

@@ -21,19 +21,26 @@ std::unordered_set<std::string_view> Loggable::used_preferences_{};
 unsigned int Loggable::warn_count_ = 0;
 unsigned int Loggable::error_count_ = 0;
 
-void Loggable::Graph(std::string_view key, double value) const {
+bool Loggable::fms_connected_ = false;
+
+void Loggable::Graph(std::string_view key, double value, bool persist) const {
+  if (!persist && !ShouldGraph()) return;
   frc::SmartDashboard::PutNumber(fmt::format("{}/{}", name_, key), value);
 }
 
-void Loggable::Graph(std::string_view key, int value) const {
+void Loggable::Graph(std::string_view key, int value, bool persist) const {
+  if (!persist && !ShouldGraph()) return;
   frc::SmartDashboard::PutNumber(fmt::format("{}/{}", name_, key), value);
 }
 
-void Loggable::Graph(std::string_view key, bool value) const {
+void Loggable::Graph(std::string_view key, bool value, bool persist) const {
+  if (!persist && !ShouldGraph()) return;
   frc::SmartDashboard::PutBoolean(fmt::format("{}/{}", name_, key), value);
 }
 
-void Loggable::Graph(std::string_view key, const std::string& value) const {
+void Loggable::Graph(
+    std::string_view key, const std::string& value, bool persist) const {
+  if (!persist && !ShouldGraph()) return;
   frc::SmartDashboard::PutString(fmt::format("{}/{}", name_, key), value);
 }
 
