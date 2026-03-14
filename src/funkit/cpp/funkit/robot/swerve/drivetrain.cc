@@ -589,7 +589,7 @@ void DrivetrainSubsystem::WriteToHardware(DrivetrainTarget target) {
   for (int i = 0; i < 4; i++) {
     modules_[i]->ModifySwerveGenome(drive_genome, steer_genome);
   }
-
+  if (!target.use_dc) {
   cached_max_omega_cut_ =
       GetPreferenceValue_unit_type<pdcsu::units::degps_t>("max_omega_cut");
   cached_max_speed_ =
@@ -602,6 +602,11 @@ void DrivetrainSubsystem::WriteToHardware(DrivetrainTarget target) {
   WriteVelocitiesHelper(accelClampHelper(target.velocity, target.accel_clamp),
       target.cut_excess_steering ? cut_angular_vel : target.angular_velocity,
       target.cut_excess_steering, cached_max_speed_);
+  } else {
+    SwerveModuleTarget trg{0.0_fps_, 0.0_deg_};
+    for (int i = 0; i < 4; i++)
+      modules_[i]->SetTarget(trg);
+  }
     
   for (int i = 0; i < 4; i++)
     modules_[i]->UpdateHardware();
