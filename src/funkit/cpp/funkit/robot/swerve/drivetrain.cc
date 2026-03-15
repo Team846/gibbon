@@ -98,6 +98,8 @@ DrivetrainSubsystem::DrivetrainSubsystem(DrivetrainConfigs configs)
   RegisterPreference(
       "drive_to_point/bearing_threshold", pdcsu::units::degree_t{5});
 
+  RegisterPreference("ramp_rate_limit_step", 5.0);
+
   odometry_.setConstants(
       {.forward_wheelbase_dim = configs.wheelbase_forward_dim,
           .horizontal_wheelbase_dim = configs.wheelbase_horizontal_dim});

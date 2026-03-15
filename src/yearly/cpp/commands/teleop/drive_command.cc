@@ -107,6 +107,27 @@ void DriveCommand::Periodic() {
     ema_comp_gpd_ = 0.0_fps_;
   }
 
+  auto limited_x = ramp_rate_limiter_x_.limit(target.velocity[0].value(),
+      container_.drivetrain_.GetPreferenceValue_double("ramp_rate_limit_step"));
+  auto limited_y = ramp_rate_limiter_y_.limit(target.velocity[1].value(),
+      container_.drivetrain_.GetPreferenceValue_double("ramp_rate_limit_step"));
+
+  if (container_.drivetrain_.GetReadings().estimated_pose.position[0] <
+          158.5_in_ &&
+      container_.drivetrain_.GetReadings().estimated_pose.position[0] >
+          158.5_in_) {
+    target.velocity[0] = pdcsu::units::fps_t{limited_x};
+    target.velocity[1] = pdcsu::units::fps_t{limited_y};
+  }
+
+  if (container_.control_input_.GetReadings().diagonalize_bump) {
+    target.angular_velocity = container_.drivetrain_.ApplyBearingPID(
+        pdcsu::units::u_round(
+            container_.drivetrain_.GetReadings().pose.bearing / 45.0) *
+            45.0,
+        0.0_radps_);
+  }
+
   target.kill_robot = ci_readings_.die_robot_die;
 
   container_.drivetrain_.SetTarget({target});
