@@ -120,6 +120,14 @@ void DriveCommand::Periodic() {
     target.velocity[1] = pdcsu::units::fps_t{limited_y};
   }
 
+  if (container_.control_input_.GetReadings().diagonalize_bump) {
+    target.angular_velocity = container_.drivetrain_.ApplyBearingPID(
+        pdcsu::units::u_round(
+            container_.drivetrain_.GetReadings().pose.bearing / 45.0) *
+            45.0,
+        0.0_radps_);
+  }
+
   container_.drivetrain_.SetTarget({target});
 }
 

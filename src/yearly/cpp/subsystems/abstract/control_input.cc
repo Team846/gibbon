@@ -97,7 +97,7 @@ ControlInputReadings ControlInputSubsystem::UpdateWithInput() {
 
   ci_readings_.pass_mode = dr_readings.right_bumper;
   ci_readings_.descend_l1 = op_readings.right_bumper;
-  ci_readings_.override_force_assist = op_readings.y_button;
+  // ci_readings_.override_force_assist = op_readings.y_button;
   ci_readings_.evac_storage = op_readings.a_button;
   ci_readings_.rev_dye_rotor = op_readings.left_stick_y < -0.5;
   ci_readings_.home = op_readings.back_button;
