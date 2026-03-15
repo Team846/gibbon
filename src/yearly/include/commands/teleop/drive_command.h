@@ -19,4 +19,7 @@ public:
 
 private:
   fps_t ema_comp_gpd_;
+
+  funkit::math::RampRateLimiter ramp_rate_limiter_x_{};
+  funkit::math::RampRateLimiter ramp_rate_limiter_y_{};
 };

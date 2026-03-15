@@ -81,7 +81,7 @@ ShooterReadings ShooterSubsystem::ReadFromHardware() {
 
   if (filling_graph) {
     errors_graph[errors_graph_pos] =
-        (u_abs(vel - GetTarget().target_vel) / vel).value();
+        ((vel - GetTarget().target_vel) / vel).value();
     errors_graph_pos++;
     if (errors_graph_pos >= 280) {
       std::string dir = "/home/lvuser/shooter_errors.csv";
