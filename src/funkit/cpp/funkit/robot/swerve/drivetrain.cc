@@ -100,6 +100,8 @@ DrivetrainSubsystem::DrivetrainSubsystem(DrivetrainConfigs configs)
 
   RegisterPreference("ramp_rate_limit_step", 5.0);
 
+  RegisterPreference("april_tags/bearing_corr_gain", 0.1);
+
   odometry_.setConstants(
       {.forward_wheelbase_dim = configs.wheelbase_forward_dim,
           .horizontal_wheelbase_dim = configs.wheelbase_horizontal_dim});
@@ -168,6 +170,8 @@ bool DrivetrainSubsystem::VerifyHardware() {
 
 void DrivetrainSubsystem::ZeroBearing() {
   if (!is_initialized()) return;
+
+  bearing_correction_at_ = 0.0_deg_;
 
   constexpr int kMaxAttempts = 5;
   constexpr int kSleepTimeMs = 500;
@@ -346,6 +350,10 @@ DrivetrainReadings DrivetrainSubsystem::ReadFromHardware() {
       GetPreferenceValue_unit_type<pdcsu::units::second_t>("bearing_latency");
   bearing += cached_bearing_latency_ * yaw_rate;
 
+  degree_t og_bearing = bearing;
+
+  bearing += bearing_correction_at_;
+
   if (frc::RobotBase::IsSimulation()) { bearing = odometry_.GetOdomBearing(); }
 
   Graph("readings/bearing", bearing);
@@ -444,6 +452,11 @@ DrivetrainReadings DrivetrainSubsystem::ReadFromHardware() {
           {new_pose, yaw_rate, cached_april_variance_coeff_,
               cached_triangular_variance_coeff_, cached_fudge_latencies_});
 
+  if (tag_pos.camera_disconnect && !previous_camera_disconnect) {
+    Error("Camera disconnect");
+  }
+  previous_camera_disconnect = tag_pos.camera_disconnect;
+
   if (tag_pos.variance >= 0) {
     pose_estimator.AddVisionMeasurement(
         std::array<double, 2>{tag_pos.pos[0].value(), tag_pos.pos[1].value()},
@@ -457,8 +470,22 @@ DrivetrainReadings DrivetrainSubsystem::ReadFromHardware() {
   Graph("april_tags/april_pos_x", tag_pos.pos[0]);
   Graph("april_tags/april_pos_y", tag_pos.pos[1]);
   Graph("april_tags/april_variance", tag_pos.variance);
-  if (tag_pos.bearing_from_tags_valid) {
+  if (tag_pos.bearing_from_tags_valid && velocity.magnitude() < 2_fps_) {
     Graph("april_tags/bearing_from_tags", tag_pos.bearing_from_tags);
+    degree_t new_bearing_correction_at_ =
+        tag_pos.bearing_from_tags - og_bearing;
+    double sum_sin =
+        u_sin(new_bearing_correction_at_) *
+            GetPreferenceValue_double("april_tags/bearing_corr_gain") +
+        u_sin(bearing_correction_at_) *
+            (1 - GetPreferenceValue_double("april_tags/bearing_corr_gain"));
+    double sum_cos =
+        u_cos(new_bearing_correction_at_) *
+            GetPreferenceValue_double("april_tags/bearing_corr_gain") +
+        u_cos(bearing_correction_at_) *
+            (1 - GetPreferenceValue_double("april_tags/bearing_corr_gain"));
+    bearing_correction_at_ = radian_t{std::atan2(sum_sin, sum_cos)};
+    Graph("april_tags/bearing_correction", bearing_correction_at_);
   }
 
   Graph("pose_estimator/latency_est", pose_estimator.getLatency());

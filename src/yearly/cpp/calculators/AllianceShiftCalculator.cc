@@ -2,10 +2,17 @@
 
 #include <frc/DriverStation.h>
 
+bool AllianceShiftCalculator::shot_valid = false;
+
 AllianceShiftOutputs AllianceShiftCalculator::Calculate() {
   static int is_cached = -1;
 
   double t = frc::DriverStation::GetMatchTime().value();
+
+  // if (!frc::DriverStation::IsFMSAttached()) {
+  //   shot_valid = true;
+  //   return {true, false, 0, 100.0, 100.0};
+  // }
 
   constexpr double kB[] = {125, 105, 80, 55, 30};
   int shift = (t > kB[0])   ? 0
@@ -30,6 +37,8 @@ AllianceShiftOutputs AllianceShiftCalculator::Calculate() {
 
   bool our_active = (shift % 2 == 1) != (is_cached == 1);
   double flip = t - kB[shift];
+
+  shot_valid = our_active || flip < 1.5 || flip > 23.5;
 
   return {our_active, is_cached == 0, shift, flip, our_active ? flip : 0};
 }

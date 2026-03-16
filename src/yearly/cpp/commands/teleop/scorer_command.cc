@@ -6,6 +6,7 @@
 
 #include "calculators/ShootingCalculator.h"
 #include "funkit/math/fieldpoints.h"
+#include "calculators/AllianceShiftCalculator.h"
 
 ScorerCommand::ScorerCommand(RobotContainer &container)
     : funkit::robot::GenericCommand<RobotContainer, ScorerCommand>{
@@ -106,12 +107,14 @@ void ScorerCommand::Periodic() {
       (shooting_outputs.is_valid && !ci_readings_.override_autoshoot &&
           container_.scorer_ss_.GetReadings().will_make_shot &&
           !frc::DriverStation::IsTest() &&
-          container_.drivetrain_.variance < 16.0) ||  // TODO fix variance case
+          container_.drivetrain_.variance < 16.0 &&
+          !container_.scorer_ss_.turret.GetReadings()
+              .about_to_wrap_/* && AllianceShiftCalculator::shot_valid*/) ||  // TODO fix variance case
       ci_readings_.force_shoot ||
       (ci_readings_.pass_mode &&
           container_.scorer_ss_.turret.GetReadings().in_position_);
 
-  if (!shooting_outputs.is_valid) {
+  if (!target.shoot) {
     container_.drivetrain_.SetFieldObjectPose(
         "shoot_point", {-1000_in_, -1000_in_}, 0.0_deg_);
     container_.drivetrain_.SetFieldObjectPose(

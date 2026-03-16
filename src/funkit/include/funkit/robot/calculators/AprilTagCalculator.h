@@ -29,6 +29,7 @@ struct ATCalculatorOutput {
   double variance;
   pdcsu::units::degree_t bearing_from_tags;
   bool bearing_from_tags_valid;
+  bool camera_disconnect = false;
 };
 
 struct AprilTagData {

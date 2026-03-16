@@ -20,6 +20,8 @@ PivotSubsystem::PivotSubsystem()
 PivotSubsystem::~PivotSubsystem() = default;
 
 void PivotSubsystem::Setup() {
+  if (!is_initialized()) return;
+
   MotorGenome genome_backup{.motor_current_limit = 200_A_,
       .smart_current_limit = 200_A_,
       .voltage_compensation = 12_V_,
@@ -56,6 +58,10 @@ PivotTarget PivotSubsystem::ZeroTarget() const {
 }
 
 void PivotSubsystem::ZeroSubsystem() {
+  if (!is_initialized()) {
+    homed = true;
+    return;
+  };
   esc_.SetPosition(radian_t{0});
   homed = true;
 }

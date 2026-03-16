@@ -92,6 +92,21 @@ void IntakeSubsystem::WriteToHardware(IntakeTarget target) {
     trgt_vel_ = GetPreferenceValue_unit_type<fps_t>("speed_evac");
   } else {
     trgt_vel_ = GetPreferenceValue_unit_type<fps_t>("speed_idle");
+
+    if (u_abs(esc_.GetVelocity<mps_t>()) < 5_fps_) {
+      stall_ctr_++;
+    } else {
+      stall_ctr_ = 0;
+    }
+    if (reset_ctr_ > 10 && reset_ctr_ <= 20) {
+      trgt_vel_ = GetPreferenceValue_unit_type<fps_t>("speed_evac");
+    } else if (reset_ctr_ > 0) {
+      // Let it spin up again - continue
+    } else {
+      if (stall_ctr_ > 25) { reset_ctr_ = 20; }
+    }
+
+    if (reset_ctr_ > 0) reset_ctr_--;
   }
 
   Graph("target_velocity", trgt_vel_);

@@ -1948,7 +1948,7 @@
   {
     "name": "/Preferences/SwerveDrivetrain/april_tags/bearing_corr_gain",
     "type": "double",
-    "value": 0.01,
+    "value": 0.1,
     "properties": {
       "persistent": true
     }

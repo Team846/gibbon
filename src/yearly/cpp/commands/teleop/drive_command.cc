@@ -112,20 +112,28 @@ void DriveCommand::Periodic() {
   auto limited_y = ramp_rate_limiter_y_.limit(target.velocity[1].value(),
       container_.drivetrain_.GetPreferenceValue_double("ramp_rate_limit_step"));
 
-  if (container_.drivetrain_.GetReadings().estimated_pose.position[0] <
-          158.5_in_ &&
-      container_.drivetrain_.GetReadings().estimated_pose.position[0] >
-          158.5_in_) {
+  if ((!isBlue &&
+          container_.drivetrain_.GetReadings().estimated_pose.position[1] <
+              158.5_in_) ||
+      (isBlue &&
+          container_.drivetrain_.GetReadings().estimated_pose.position[1] >
+              funkit::math::FieldPoint::field_size_y - 158.5_in_)) {
     target.velocity[0] = pdcsu::units::fps_t{limited_x};
     target.velocity[1] = pdcsu::units::fps_t{limited_y};
   }
 
   if (container_.control_input_.GetReadings().diagonalize_bump) {
-    target.angular_velocity = container_.drivetrain_.ApplyBearingPID(
-        pdcsu::units::u_round(
-            container_.drivetrain_.GetReadings().pose.bearing / 45.0) *
-            45.0,
-        0.0_radps_);
+    auto bearing = container_.drivetrain_.GetReadings().pose.bearing % 360_deg_;
+    degree_t target_bearing = 45_deg_;
+    if (bearing >= 90_deg_ && bearing < 180_deg_) {
+      target_bearing = 135_deg_;
+    } else if (bearing >= 180_deg_ && bearing < 270_deg_) {
+      target_bearing = 225_deg_;
+    } else if (bearing >= 270_deg_) {
+      target_bearing = 315_deg_;
+    }
+    target.angular_velocity =
+        container_.drivetrain_.ApplyBearingPID(target_bearing, 0.0_radps_);
   }
 
   target.kill_robot = ci_readings_.die_robot_die;

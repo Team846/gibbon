@@ -26,21 +26,21 @@ using WAIT = frc2::WaitCommand;
 
 using FPT = funkit::math::FieldPoint;
 
-#define MAX_ACCEL_CS2_NORM 25_fps2_
-#define MAX_DECEL_CS2_NORM 20_fps2_
+#define MAX_ACCEL_CS2_NORM 30_fps2_
+#define MAX_DECEL_CS2_NORM 30_fps2_
 #define MAX_VEL_CS2_NORM 15_fps_
 
-#define MAX_ACCEL_CS2_CURVE 25_fps2_
-#define MAX_DECEL_CS2_CURVE 20_fps2_
+#define MAX_ACCEL_CS2_CURVE 30_fps2_
+#define MAX_DECEL_CS2_CURVE 30_fps2_
 #define MAX_VEL_CS2_CURVE 15_fps_
 
 #define MAX_ACCEL_CS2_BUMP 35_fps2_
 #define MAX_DECEL_CS2_BUMP 35_fps2_
 #define MAX_VEL_CS2_BUMP 15_fps_
 
-#define MAX_ACCEL_CS2_SWIM 7_fps2_
-#define MAX_DECEL_CS2_SWIM 7_fps2_
-#define MAX_VEL_CS2_SWIM 6_fps_
+#define MAX_ACCEL_CS2_SWIM 8_fps2_
+#define MAX_DECEL_CS2_SWIM 8_fps2_
+#define MAX_VEL_CS2_SWIM 7_fps_
 
 #define START_Y (298.5_in_ - 16.5_in_)
 
@@ -112,15 +112,15 @@ using FPT = funkit::math::FieldPoint;
 
 #define PASS() AutoScorerCommand(container, false, true)
 
-#define END_BUMPC1_PT MKPT(108_in_, 223.61_in_, -35_deg_, 8_fps_)
-#define START_BUMPC1_PT MKPT(108_in_, 120.61_in_, -35_deg_, 8_fps_)
+#define END_BUMPC1_PT MKPT(98_in_, 223.61_in_, 35_deg_, 8_fps_)
+#define START_BUMPC1_PT MKPT(98_in_, 120.61_in_, 35_deg_, 8_fps_)
 // 8_fps
-#define END_BUMPC23_PT MKPT(108_in_, 223.61_in_, 35_deg_ + 180_deg_, 8_fps_)
-#define START_BUMPC23_PT MKPT(96_in_, 110.61_in_, 35_deg_ + 180_deg_, 8_fps_)
+#define END_BUMPC23_PT MKPT(99_in_, 223.61_in_, 35_deg_ + 180_deg_, 8_fps_)
+#define START_BUMPC23_PT MKPT(99_in_, 110.61_in_, 35_deg_ + 180_deg_, 8_fps_)
 
-#define P1C1_INTAKE_PT MKPT(100.5_in_, 287.35_in_, -45_deg_, 11_fps_)
-#define P2C1_INTAKE_PT MKPT(85.25_in_, 300.6_in_, -55_deg_, 7_fps_)
-#define P3C1_INTAKE_PT MKPT(65.75_in_, 318.2_in_, -70_deg_, 0_fps_)
+#define P1C1_INTAKE_PT MKPT(94.5_in_, 287.35_in_, 45_deg_, 11_fps_)
+#define P2C1_INTAKE_PT MKPT(105.25_in_, 300.6_in_, 55_deg_, 7_fps_)
+#define P3C1_INTAKE_PT MKPT(120.75_in_, 318.2_in_, 70_deg_, 0_fps_)
 
 #define P1C2_INTAKE_PT MKPT(112.1_in_, 290.5_in_, 0_deg_, 11_fps_)
 #define P2C2_INTAKE_PT MKPT(130.35_in_, 315.42_in_, 0_deg_, 8_fps_)
@@ -129,7 +129,7 @@ using FPT = funkit::math::FieldPoint;
 #define P5C2_INTAKE_PT MKPT(125.85_in_, 250.35_in_, 0_deg_, 0_fps_)
 
 #define DEPOT                                                            \
-  MKPT(funkit::math::FieldPoint::field_size_x / 2.0 - 87.38_in_, 30_in_, \
+  MKPT(funkit::math::FieldPoint::field_size_x / 2.0 - 83.38_in_, 8_in_, \
       180_deg_, 0_fps_)
 
 #define __AUTO__(codeName, stringName)                                 \
@@ -157,12 +157,13 @@ __AUTO__(CS2Auto, "CS2")
 SEQUENCE {
   START2(92.5_in_, 144.54_in_, 0_deg_), DRIVE_PT(CS2, END_BUMPC1_PT, BUMP),
       TRACK(), INTAKE(HoptakeState::kIntake),
-      DRIVE_PT(CS2, P1C1_INTAKE_PT, NORM), DRIVE_PT_TANK(CS2, P2C1_INTAKE_PT, NORM),
+      DRIVE_PT_TANK(CS2, P1C1_INTAKE_PT, NORM),
+      DRIVE_PT_TANK(CS2, P2C1_INTAKE_PT, NORM),
       DRIVE_PT_TANK(CS2, P3C1_INTAKE_PT, NORM), TRACK(),
       DRIVE_PT(CS2, P1C1_INTAKE_PT, NORM), INTAKE(HoptakeState::kBump),
       DRIVE_PT(CS2, END_BUMPC1_PT, NORM), TRACK(),
       DRIVE_PT(CS2, START_BUMPC1_PT, BUMP),
-      PARALLEL_DEADLINE(WAIT{2.2_s}, SHOOT()), TRACK(),
+      PARALLEL_DEADLINE(WAIT{2.0_s}, SHOOT()), TRACK(),
       DRIVE_PT(CS2, END_BUMPC1_PT, NORM), INTAKE(HoptakeState::kIntake),
       DRIVE_PT_TANK(CS2, P1C2_INTAKE_PT, NORM),
       DRIVE_PT_TANK(CS2, P2C2_INTAKE_PT, NORM), TRACK(),
@@ -175,7 +176,7 @@ SEQUENCE {
           frc2::ParallelDeadlineGroup(
               frc2::SequentialCommandGroup{
                   DRIVE_PT_BEARING(CS2, DEPOT, SWIM), WAIT{5_s}},
-              frc2::SequentialCommandGroup{WAIT{0.2_s}, SHOOT()}),
+              frc2::SequentialCommandGroup{WAIT{0.1_s}, SHOOT()}),
           frc2::ParallelDeadlineGroup(WAIT{10_s}, SHOOT()),
           [left = is_left_side]() { return left; })
 }

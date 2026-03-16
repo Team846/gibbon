@@ -194,8 +194,10 @@ void FunkyRobot::OnPeriodic() {
 
   bool isDisabled = frc::DriverStation::IsDisabled();
 
+  AllianceShiftOutputs shift_data{};
+
   if (!isDisabled) {
-    auto shift_data = AllianceShiftCalculator::Calculate();
+    shift_data = AllianceShiftCalculator::Calculate();
     Graph("game_data/shift_active", shift_data.our_hub_active);
     Graph("game_data/active_first", shift_data.won_auto);
     Graph("game_data/shift", shift_data.shift);
@@ -203,7 +205,9 @@ void FunkyRobot::OnPeriodic() {
     Graph("game_data/our_time_left", shift_data.our_time_left);
   }
 
-  if (homing_count_ > 0 && isDisabled)
+  if (container_.control_input_.GetReadings().die_robot_die)
+    LEDsLogic::SetLEDsState(&container_, kLEDsKillRobot);
+  else if (homing_count_ > 0 && isDisabled)
     LEDsLogic::SetLEDsState(&container_, kLEDsHoming);
   else if (homing_count_gyro > 0 && isDisabled)
     LEDsLogic::SetLEDsState(&container_, kLEDsHomingGyro);
@@ -214,11 +218,12 @@ void FunkyRobot::OnPeriodic() {
     LEDsLogic::SetLEDsState(&container_, kLEDsUnready);
   else if (isDisabled)
     LEDsLogic::SetLEDsState(&container_, kLEDsDisabled);
-  else if (container_.scorer_ss_.GetReadings().will_make_shot &&
-           container_.drivetrain_.variance < 16.0)
-    LEDsLogic::SetLEDsState(&container_, kLEDsSequencing);
+  else if (shift_data.our_hub_active)
+    LEDsLogic::SetLEDsState(&container_, kLEDsOurShift);
+  else if (shift_data.our_hub_active && shift_data.until_flip < 4.0)
+    LEDsLogic::SetLEDsState(&container_, kLEDsNearOurShift);
   else
-    LEDsLogic::UpdateLEDs(&container_);
+    LEDsLogic::SetLEDsState(&container_, kLEDsTheirShift);
 }
 
 void FunkyRobot::InitTest() {

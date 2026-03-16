@@ -45,6 +45,7 @@ void LEDsSubsystem::Flash(int loops_on) {
 #define GREEN 0, 255, 0
 #define ORANGE 255, 17, 0
 #define PURPLE 255, 0, 255
+#define OFF 0, 0, 0
 
 #define SLOW_FLASH 30
 #define MED_FLASH 12
@@ -62,24 +63,16 @@ void LEDsSubsystem::WriteToHardware(TLTGT target) {
       SetStrip(RED);
     } else if (tgt->state == kLEDsDisabled) {
       SetStrip(ORANGE);
-    } else if (tgt->state == kLEDsAutonomous) {
+    } else if (tgt->state == kLEDsOurShift) {
       SetStrip(BLUE);
-    } else if (tgt->state == kLEDsSequencing) {
-      SetStrip(LIGHT_BLUE);
-      Flash(SLOW_FLASH);
-    } else if (tgt->state == kLEDsTeleop) {
+    } else if (tgt->state == kLEDsTheirShift) {
       SetStrip(ORANGE);
       Flash(SLOW_FLASH);
-    } else if (tgt->state == kLEDsClimbing) {
-      SetStrip(LIGHT_BLUE);
-      Flash(SLOW_FLASH);
-    } else if (tgt->state == kLEDsHavePiece) {
-      SetRainbow();
-    } else if (tgt->state == kisLinedUp) {
-      SetStrip(GREEN);
-    } else if (tgt->state == kisCompletelyLinedUp) {
-      SetStrip(GREEN);
-      Flash(SLOW_FLASH);
+    } else if (tgt->state == kLEDsNearOurShift) {
+      SetStrip(BLUE);
+      Flash(RAPID_FLASH);
+    } else if (tgt->state == kLEDsKillRobot) {
+      SetStrip(OFF);
     }
   } else if (auto* tgt = std::get_if<LEDsCoastingTarget>(&target)) {
     for (int i = 0; i < (int)(kLength * tgt->percent); i++) {

@@ -15,7 +15,8 @@ double RampRateLimiter::limit(double value, double rateLimit) {
   auto elapsedTime = currentTime - m_lastTime;
   m_lastTime = currentTime;
 
-  double maxChange = std::abs(rateLimit * elapsedTime.count() / 1000.0);
+  double maxChange =
+      /*std::abs(*/ rateLimit;  // * elapsedTime.count() / 1000.0);
   double change = value - m_lastValue;
 
   if (change > maxChange) {

@@ -11,4 +11,5 @@ struct AllianceShiftOutputs {
 class AllianceShiftCalculator {
 public:
   static AllianceShiftOutputs Calculate();
+  static bool shot_valid;
 };

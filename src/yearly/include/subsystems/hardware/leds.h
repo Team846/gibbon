@@ -10,13 +10,10 @@
 enum LEDsState {
   kLEDsUnready,
   kLEDsDisabled,
-  kLEDsAutonomous,
-  kLEDsSequencing,
-  kLEDsTeleop,
-  kLEDsClimbing,
-  kLEDsHavePiece,
-  kisLinedUp,
-  kisCompletelyLinedUp,
+  kLEDsKillRobot,
+  kLEDsOurShift,
+  kLEDsTheirShift,
+  kLEDsNearOurShift,
   kLEDsHomingGyro,
   kLEDsHoming
 };

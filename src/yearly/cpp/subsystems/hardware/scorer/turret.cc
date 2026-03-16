@@ -60,6 +60,7 @@ TurretSubsystem::TurretSubsystem()
 
   RegisterPreference("wrap/positive", 220_deg_);
   RegisterPreference("wrap/negative", -240_deg_);
+  RegisterPreference("wrap/project_stop", 0.1_s_);
 
   RegisterPreference("accel_factor", 4.0);
   RegisterPreference("accel_alpha", 0.3);
@@ -123,6 +124,8 @@ TurretTarget TurretSubsystem::ZeroTarget() const {
 }
 
 void TurretSubsystem::ZeroWithCRT(bool retry) {
+  if (!is_initialized()) return;
+
   auto abs1 = rotation_t{cancoder_1_.GetAbsolutePosition().GetValueAsDouble()};
   auto abs2 = rotation_t{cancoder_2_.GetAbsolutePosition().GetValueAsDouble()};
 
@@ -160,12 +163,12 @@ bool TurretSubsystem::VerifyHardware() {
 }
 
 TurretReadings TurretSubsystem::ReadFromHardware() {
-  if (!arm_sys_) { return TurretReadings{radian_t{0}, radps_t{0}, false}; }
+  if (!arm_sys_) { return TurretReadings{radian_t{0}, radps_t{0}, false, false}; }
 
   radian_t pos_real = esc_.GetPosition<radian_t>();
   radps_t vel_real = esc_.GetVelocity<radps_t>();
 
-  TurretReadings readings{pos_real, vel_real, false};
+  TurretReadings readings{pos_real, vel_real, false, false};
 
   degree_t error =
       funkit::math::CoterminalDifference(GetTarget().pos_, pos_real);
@@ -194,6 +197,19 @@ TurretReadings TurretSubsystem::ReadFromHardware() {
   Graph("sol/pos", sol.turretRotations);
   Graph("sol/error", sol.error);
   Graph("sol/valid", sol.isValid);
+
+  radian_t pos_project_wrap =
+      pos_real +
+      vel_real * GetPreferenceValue_unit_type<second_t>("wrap/project_stop");
+  if (pos_project_wrap >=
+          GetPreferenceValue_unit_type<degree_t>("wrap/positive") ||
+      pos_project_wrap <=
+          GetPreferenceValue_unit_type<degree_t>("wrap/negative")) {
+    readings.about_to_wrap_ = true;
+  } else {
+    readings.about_to_wrap_ = false;
+  }
+  Graph("debug/about_to_wrap", readings.about_to_wrap_);
 
   return readings;
 }
