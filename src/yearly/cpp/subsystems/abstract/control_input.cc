@@ -76,6 +76,10 @@ ControlInputReadings ControlInputSubsystem::UpdateWithInput() {
   ci_readings_.rotation = dr_readings.right_stick_x;
 
   ci_readings_.stop_test = dr_readings.a_button && dr_readings.b_button;
+  ci_readings_.speed_test =
+      dr_readings.a_button && dr_readings.back_button;  // fix this
+  ci_readings_.ramp_accel_test =
+      dr_readings.b_button && dr_readings.back_button;  // fix this
 
   Graph("translate_x", ci_readings_.translate_x);
   Graph("translate_y", ci_readings_.translate_y);

@@ -203,6 +203,7 @@ To undo the going back:
 
 ## CppCheck Warnings
 ```
+src/yearly/cpp/commands/teleop/ramp_accel_command.cc:21:21: warning: Variable 'target.velocity' is reassigned a value before the old one has been used. [redundantAssignment]
 src/funkit/cpp/funkit/math/collection.cc:27:0: warning: The function 'VerticalDeadband' is never used. [unusedFunction]
 src/funkit/cpp/funkit/math/collection.cc:55:0: warning: The function 'CoterminalSum' is never used. [unusedFunction]
 src/funkit/cpp/funkit/math/collection.cc:69:0: warning: The function 'modulo' is never used. [unusedFunction]

@@ -13,6 +13,8 @@ struct ControlInputReadings {
 
   bool zero_bearing;
   bool stop_test;
+  bool speed_test;
+  bool ramp_accel_test;
 
   bool diagonalize_bump;
   double intake;

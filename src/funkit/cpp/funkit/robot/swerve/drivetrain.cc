@@ -77,6 +77,12 @@ DrivetrainSubsystem::DrivetrainSubsystem(DrivetrainConfigs configs)
   RegisterPreference("odom_variance", 0.2);
   RegisterPreference("stop_test/duty_cycle", 0.5);
   RegisterPreference("stop_test/target_velocity", pdcsu::units::fps_t{10});
+  RegisterPreference(
+      "speed_test_command/max_velocity", pdcsu::units::fps_t{13.7});
+  RegisterPreference(
+      "ramp_accel_command/initial_velocity", pdcsu::units::fps_t{1.0});
+  RegisterPreference(
+      "ramp_accel_command/final_velocity", pdcsu::units::fps_t{3.0});
 
   RegisterPreference("steer_lag", pdcsu::units::second_t{0.05});
   RegisterPreference("bearing_latency", pdcsu::units::second_t{0.0});
