@@ -10,8 +10,8 @@ frc2::InstantCommand AutoIntakeCommand(
         [&container, target] {
           HoptakeSSTarget t{};
           t.target_state = target;
-          t.drivetrain_vel = container.drivetrain_.GetReadings()
-                                 .estimated_pose.velocity.magnitude();
+          t.drivetrain_vel =
+              container.drivetrain_.GetReadings().pose.velocity.magnitude();
           container.hoptake_ss_.SetTarget(t);
         },
         [](bool) {}, [] { return false; }, {&container.hoptake_ss_}});

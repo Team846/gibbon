@@ -1810,7 +1810,7 @@
   {
     "name": "/Preferences/ShootingCalculator/swim/tofGain",
     "type": "double",
-    "value": 0.022,
+    "value": 1.0,
     "properties": {
       "persistent": true
     }

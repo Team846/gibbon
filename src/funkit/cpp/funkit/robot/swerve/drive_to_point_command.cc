@@ -40,7 +40,7 @@ void DriveToPointCommand::Initialize() {
   }
 
   auto initial_distance = (target_.point - start_point_).magnitude();
-  auto initial_velocity = readings.estimated_pose.velocity.magnitude();
+  auto initial_velocity = readings.pose.velocity.magnitude();
   estimated_time_ = EstimateCompletionTime(
       initial_distance, initial_velocity, target_.velocity);
 
@@ -62,19 +62,18 @@ void DriveToPointCommand::Execute() {
   DrivetrainTarget dt_target{{pdcsu::units::fps_t{0}, pdcsu::units::fps_t{0}},
       pdcsu::units::degps_t{0}};
 
-  funkit::math::Vector2D delta_vec =
-      target_.point - dt_readings.estimated_pose.position;
+  funkit::math::Vector2D delta_vec = target_.point - dt_readings.pose.position;
 
   pdcsu::units::degree_t heading_direction = delta_vec.angle(true);
-  if (dt_readings.estimated_pose.velocity.magnitude().value() > 2.0)
-    heading_direction = dt_readings.estimated_pose.velocity.angle(true);
+  if (dt_readings.pose.velocity.magnitude().value() > 2.0)
+    heading_direction = dt_readings.pose.velocity.angle(true);
 
   pdcsu::units::degree_t O = delta_vec.angle(true) - heading_direction;
 
   double O_rad = pdcsu::units::radian_t{O}.value();
   double delta_mag = delta_vec.magnitude().value();
   double max_dec_val = max_deceleration_.value();
-  double vel_mag = dt_readings.estimated_pose.velocity.magnitude().value();
+  double vel_mag = dt_readings.pose.velocity.magnitude().value();
 
   double vel_dir_target_val =
       std::min(

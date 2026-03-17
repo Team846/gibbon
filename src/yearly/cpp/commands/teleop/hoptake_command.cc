@@ -30,7 +30,7 @@ void HoptakeCommand::Periodic() {
   }
 
   target.drivetrain_vel =
-      container_.drivetrain_.GetReadings().estimated_pose.velocity.magnitude();
+      container_.drivetrain_.GetReadings().pose.velocity.magnitude();
 
   container_.hoptake_ss_.SetTarget(target);
 }

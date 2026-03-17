@@ -43,6 +43,11 @@ HoodSubsystem::HoodSubsystem()
 
 HoodSubsystem::~HoodSubsystem() = default;
 
+const degree_t hood_absolute_min = 40_deg_;
+const degree_t hood_absolute_max = 90_deg_;
+const degree_t hood_soft_min = 50_deg_;
+const degree_t hood_soft_max = 77_deg_;
+
 void HoodSubsystem::Setup() {
   MotorGenome genome_backup{.motor_current_limit = 25_A_,
       .smart_current_limit = 30_A_,
@@ -84,16 +89,14 @@ void HoodSubsystem::Setup() {
   icnor_controller_->attachLearner(learner_path);
 
   if (!frc::RobotBase::IsSimulation()) { ZeroWithAbsoluteEncoder(); }
+
+  esc_.SetControllerSoftLimits(
+      arm_sys_->toNative(hood_soft_max), arm_sys_->toNative(hood_soft_min));
 }
 
 HoodTarget HoodSubsystem::ZeroTarget() const {
   return HoodTarget{60_deg_, 0_degps_};
 }
-
-const degree_t hood_absolute_min = 40_deg_;
-const degree_t hood_absolute_max = 90_deg_;
-const degree_t hood_soft_min = 50_deg_;
-const degree_t hood_soft_max = 77_deg_;
 
 namespace {
 

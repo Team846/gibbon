@@ -1338,7 +1338,7 @@
   {
     "name": "/Preferences/pivot/pos_stow (deg)",
     "type": "double",
-    "value": -64.0,
+    "value": -57.0,
     "properties": {
       "persistent": true
     }
@@ -1948,7 +1948,7 @@
   {
     "name": "/Preferences/SwerveDrivetrain/april_tags/bearing_corr_gain",
     "type": "double",
-    "value": 0.01,
+    "value": 0.1,
     "properties": {
       "persistent": true
     }

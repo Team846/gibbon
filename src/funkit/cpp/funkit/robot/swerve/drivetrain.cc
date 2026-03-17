@@ -522,6 +522,8 @@ DrivetrainReadings DrivetrainSubsystem::ReadFromHardware() {
 
   Graph("readings/position_x", new_pose.position[0]);
   Graph("readings/position_y", new_pose.position[1]);
+  Graph("readings/velocity_x", new_pose.velocity[0]);
+  Graph("readings/velocity_y", new_pose.velocity[1]);
   Graph("readings/odom_bearing", odom_output.odom_bearing);
 
   pdcsu::util::math::uVec<pdcsu::units::fps2_t, 2> accl = GetAcceleration();

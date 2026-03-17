@@ -12,7 +12,7 @@ DyeRotorSubsystem::DyeRotorSubsystem()
   // Theoretical 171.43 RPM maximum speed
   RegisterPreference("speed_84bps", 150_rpm_);
   RegisterPreference("speed_slow_feed", 120_rpm_);
-  RegisterPreference("speed_reverse", -25_rpm_);
+  RegisterPreference("speed_reverse", -100_rpm_);
   RegisterPreference("speed_idle", 0_rpm_);
 }
 

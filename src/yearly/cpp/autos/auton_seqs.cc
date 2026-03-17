@@ -128,7 +128,7 @@ using FPT = funkit::math::FieldPoint;
 #define P4C2_INTAKE_PT MKPT(160.85_in_, 278.35_in_, 0_deg_, 4_fps_)
 #define P5C2_INTAKE_PT MKPT(125.85_in_, 250.35_in_, 0_deg_, 0_fps_)
 
-#define DEPOT                                                            \
+#define DEPOT                                                           \
   MKPT(funkit::math::FieldPoint::field_size_x / 2.0 - 83.38_in_, 8_in_, \
       180_deg_, 0_fps_)
 

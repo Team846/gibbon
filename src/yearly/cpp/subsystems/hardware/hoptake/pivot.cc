@@ -8,9 +8,9 @@ using namespace funkit::control::config;
 
 PivotSubsystem::PivotSubsystem()
     : GenericSubsystem("pivot"),
-      esc_{base::TALON_FX_KRAKENX60, ports::pivot_::kPivotParams} {
-  RegisterPreference("pos_stow", -64.0_deg_);
-  RegisterPreference("pos_intake", -74.0_deg_);
+      esc_{base::TALON_FX_KRAKENX44, ports::pivot_::kPivotParams} {
+  RegisterPreference("pos_stow", -57.0_deg_);
+  RegisterPreference("pos_intake", -76.0_deg_);
   RegisterPreference("pos_collapsed", -10.0_deg_);
 
   RegisterPreference("agigtate/on_loop_count", 10);

@@ -148,9 +148,7 @@ ATCalculatorOutput AprilTagCalculator::calculate(ATCalculatorInput input) {
     pdcsu::units::second_t tl =
         pdcsu::units::second_t(cam_table->GetNumber("tl", -1));
 
-    if (delay > 3_s_) {
-      output.camera_disconnect = true;
-    }
+    if (delay > 3_s_) { output.camera_disconnect = true; }
 
     std::vector<double> tx_nums = cam_table->GetNumberArray("tx", {});
     std::vector<double> distances_num =

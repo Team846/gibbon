@@ -163,7 +163,9 @@ bool TurretSubsystem::VerifyHardware() {
 }
 
 TurretReadings TurretSubsystem::ReadFromHardware() {
-  if (!arm_sys_) { return TurretReadings{radian_t{0}, radps_t{0}, false, false}; }
+  if (!arm_sys_) {
+    return TurretReadings{radian_t{0}, radps_t{0}, false, false};
+  }
 
   radian_t pos_real = esc_.GetPosition<radian_t>();
   radps_t vel_real = esc_.GetVelocity<radps_t>();

@@ -74,14 +74,14 @@ void ShootingCalculator::Calculate(
   auto drivetrain_readings = container_->drivetrain_.GetReadings();
 
   Vel2D driver_vel{container_->drivetrain_.GetTarget().velocity};
-  drivetrain_readings.estimated_pose.velocity =
+  drivetrain_readings.pose.velocity =
       (1 - loggable.GetPreferenceValue_double("swim/drawTwdDriver")) *
-          drivetrain_readings.estimated_pose.velocity +
+          drivetrain_readings.pose.velocity +
       loggable.GetPreferenceValue_double("swim/drawTwdDriver") * driver_vel;
 
   swim_accum_angle_reduc +=
       kSWIM_reduc_accum_fac * 10_ms_ *
-      (drivetrain_readings.estimated_pose.velocity.magnitude() - kSWIM_minvel_reduc);
+      (drivetrain_readings.pose.velocity.magnitude() - kSWIM_minvel_reduc);
   swim_accum_angle_reduc =
       u_clamp(swim_accum_angle_reduc, 0_deg_, kSWIM_max_angle_reduc);
 
@@ -98,8 +98,9 @@ void ShootingCalculator::Calculate(
   outputs_.start_traj = shooter_pos;
 
   const Vel2D vel_at_shooter =
-      drivetrain_readings.estimated_pose.velocity;  // Robot-to-shooter is small enough,
-                                          // that term may be considered zero
+      drivetrain_readings.estimated_pose
+          .velocity;  // Robot-to-shooter is small enough,
+                      // that term may be considered zero
 
   const Vector2D odelta = target - shooter_pos;
 
@@ -202,7 +203,7 @@ pdcsu::util::math::Vector2D ShootingCalculator::SimulateTrajectory(
       shot_speed, shot_dir, true};
 
   pdcsu::util::math::uVec<pdcsu::units::fps_t, 2> compl_vel =
-      shot_vel + container_->drivetrain_.GetReadings().estimated_pose.velocity;
+      shot_vel + container_->drivetrain_.GetReadings().pose.velocity;
 
   fps_t vertical_vel = effective_launch_speed *
                        u_sin(container_->scorer_ss_.hood.GetReadings().pos_);
