@@ -18,9 +18,6 @@ public:
 
 private:
   double timer;
-  double total_timer;
-  int counter;
-  double another_timer;
   funkit::robot::swerve::odometry::Vector2D start_pos;
   bool do_stop;
 };
