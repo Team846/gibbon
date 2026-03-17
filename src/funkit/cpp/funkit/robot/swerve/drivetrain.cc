@@ -76,7 +76,7 @@ DrivetrainSubsystem::DrivetrainSubsystem(DrivetrainConfigs configs)
   RegisterPreference("odom_fudge_factor", 1.062855074);
   RegisterPreference("odom_variance", 0.2);
   RegisterPreference("stop_test/duty_cycle", 0.5);
-  RegisterPreference("stop_test/target_velocity", 10);
+  RegisterPreference("stop_test/target_velocity", pdcsu::units::fps_t{10});
 
   RegisterPreference("steer_lag", pdcsu::units::second_t{0.05});
   RegisterPreference("bearing_latency", pdcsu::units::second_t{0.0});
@@ -590,24 +590,24 @@ void DrivetrainSubsystem::WriteToHardware(DrivetrainTarget target) {
     modules_[i]->ModifySwerveGenome(drive_genome, steer_genome);
   }
   if (!target.use_dc) {
-  cached_max_omega_cut_ =
-      GetPreferenceValue_unit_type<pdcsu::units::degps_t>("max_omega_cut");
-  cached_max_speed_ =
-      GetPreferenceValue_unit_type<pdcsu::units::fps_t>("max_speed");
+    cached_max_omega_cut_ =
+        GetPreferenceValue_unit_type<pdcsu::units::degps_t>("max_omega_cut");
+    cached_max_speed_ =
+        GetPreferenceValue_unit_type<pdcsu::units::fps_t>("max_speed");
 
-  pdcsu::units::degps_t cut_angular_vel = pdcsu::units::u_min(
-      pdcsu::units::u_max(target.angular_velocity, -cached_max_omega_cut_),
-      cached_max_omega_cut_);
+    pdcsu::units::degps_t cut_angular_vel = pdcsu::units::u_min(
+        pdcsu::units::u_max(target.angular_velocity, -cached_max_omega_cut_),
+        cached_max_omega_cut_);
 
-  WriteVelocitiesHelper(accelClampHelper(target.velocity, target.accel_clamp),
-      target.cut_excess_steering ? cut_angular_vel : target.angular_velocity,
-      target.cut_excess_steering, cached_max_speed_);
+    WriteVelocitiesHelper(accelClampHelper(target.velocity, target.accel_clamp),
+        target.cut_excess_steering ? cut_angular_vel : target.angular_velocity,
+        target.cut_excess_steering, cached_max_speed_);
   } else {
     SwerveModuleTarget trg{0.0_fps_, 0.0_deg_};
     for (int i = 0; i < 4; i++)
       modules_[i]->SetTarget(trg);
   }
-    
+
   for (int i = 0; i < 4; i++)
     modules_[i]->UpdateHardware();
 
