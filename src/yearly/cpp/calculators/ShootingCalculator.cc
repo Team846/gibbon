@@ -98,9 +98,8 @@ void ShootingCalculator::Calculate(
   outputs_.start_traj = shooter_pos;
 
   const Vel2D vel_at_shooter =
-      drivetrain_readings.estimated_pose
-          .velocity;  // Robot-to-shooter is small enough,
-                      // that term may be considered zero
+      drivetrain_readings.pose.velocity;  // Robot-to-shooter is small enough,
+                                          // that term may be considered zero
 
   const Vector2D odelta = target - shooter_pos;
 
@@ -117,7 +116,6 @@ void ShootingCalculator::Calculate(
       delta_mag / 100_in_ * 0.375_s_ *
       loggable.GetPreferenceValue_double(
           "swim/tofGain");  // Initial guess (likely lower than actual)
-                            //   degree_t shot_angle = 75_deg_;
 
   // Recursive iteration to find TOF
   for (int i = 0; i < 10; i++) {

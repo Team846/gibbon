@@ -16,6 +16,7 @@ struct TurretReadings {
   degps_t vel_;
   bool in_position_;
   bool about_to_wrap_;
+  degree_t error_;
 };
 
 struct TurretTarget {

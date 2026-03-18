@@ -289,7 +289,7 @@ ATCalculatorOutput AprilTagCalculator::calculate(ATCalculatorInput input) {
 
         auto field_len = field_vec.magnitude();
         auto cam_len = cam_vec.magnitude();
-        if (field_len.value() <= 20.0 || cam_len.value() <= 20.0) { continue; }
+        if (field_len.value() <= 40.0 || cam_len.value() <= 40.0) { continue; }
 
         degree_t field_angle = field_vec.angle(true);
         degree_t cam_angle = cam_vec.angle(true);

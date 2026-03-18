@@ -109,10 +109,11 @@ void ScorerCommand::Periodic() {
           !frc::DriverStation::IsTest() &&
           container_.drivetrain_.variance < 16.0 &&
           !container_.scorer_ss_.turret.GetReadings()
-               .about_to_wrap_ /* && AllianceShiftCalculator::shot_valid*/) ||  // TODO fix variance case
+              .about_to_wrap_ /* && AllianceShiftCalculator::shot_valid*/) ||  // TODO fix variance case
       ci_readings_.force_shoot ||
       (ci_readings_.pass_mode &&
-          container_.scorer_ss_.turret.GetReadings().in_position_);
+          !container_.scorer_ss_.turret.GetReadings().about_to_wrap_ &&
+          container_.scorer_ss_.turret.GetReadings().error_ < 10_deg_);
 
   if (!target.shoot) {
     container_.drivetrain_.SetFieldObjectPose(

@@ -59,6 +59,12 @@ void FunkyRobot::OnInitialize() {
       new funkit::wpilib::NTAction(
           [this] { container_.scorer_ss_.turret.ZeroWithCRT(); }));
 
+
+  frc::SmartDashboard::PutData("zero_pivot_at_hardstop",
+    new funkit::wpilib::NTAction(
+        [this] { container_.hoptake_ss_.pivot.ZeroSubsystem(true); }));
+      
+
   // Add path recording controls
   frc::SmartDashboard::PutData(
       "start_path_recording", new funkit::wpilib::NTAction([this] {

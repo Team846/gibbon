@@ -57,12 +57,16 @@ PivotTarget PivotSubsystem::ZeroTarget() const {
   return PivotTarget{PivotState::kStow};
 }
 
-void PivotSubsystem::ZeroSubsystem() {
+void PivotSubsystem::ZeroSubsystem(bool at_hardstop) {
   if (!is_initialized()) {
     homed = true;
     return;
   };
-  esc_.SetPosition(radian_t{0});
+  if (at_hardstop) {
+    esc_.SetPosition(GetPreferenceValue_unit_type<degree_t>("pos_intake"));
+  } else {
+    esc_.SetPosition(radian_t{0});
+  }
   homed = true;
 }
 

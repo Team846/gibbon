@@ -164,13 +164,13 @@ bool TurretSubsystem::VerifyHardware() {
 
 TurretReadings TurretSubsystem::ReadFromHardware() {
   if (!arm_sys_) {
-    return TurretReadings{radian_t{0}, radps_t{0}, false, false};
+    return TurretReadings{radian_t{0}, radps_t{0}, false, false, 0_deg_};
   }
 
   radian_t pos_real = esc_.GetPosition<radian_t>();
   radps_t vel_real = esc_.GetVelocity<radps_t>();
 
-  TurretReadings readings{pos_real, vel_real, false, false};
+  TurretReadings readings{pos_real, vel_real, false, false, 0_deg_};
 
   degree_t error =
       funkit::math::CoterminalDifference(GetTarget().pos_, pos_real);
@@ -179,6 +179,8 @@ TurretReadings TurretSubsystem::ReadFromHardware() {
 
   funkit::robot::calculators::AprilTagCalculator::turret_angle = pos_real;
   funkit::robot::calculators::AprilTagCalculator::turret_vel = vel_real;
+  
+  readings.error_ = u_abs(error);
 
   readings.in_position_ =
       u_abs(error) < GetPreferenceValue_unit_type<degree_t>("tolerance");

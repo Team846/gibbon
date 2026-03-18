@@ -31,7 +31,7 @@ public:
 
   bool VerifyHardware() override;
 
-  void ZeroSubsystem();
+  void ZeroSubsystem(bool at_hardstop = false);
 
   bool homed = false;
 
