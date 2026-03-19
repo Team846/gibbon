@@ -258,7 +258,7 @@
   {
     "name": "/Preferences/SwerveDrivetrain/odom_fudge_factor",
     "type": "double",
-    "value": 0.9546,
+    "value": 0.973855,
     "properties": {
       "persistent": true
     }
@@ -338,7 +338,7 @@
   {
     "name": "/Preferences/SwerveDrivetrain/april_tags/fudge_latency1 (ms)",
     "type": "double",
-    "value": 30.0,
+    "value": 40.0,
     "properties": {
       "persistent": true
     }
@@ -346,7 +346,7 @@
   {
     "name": "/Preferences/SwerveDrivetrain/april_tags/fudge_latency2 (ms)",
     "type": "double",
-    "value": 30.0,
+    "value": 40.0,
     "properties": {
       "persistent": true
     }
@@ -842,7 +842,7 @@
   {
     "name": "/Preferences/SwerveDrivetrain/april_tags/fudge_latency3 (ms)",
     "type": "double",
-    "value": 30.0,
+    "value": 40.0,
     "properties": {
       "persistent": true
     }
@@ -954,7 +954,7 @@
   {
     "name": "/Preferences/SwerveDrivetrain/april_tags/fudge_latency4 (ms)",
     "type": "double",
-    "value": 30.0,
+    "value": 40.0,
     "properties": {
       "persistent": true
     }
@@ -1162,7 +1162,7 @@
   {
     "name": "/Preferences/turret/wrap/positive (deg)",
     "type": "double",
-    "value": 210.0,
+    "value": 220.0,
     "properties": {
       "persistent": true
     }
@@ -1964,7 +1964,7 @@
   {
     "name": "/Preferences/ShootingCalculator/pass/passGain",
     "type": "double",
-    "value": 1.07,
+    "value": 1.2,
     "properties": {
       "persistent": true
     }

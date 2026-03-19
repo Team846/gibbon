@@ -18,3 +18,11 @@ class CS2Auto : public funkit::robot::GenericCommandGroup<RobotContainer,
 public:
   CS2Auto(RobotContainer& container, bool is_blue_side, bool is_left_side);
 };
+
+class CompatibilityAuto
+    : public funkit::robot::GenericCommandGroup<RobotContainer,
+          CompatibilityAuto, frc2::SequentialCommandGroup> {
+public:
+  CompatibilityAuto(
+      RobotContainer& container, bool is_blue_side, bool is_left_side);
+};

@@ -354,7 +354,7 @@
   {
     "name": "/Preferences/SwerveDrivetrain/drive_to_point/kC",
     "type": "double",
-    "value": 1.0,
+    "value": 0.5,
     "properties": {
       "persistent": true
     }
@@ -1162,7 +1162,7 @@
   {
     "name": "/Preferences/turret/wrap/positive (deg)",
     "type": "double",
-    "value": 220.0,
+    "value": 210.0,
     "properties": {
       "persistent": true
     }

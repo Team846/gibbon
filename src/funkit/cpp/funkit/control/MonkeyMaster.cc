@@ -129,16 +129,13 @@ void MonkeyMaster::Tick(bool disabled) {
   battery_voltage = pdcsu::units::volt_t{
       frc::RobotController::GetBatteryVoltage().to<double>()};
 
-  if (disabled) {
-    if (!frc::RobotBase::IsSimulation()) {
-      WriteMessages();
-      MonkeyMaster::loggable_.Graph("LoggableTick", -battery_voltage);
-      return;
-    }
+  if (disabled && frc::RobotBase::IsSimulation()) {
+    WriteMessages();
+    MonkeyMaster::loggable_.Graph("LoggableTick", -battery_voltage);
+    return;
   }
-  MonkeyMaster::loggable_.Graph("LoggableTick", battery_voltage);
-
   WriteMessages();
+  MonkeyMaster::loggable_.Graph("LoggableTick", battery_voltage);
 
   for (size_t i = 0; i < CONTROLLER_REGISTRY_SIZE; i++) {
     if (controller_registry[i] != nullptr) {
@@ -355,7 +352,21 @@ size_t MonkeyMaster::ConstructController(
   genome_registry[slot_id] = genome;
 
   this_controller->SetGenome(genome);
-  LOG_IF_ERROR(slot_id, "SetGenome");
+  {
+    hardware::ControllerErrorCodes err =
+        controller_registry[slot_id]->GetLastErrorCode();
+    if (err != hardware::ControllerErrorCodes::kAllOK) {
+      loggable_.Error(
+          "Error [{}] completing action [SetGenome] for slot ID {} during "
+          "construction. Will retry while disabled.",
+          parseError(err), slot_id);
+      RecordDeviceError(slot_id);
+      set_genome_pending_retry_[slot_id] = true;
+      set_genome_force_set_[slot_id] = true;
+    } else {
+      RecordDeviceSuccess(slot_id);
+    }
+  }
 
   return slot_id;
 }

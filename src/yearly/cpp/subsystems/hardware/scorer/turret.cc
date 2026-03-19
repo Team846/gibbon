@@ -179,7 +179,7 @@ TurretReadings TurretSubsystem::ReadFromHardware() {
 
   funkit::robot::calculators::AprilTagCalculator::turret_angle = pos_real;
   funkit::robot::calculators::AprilTagCalculator::turret_vel = vel_real;
-  
+
   readings.error_ = u_abs(error);
 
   readings.in_position_ =

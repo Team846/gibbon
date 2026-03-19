@@ -62,7 +62,8 @@ void DriveToPointCommand::Execute() {
   DrivetrainTarget dt_target{{pdcsu::units::fps_t{0}, pdcsu::units::fps_t{0}},
       pdcsu::units::degps_t{0}};
 
-  funkit::math::Vector2D delta_vec = target_.point - dt_readings.estimated_pose.position;
+  funkit::math::Vector2D delta_vec =
+      target_.point - dt_readings.estimated_pose.position;
 
   pdcsu::units::degree_t heading_direction = delta_vec.angle(true);
   if (dt_readings.pose.velocity.magnitude().value() > 2.0)
