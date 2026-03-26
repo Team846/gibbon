@@ -1,5 +1,6 @@
 #include "subsystems/hardware/hoptake/pivot.h"
 
+#include "funkit/control/calculators/CircuitResistanceCalculator.h"
 #include "funkit/control/config/genome.h"
 #include "ports.h"
 
@@ -42,7 +43,10 @@ void PivotSubsystem::Setup() {
       [](radian_t x, radps_t v) -> nm_t {
         return nm_t{2.27_kg_ * 9.81_mps2_ * 0.23_m_ * u_cos(x)};
       },
-      0.001044_kgm2_, 0.05_Nm_, 0.1_Nm_ / 1200_radps_, 20_ms_);
+      0.001044_kgm2_, 0.05_Nm_, 0.1_Nm_ / 1200_radps_, 20_ms_,
+      funkit::control::calculators::CircuitResistanceCalculator::calculate(
+          inch_t{50}, funkit::control::calculators::WireGauge::sixteen_gauge,
+          0));
 
   esc_.Setup(genome_backup, pivot_plant);
 

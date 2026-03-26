@@ -110,9 +110,10 @@ bool SwerveModuleSubsystem::VerifyHardware() {
   return ok;
 }
 
-void SwerveModuleSubsystem::SetCANCoderOffset() {
+void SwerveModuleSubsystem::SetCANCoderOffset(bool rotate_90) {
   units::degree_t position_wpi = cancoder_.GetAbsolutePosition().GetValue();
-  SetCANCoderOffset(degree_t{position_wpi.to<double>()});
+  SetCANCoderOffset(degree_t{position_wpi.to<double>()} +
+                    (rotate_90 ? degree_t{90.0} : degree_t{0.0}));
 }
 void SwerveModuleSubsystem::SetCANCoderOffset(degree_t offset) {
   SetPreferenceValue("cancoder_offset_", offset);

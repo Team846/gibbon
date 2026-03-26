@@ -83,7 +83,7 @@ public:
 
   bool VerifyHardware() override;
 
-  void SetCANCoderOffset();
+  void SetCANCoderOffset(bool rotate_90 = false);
   void SetCANCoderOffset(pdcsu::units::degree_t offset);
 
   void ZeroWithCANcoder();

@@ -239,9 +239,9 @@ void DrivetrainSubsystem::SetOdomBearing(pdcsu::units::degree_t odom_bearing) {
   odometry_.SetOdomBearing(odom_bearing);
 }
 
-void DrivetrainSubsystem::SetCANCoderOffsets() {
+void DrivetrainSubsystem::SetCANCoderOffsets(bool offset_90) {
   for (auto& module : modules_) {
-    module->SetCANCoderOffset();
+    module->SetCANCoderOffset(offset_90);
   }
 }
 
