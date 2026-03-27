@@ -11,16 +11,35 @@
 #include "funkit/base/FunkyLogSystem.h"
 
 namespace funkit::base {
+/*
+FunkyLogger
 
+Class that handles logging messages
+
+*/
 class FunkyLogger {
 private:
   std::string pname_;
 
+  /*
+  format_dp()
+
+  Compresses/formats a float into the specified number of decimal places
+  */
   float format_dp(float num, int num_places = 2) const {
     float value = (int)(num * std::pow(10, num_places) + 0.5);
     return ((float)value) / std::pow(10, num_places);
   }
 
+  /**
+   * HandleLogMessage()
+   * 
+   * @param type: The type of message being handled
+   * @param fmt: A formatted string 
+   * @param args: Some number of arguments
+   * 
+   * Formats/scrubs a LogMessage to be usable for FunkyLogSystem
+   */
   template <typename... T>
   void HandleLogMessage(
       int type, fmt::format_string<T...> fmt, T&&... args) const {
@@ -48,18 +67,38 @@ private:
   }
 
 public:
+  /**
+   * FunkyLogger() 
+   * 
+   * Constructor for FunkyLogger that initializes its members
+   */
   FunkyLogger(std::string_view pname) : pname_{pname} {};
 
+  /**
+   * Log()
+   * 
+   * Calls HandleLogMessage for messages of type 0 
+   */
   template <typename... T>
   void Log(fmt::format_string<T...> fmt, T&&... args) const {
     HandleLogMessage(0, fmt, std::forward<T>(args)...);
   }
 
+  /**
+   * Warn()
+   * 
+   * Calls HandleLogMessage for messages of type 1 (Warning Logs)
+   */
   template <typename... T>
   void Warn(fmt::format_string<T...> fmt, T&&... args) const {
     HandleLogMessage(1, fmt, std::forward<T>(args)...);
   }
 
+  /**
+   * Error()
+   * 
+   * Calls HandleLogMessage for messages of type 2 (Error Logs)
+   */
   template <typename... T>
   void Error(fmt::format_string<T...> fmt, T&&... args) const {
     HandleLogMessage(2, fmt, std::forward<T>(args)...);
