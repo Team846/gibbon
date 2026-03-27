@@ -23,8 +23,22 @@ struct KnownResistances {
 
 enum WireGauge { twelve_gauge, fourteen_gauge, sixteen_gauge, eighteen_gauge };
 
+/*
+CircuitResistanceCalculator
+
+This class includes a static method to calculate the total resistance
+*/
 class CircuitResistanceCalculator {
 public:
+  /*
+  calculate()
+
+  @param wire_length: The length of the wire
+  @param guage: The type of wire gauge
+  @param num_connectors: The number of connectors
+
+  Calculates total resistance
+  */
   static constexpr pdcsu::units::ohm_t calculate(
       pdcsu::units::foot_t wire_length, WireGauge gauge,
       unsigned int num_connectors) {
