@@ -11,6 +11,7 @@
 #include "funkit/base/FunkyLogSystem.h"
 
 namespace funkit::base {
+  
 /*
 FunkyLogger
 
