@@ -67,7 +67,7 @@ void FunkyLogSystem::LogThread(int rateLimit, std::string logFileName) {
   }
 
   for (;;) {
-    auto start_time = std::chrono::system_clock::now();
+    auto start_time = std::chrono::steady_clock::now();
 
     int runningCharCounter = 0;
 
@@ -108,9 +108,7 @@ void FunkyLogSystem::LogThread(int rateLimit, std::string logFileName) {
       }
     }
 
-    std::this_thread::sleep_for(
-        std::chrono::milliseconds(500) -
-        (std::chrono::system_clock::now() - start_time));
+    std::this_thread::sleep_until(start_time + std::chrono::milliseconds(500));
   }
 }
 

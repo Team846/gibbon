@@ -9,7 +9,8 @@ using namespace funkit::control::config;
 
 PivotSubsystem::PivotSubsystem()
     : GenericSubsystem("pivot"),
-      esc_{base::TALON_FX_KRAKENX44, ports::pivot_::kPivotParams} {
+      esc_1_{base::TALON_FX_KRAKENX44, ports::pivot_::kPivotLeftParams},
+      esc_2_{base::TALON_FX_KRAKENX44, ports::pivot_::kPivotRightParams} {
   RegisterPreference("pos_stow", -57.0_deg_);
   RegisterPreference("pos_intake", -76.0_deg_);
   RegisterPreference("pos_collapsed", -10.0_deg_);
@@ -48,13 +49,19 @@ void PivotSubsystem::Setup() {
           inch_t{50}, funkit::control::calculators::WireGauge::sixteen_gauge,
           0));
 
-  esc_.Setup(genome_backup, pivot_plant);
+  esc_1_.Setup(genome_backup, pivot_plant);
+  esc_2_.Setup(genome_backup, pivot_plant);
 
-  esc_.EnableStatusFrames(
+  esc_1_.EnableStatusFrames(
       {StatusFrame::kPositionFrame, StatusFrame::kVelocityFrame}, ms_t{20},
       ms_t{5}, ms_t{5}, ms_t{20});
 
-  esc_.SetPosition(radian_t{0});
+  esc_2_.EnableStatusFrames(
+      {StatusFrame::kPositionFrame, StatusFrame::kVelocityFrame}, ms_t{20},
+      ms_t{5}, ms_t{5}, ms_t{20});
+
+  esc_1_.SetPosition(radian_t{0});
+  esc_2_.SetPosition(radian_t{0});
 }
 
 PivotTarget PivotSubsystem::ZeroTarget() const {
@@ -67,24 +74,32 @@ void PivotSubsystem::ZeroSubsystem(bool at_hardstop) {
     return;
   };
   if (at_hardstop) {
-    esc_.SetPosition(GetPreferenceValue_unit_type<degree_t>("pos_intake"));
+    esc_1_.SetPosition(GetPreferenceValue_unit_type<degree_t>("pos_intake"));
+    esc_2_.SetPosition(GetPreferenceValue_unit_type<degree_t>("pos_intake"));
   } else {
-    esc_.SetPosition(radian_t{0});
+    esc_1_.SetPosition(radian_t{0});
+    esc_2_.SetPosition(radian_t{0});
   }
   homed = true;
 }
 
 bool PivotSubsystem::VerifyHardware() {
   bool ok = true;
-  FUNKIT_VERIFY(esc_.VerifyConnected(), ok, "Could not verify Pivot esc");
+  FUNKIT_VERIFY(
+      esc_1_.VerifyConnected(), ok, "Could not verify Left Pivot esc");
+  FUNKIT_VERIFY(
+      esc_2_.VerifyConnected(), ok, "Could not verify Right Pivot esc");
   return ok;
 }
 
 PivotReadings PivotSubsystem::ReadFromHardware() {
-  degree_t current_pos = esc_.GetPosition<radian_t>();
+  degree_t current_pos = esc_1_.GetPosition<radian_t>();
+  degree_t current_pos_2 = esc_2_.GetPosition<radian_t>();
 
   degree_t error = trgt_pos_ - current_pos;
-  Graph("error", error, true);
+  degree_t error_2 = trgt_pos_ - current_pos_2;
+  Graph("error_left", error);
+  Graph("error_right", error_2);
 
   // Graph("current", esc_.GetCurrent());
 
@@ -95,7 +110,8 @@ void PivotSubsystem::WriteToHardware(PivotTarget target) {
   auto genome =
       funkit::control::config::SubsystemGenomeHelper::LoadGenomePreferences(
           *this, "genome");
-  esc_.ModifyGenome(genome);
+  esc_1_.ModifyGenome(genome);
+  esc_2_.ModifyGenome(genome);
 
   if (target.target_state == PivotState::kStow) {
     trgt_pos_ = GetPreferenceValue_unit_type<degree_t>("pos_stow");
@@ -105,13 +121,16 @@ void PivotSubsystem::WriteToHardware(PivotTarget target) {
     trgt_pos_ = GetPreferenceValue_unit_type<degree_t>("pos_intake");
   }
 
-  if (trgt_pos_ < GetReadings().pos_) {
-    esc_.WriteDC((trgt_pos_ - GetReadings().pos_).value() * genome.gains.kP +
-                 genome.gains.kI * u_sin(GetReadings().pos_) -
-                 genome.gains.kD * esc_.GetVelocity<radps_t>().value());
-  } else {
-    esc_.WriteDC((trgt_pos_ - GetReadings().pos_).value() * genome.gains.kP +
-                 genome.gains.kF * u_sin(GetReadings().pos_) -
-                 genome.gains.kD * esc_.GetVelocity<radps_t>().value());
-  }
+  esc_1_.WritePosition(trgt_pos_);
+  esc_2_.WritePosition(trgt_pos_);
+
+  // if (trgt_pos_ < GetReadings().pos_) {
+  //   esc_.WriteDC((trgt_pos_ - GetReadings().pos_).value() * genome.gains.kP +
+  //                genome.gains.kI * u_sin(GetReadings().pos_) -
+  //                genome.gains.kD * esc_.GetVelocity<radps_t>().value());
+  // } else {
+  //   esc_.WriteDC((trgt_pos_ - GetReadings().pos_).value() * genome.gains.kP +
+  //                genome.gains.kF * u_sin(GetReadings().pos_) -
+  //                genome.gains.kD * esc_.GetVelocity<radps_t>().value());
+  // }
 }

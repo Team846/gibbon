@@ -9,7 +9,7 @@ using namespace funkit::control::config;
 
 IntakeSubsystem::IntakeSubsystem()
     : GenericSubsystem("Intake"),
-      esc_{base::TALON_FX_KRAKENX44, ports::intake_::kIntakeParams} {
+      esc_{base::TALON_FX_KRAKENX60, ports::intake_::kIntakeParams} {
   RegisterPreference("speed_idle", 15.0_fps_);
   RegisterPreference("speed_intake", 55.0_fps_);
   RegisterPreference("speed_evac", -25.0_fps_);

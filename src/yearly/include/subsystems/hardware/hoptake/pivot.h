@@ -40,7 +40,8 @@ private:
 
   void WriteToHardware(PivotTarget target) override;
 
-  funkit::control::HigherMotorController esc_;
+  funkit::control::HigherMotorController esc_1_;
+  funkit::control::HigherMotorController esc_2_;
 
   degree_t trgt_pos_{0_deg_};
 

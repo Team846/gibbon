@@ -219,7 +219,7 @@ void HoodSubsystem::WriteToHardware(HoodTarget target) {
       GetPreferenceValue_double("icnor/IPG"));
 
   Graph("debug/output", output);
-  Graph("position", degree_t(current_pos_real));
+  Graph("position", degree_t(current_pos_real), true);
   Graph("target/position", degree_t(target.pos_));
 
   esc_.WriteDC(output);

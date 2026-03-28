@@ -1,5 +1,6 @@
 #include "subsystems/hardware/scorer/dye_rotor.h"
 
+#include "funkit/control/calculators/CircuitResistanceCalculator.h"
 #include "funkit/control/config/genome.h"
 #include "ports.h"
 
@@ -14,6 +15,8 @@ DyeRotorSubsystem::DyeRotorSubsystem()
   RegisterPreference("speed_slow_feed", 120_rpm_);
   RegisterPreference("speed_reverse", -100_rpm_);
   RegisterPreference("speed_idle", 0_rpm_);
+
+  RegisterPreference("stall_threshold_rpm", 10_rpm_);
 }
 
 radps_t DyeRotorSubsystem::getTargetRotorSpeed(DyeRotorState rotor_state) {
@@ -47,9 +50,11 @@ void DyeRotorSubsystem::Setup() {
       motor_specs.stall_torque, motor_specs.free_speed, 12_V_);
 
   DefArmSys DyeRotor_plant(
-      def_bldc, 1, 35_rot_ / 1_rot_,
+      def_bldc, 1, 3_rot_ / 1_rot_ * 175_rot_ / 15_rot_,
       [&](radian_t x, radps_t v) -> nm_t { return 0.0_Nm_; },
-      3_lb_ * 7_in_ * 7_in_, 4.0_Nm_, 2.0_Nm_ / 628_radps_, 10_ms_);
+      3_lb_ * 7_in_ * 7_in_, 4.0_Nm_, 2.0_Nm_ / 628_radps_, 10_ms_,
+      funkit::control::calculators::CircuitResistanceCalculator::calculate(
+          inch_t{38}, funkit::control::calculators::WireGauge::ten_gauge, 0));
 
   esc_.Setup(genome_backup, DyeRotor_plant);
 
@@ -75,6 +80,7 @@ DyeRotorReadings DyeRotorSubsystem::ReadFromHardware() {
   radps_t error = target_speed - esc_.GetVelocity<radps_t>();
 
   Graph("error", error);
+  Graph("vel", esc_.GetVelocity<rpm_t>());
 
   return DyeRotorReadings{error};
 }
@@ -89,7 +95,8 @@ void DyeRotorSubsystem::WriteToHardware(DyeRotorTarget target) {
   radps_t trgt_vel_ = getTargetRotorSpeed(current_state);
 
   if (target.target_state == DyeRotorState::kRotor84bps) {
-    if (u_abs(esc_.GetVelocity<radps_t>()) < 20_rpm_) {
+    if (u_abs(esc_.GetVelocity<radps_t>()) <
+        GetPreferenceValue_unit_type<rpm_t>("stall_threshold_rpm")) {
       stall_ctr_++;
     } else {
       stall_ctr_ = 0;

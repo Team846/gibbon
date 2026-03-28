@@ -61,7 +61,9 @@ struct ports {
 
   struct pivot_ {
     static constexpr funkit::control::config::MotorConstructionParameters
-        kPivotParams = {25, "", false};
+        kPivotLeftParams = {25, "", false};
+    static constexpr funkit::control::config::MotorConstructionParameters
+        kPivotRightParams = {26, "", false};
   };
 
   struct dye_rotor_ {
