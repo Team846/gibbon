@@ -9,13 +9,18 @@
 #include "funkit/robot/GenericRobotContainer.h"
 
 namespace frc2 {
-class Command;
+  class Command;
 }
 
 namespace funkit::robot {
 
 enum Mode { kNone, kDisabled, kAutonomous, kTeleop, kTest };
 
+/**
+ * GenericRobot
+ * 
+ * A class that inherits from RobotBase and Loggable, helping provide logging utilities beyond WPILibs RobotBase. 
+ */
 class GenericRobot : public frc::RobotBase, public funkit::base::Loggable {
 public:
   static constexpr pdcsu::units::second_t kPeriod{0.01};  // 100Hz (10ms)
