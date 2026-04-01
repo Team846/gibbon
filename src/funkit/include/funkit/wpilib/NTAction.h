@@ -6,8 +6,7 @@
 
 namespace funkit::wpilib {
 
-// Use with SmartDashboard::PutData to have buttons call functions on the
-// dashboard
+// Use with SmartDashboard::PutData to have buttons call functions on the dashboard
 class NTAction : public wpi::Sendable {
 public:
   NTAction(std::function<void()> callback);

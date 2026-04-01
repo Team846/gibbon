@@ -21,6 +21,7 @@
 #include "util/math/uvec.h"
 
 namespace funkit::robot::swerve {
+  
 class SwerveModuleSubsystem;
 }
 
@@ -36,13 +37,14 @@ struct NavXConnection {
   NavXConnectionType connection_type;
 };
 
-/*
-DrivetrainConfigs
 
-Contains all configs related to the specific drivetrain in use.
-*/
 using Vector2D = pdcsu::util::math::uVec<pdcsu::units::inch_t, 2>;
 
+/**
+ * DrivetrainConfigs
+ * 
+ * Contains all configs related to the specific drivetrain in use.
+ */
 struct DrivetrainConfigs {
   std::variant<PigeonConnection, NavXConnection> imu_connection;
 
@@ -63,6 +65,11 @@ struct DrivetrainConfigs {
   pdcsu::units::fps2_t max_accel;
 };
 
+/**
+ * DrivetrainReadings
+ * 
+ * Contains all readings from the drivetrain
+ */
 struct DrivetrainReadings {
   funkit::robot::swerve::odometry::SwervePose pose;
   Vector2D april_point;
@@ -72,6 +79,11 @@ struct DrivetrainReadings {
   int see_tag_counter;
 };
 
+/**
+ * DrivetrainTarget
+ * 
+ * Contains the target values for the drivetrain to reach
+ */
 struct DrivetrainTarget {
   pdcsu::util::math::uVec<pdcsu::units::fps_t, 2> velocity;
   pdcsu::units::degps_t angular_velocity;
@@ -81,31 +93,46 @@ struct DrivetrainTarget {
   bool kill_robot = false;
 };
 
-/*
-DrivetrainSubsystem
-
-A generic class to control a 4-module Kraken x60 swerve drive with CANCoders.
-*/
+/**
+ * DrivetrainSubsystem
+ * 
+ * A generic class to control a 4-module Kraken x60 swerve drive with CANCoders.
+ */
 class DrivetrainSubsystem
     : public funkit::robot::GenericSubsystem<DrivetrainReadings,
           DrivetrainTarget> {
 public:
   DrivetrainSubsystem(DrivetrainConfigs configs);
 
+  // Sets up all hardware configurations
   void Setup() override;
 
+  // Zeroes the DrivetrainTarget
   DrivetrainTarget ZeroTarget() const override;
 
+  // Verifies drivetrain hardware
   bool VerifyHardware() override;
 
+  // Zeroes the drivetrain's bearing
   void ZeroBearing();
 
+  // Sets drivetrain bearing
   void SetBearing(pdcsu::units::degree_t bearing);
+  // Sets position of drivetrain odometry
   void SetPosition(Vector2D position);
+  // Sets drivetrain's odometry bearing 
   void SetOdomBearing(pdcsu::units::degree_t odom_bearing);
-
+  // Sets CANCoderOffsets for all SwerveModules
   void SetCANCoderOffsets();
 
+  /**
+   * ApplyBearingPID()
+   * 
+   * Computes values for drivetrain's angular velocity depending on PID preference values
+   * @param target_bearing - the desired bearing 
+   * @param dAE - desired yaw-rate, defaults to 0
+   * @return the computed yaw-rate
+   */
   pdcsu::units::degps_t ApplyBearingPID(pdcsu::units::degree_t target_bearing,
       pdcsu::units::radps_t dAE = 0.0_radps_);
 
@@ -141,6 +168,13 @@ public:
       pdcsu::util::math::uVec<pdcsu::units::inch_t, 2> position,
       pdcsu::units::degree_t rotation);
 
+  /**
+   * SetFieldTrajectory()
+   * 
+   * Sets the start and end points for visualizing trajectories. Does not drive the robot itself.
+   * @param A - Starting trajectory point
+   * @param B - Ending trajectory point
+   */
   void SetFieldTrajectory(Vector2D A, Vector2D B);
 
   double variance = 1000.0;
@@ -150,23 +184,57 @@ private:
 
   DrivetrainReadings ReadFromHardware() override;
 
+  /**
+   * compensateForSteerLag()
+   * 
+   * Compensates for translational velocity error caused by steering lag by adjusting the translational velocity.
+   * @param uncompensated - The uncompensated translational velocity to be applied
+   * @return the compensated translational velocity
+   */
   pdcsu::util::math::uVec<pdcsu::units::fps_t, 2> compensateForSteerLag(
       pdcsu::util::math::uVec<pdcsu::units::fps_t, 2> uncompensated);
 
+  /**
+   * accelClampHelper()
+   * 
+   * Helper method designated for clamping acceleration to a max value if needed
+   * @param velocity - the target velocity
+   * @param accel_clamp - the acceleration clamp setting 
+   */
   pdcsu::util::math::uVec<pdcsu::units::fps_t, 2> accelClampHelper(
       pdcsu::util::math::uVec<pdcsu::units::fps_t, 2> velocity,
       pdcsu::units::fps2_t accel_clamp);
 
+  /**
+   * WriteVelocitiesHelper()
+   * 
+   * Helper method to write velocities to all SwerveModules
+   * @param velocity - uncompensated translational velocity used to calculate module targets
+   * @param angular_velocity - the desired angular velocity
+   * @param cut_excess_steering - boolean to prioritize reducing rotation in case of exceeding max speed
+   * @param speed_limit - max allowed module drive speed 
+   */
   void WriteVelocitiesHelper(
       pdcsu::util::math::uVec<pdcsu::units::fps_t, 2> velocity,
       pdcsu::units::degps_t angular_velocity, bool cut_excess_steering,
       pdcsu::units::fps_t speed_limit);
+  /**
+   * WriteToHardware()
+   * 
+   * Writes to drivetrain hardware
+   * @param target - the target values for drivetrain to reach
+   */
   void WriteToHardware(DrivetrainTarget target) override;
 
+  // returns the yaw angle (bearing)
   pdcsu::units::degree_t GetBearing();
+  // returns rotation around the y-axis
   pdcsu::units::degree_t GetPitch();
+  // returns rotation around the x-axis
   pdcsu::units::degree_t GetRoll();
+  // returns the rate at which yaw changes (angular speed)
   pdcsu::units::degps_t GetYawRate();
+  // returns the 2d linear acceleration of drivetrain
   pdcsu::util::math::uVec<pdcsu::units::fps2_t, 2> GetAcceleration();
 
   DrivetrainConfigs configs_;
