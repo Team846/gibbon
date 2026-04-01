@@ -8,11 +8,10 @@
 
 #ifdef _WIN32
 
-/*
-Importing windows-specific networking libraries.
-Required for hardware simulation.
-*/
-
+/**
+ * Importing windows-specific networking libraries.
+ * Required for hardware simulation.
+ */
 #include <winsock2.h>
 #include <ws2tcpip.h>
 #pragma comment(lib, "ws2_32.lib")
@@ -28,6 +27,13 @@ typedef int socklen_t;
 
 namespace funkit::base {
 
+/**
+ * LoggingClient
+ * 
+ * A record of each remote client
+ * @var addr - the address of the client
+ * @var lastKeepAlive - the last time client was seen
+ */
 struct LoggingClient {
   sockaddr_in addr;
   std::chrono::milliseconds lastKeepAlive;
@@ -35,6 +41,11 @@ struct LoggingClient {
 
 class LoggingServer {
 private:
+  /**
+   * getTime()
+   * 
+   * @return the time in milliseconds since the Unix epoch (the current clock-time)
+   */
   std::chrono::milliseconds getTime() {
     return std::chrono::duration_cast<std::chrono::milliseconds>(
         std::chrono::system_clock::now().time_since_epoch());
@@ -44,18 +55,17 @@ public:
   LoggingServer();
   ~LoggingServer();
 
-  /*
-  Starts a UDP logging server on the specified port. Make sure port is FRC legal
-  in FMS. As of 2024, these include 5800...5810. Spawns threads for logging and
-  watching clients.
-  @param port port to start the server on
-  */
+  /**
+   * Starts a UDP logging server on the specified port. Make sure port is FRC legal
+   * in FMS. As of 2024, these include 5800...5810. Spawns threads for logging and watching clients.
+   * @param port - port to start the server on
+   */
   void Start(int port);
 
-  /*
-  Adds message to the sending queue. Messages will not be sent out unless server
-  has been started. Blocking operation while server is reading message.
-  */
+  /**
+   * Adds message to the sending queue. Messages will not be sent out unless server
+   * has been started. Blocking operation while server is reading message.
+   */
   void AddMessage(const std::vector<uint8_t> &message) {
     std::lock_guard<std::mutex> lock(msg_mtx);
     messages.push(message);

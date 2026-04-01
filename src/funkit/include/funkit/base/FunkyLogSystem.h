@@ -21,11 +21,11 @@ struct LogMessage {
   double period_timestamp;  // game timestamp of the message
   int char_count;           // for both sender and content
 
-  /*
-  Returns a string representation of the LogMessage struct. Use for file writes,
-  logging to DS. Does NOT include newline character.
-  @return: string representation of the LogMessage struct
-  */
+  /**
+   * Returns a string representation of the LogMessage struct. Use for file writes,
+   * logging to DS. Does NOT include newline character.
+   * @return: string representation of the LogMessage struct
+   */
   std::string pack() const {
     return fmt::format("{};{};{};{};{};{}", type, sender, content, timestamp,
         period, period_timestamp);
@@ -34,27 +34,33 @@ struct LogMessage {
 
 class FunkyLogSystem {
 public:
-  /*
-  Spawns a new logger thread
-  @param rateLimit: maximum chars/second
-  */
+  /**
+   * Spawns a new logger thread
+   * @param rateLimit: maximum chars/second
+   */
   static void Start(int rateLimit);
 
-  /*
-  Call in main loop to update the logger with GameState (e.g. teleop, auto,
-  disabled). The GameState is used in outgoing log messages.
-  @param newGameState: 0 for disabled, 1 for teleop, 2 for auto
-  */
+  /**
+   * Call in main loop to update the logger with GameState (e.g. teleop, auto,
+   * disabled). The GameState is used in outgoing log messages.
+   * @param newGameState: 0 for disabled, 1 for teleop, 2 for auto
+   */
   static void SetGameState(int newGameState) { gameState = newGameState; }
 
+  /**
+   * getPeriod()
+   * 
+   * Returns the current game state 
+   * @return an integer corresponding to its gamestate
+   */
   static int getPeriod() { return gameState; };
 
-  /*
-  Adds a message to the sending queue. Messages will not be sent out unless
-  logger has been started. Blocking operation while sending thread is reading
-  from message queue.
-  @param msg: LogMessage struct
-  */
+  /**
+   * Adds a message to the sending queue. Messages will not be sent out unless
+   * logger has been started. Blocking operation while sending thread is reading
+   * from message queue.
+   * @param msg: LogMessage struct
+   */
   static void AddMessage(LogMessage msg) {
     std::lock_guard<std::mutex> lock(mtx);
     messages.push(std::move(msg));
@@ -63,6 +69,11 @@ public:
 private:
   static uintmax_t MIN_SPACE;
 
+  /**
+   * Background thread that periodically drains queued messages and appends them to the file. 
+   * @param rateLimit - the maximum number of characters processed per cycle
+   * @param logFileName - the file name to write logs to
+   */
   static void LogThread(int rateLimit, std::string logFileName);
 
   static int gameState;
