@@ -10,6 +10,11 @@
 
 namespace funkit::robot::swerve {
 
+/**
+ * DriveToPointFlags
+ * 
+ * An enum acting as a bitmask, used to describe drivetrain behaviors 
+ */
 enum DriveToPointFlags {
   kNone = 0,
   kLockToPoint = 1 << 0,
@@ -17,15 +22,38 @@ enum DriveToPointFlags {
   kNoTimeout = 1 << 2,
   kTankMode = 1 << 3
 };
+
+/**
+ * Operator| overloading function
+ * Merges bit values of DriveToPointFlags to create custom combinations of behavior
+ * Casts to int for reliable bitwise OR calculations, then casts back to DriveToPointFlags for desired return type. 
+ */
 inline DriveToPointFlags operator|(DriveToPointFlags a, DriveToPointFlags b) {
   return static_cast<DriveToPointFlags>(
       static_cast<int>(a) | static_cast<int>(b));
 }
 
+/**
+ * DriveToPointCommand
+ * 
+ * A class serving as a command to drive to a location
+ * Inherits from CommandHelper for command lifecycle utilities, and Loggable for logging utilities
+ */
 class DriveToPointCommand
     : public frc2::CommandHelper<frc2::Command, DriveToPointCommand>,
       public funkit::base::Loggable {
 public:
+/**
+ * DriveToPointCommand()
+ * 
+ * Constructor for class
+ * @param drivetrain - the robot's drivetrain
+ * @param target - the target location to go to
+ * @param max_speed - the max speed of the drivetrain
+ * @param max_acceleration - the max acceleration of the drivetrain
+ * @param max_deceleration - the max deceleration of the drivetrain
+ * @param flags - specific flags for implementable drivetrain behavior
+ */
   DriveToPointCommand(funkit::robot::swerve::DrivetrainSubsystem* drivetrain,
       funkit::math::FieldPoint target, pdcsu::units::fps_t max_speed,
       pdcsu::units::fps2_t max_acceleration,
@@ -42,6 +70,11 @@ public:
 protected:
   funkit::robot::swerve::DrivetrainSubsystem* drivetrain_;
 
+  /**
+   * GetTargetPoint()
+   * 
+   * @return The target point to go to, and if it's valid. Default implementation returns a zero FieldPoint and false. 
+   */
   virtual std::pair<funkit::math::FieldPoint, bool> GetTargetPoint() {
     return {{{pdcsu::units::inch_t{0}, pdcsu::units::inch_t{0}},
                 pdcsu::units::degree_t{0}, pdcsu::units::fps_t{0}},
@@ -62,6 +95,15 @@ private:
   pdcsu::units::second_t start_time_;
   pdcsu::units::second_t estimated_time_;
 
+  /**
+   * EstimateCompletionTime()
+   * 
+   * Uses theoretical kinematic calculations to determine estimated completion time.
+   * @param distance - distance to the target location
+   * @param initial_velocity - initial velocity when function is called
+   * @param final_velocity - the estimated final velocity when target location is reached
+   * @return the estimated completion time
+   */
   pdcsu::units::second_t EstimateCompletionTime(pdcsu::units::inch_t distance,
       pdcsu::units::fps_t initial_velocity,
       pdcsu::units::fps_t final_velocity) const;
