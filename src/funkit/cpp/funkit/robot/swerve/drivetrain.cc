@@ -79,6 +79,8 @@ DrivetrainSubsystem::DrivetrainSubsystem(DrivetrainConfigs configs)
   RegisterPreference("steer_lag", pdcsu::units::second_t{0.05});
   RegisterPreference("bearing_latency", pdcsu::units::second_t{0.0});
 
+  RegisterPreference("location/x_location", 0.0);
+  RegisterPreference("location/y_location", 0.0);
   RegisterPreference("pose_estimator/override", false);
 
   RegisterPreference("pitch_roll_thresh", pdcsu::units::degree_t{10});

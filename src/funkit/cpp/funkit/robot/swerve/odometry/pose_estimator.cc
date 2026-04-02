@@ -31,7 +31,7 @@ void PoseEstimator::Update() {
   filter.Predict(Eigen::Matrix<double, 5, 1>(
       {{kPoseProcessVar}, {kPoseProcessVar}, {kVelocityProcessVar},
           {kVelocityProcessVar}, {kLatencyProcessVar}})
-                     .asDiagonal());
+          .asDiagonal());
   state_ = filter.getEstimate();
   ClampLatency();
   filter.setState(state_);

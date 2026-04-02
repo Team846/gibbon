@@ -1992,5 +1992,81 @@
     "properties": {
       "persistent": true
     }
+  },
+  {
+    "name": "/Preferences/SwerveDrivetrain/location/x_location",
+    "type": "double",
+    "value": 651.22,
+    "properties": {
+      "persistent": true
+    }
+  },
+  {
+    "name": "/Preferences/SwerveDrivetrain/location/y_location",
+    "type": "double",
+    "value": 317.69,
+    "properties": {
+      "persistent": true
+    }
+  },
+  {
+    "name": "/Preferences/location/x_location",
+    "type": "double",
+    "value": 0.0,
+    "properties": {
+      "cached": true,
+      "persistent": true,
+      "retained": true
+    }
+  },
+  {
+    "name": "/Preferences/location/y_location",
+    "type": "double",
+    "value": 0.0,
+    "properties": {
+      "cached": true,
+      "persistent": true,
+      "retained": true
+    }
+  },
+  {
+    "name": "/Preferences/SwerveDrivetrain/x_location",
+    "type": "double",
+    "value": 0.0,
+    "properties": {
+      "cached": true,
+      "persistent": true,
+      "retained": true
+    }
+  },
+  {
+    "name": "/Preferences/SwerveDrivetrain/y_location",
+    "type": "double",
+    "value": 0.0,
+    "properties": {
+      "cached": true,
+      "persistent": true,
+      "retained": true
+    }
+  },
+  {
+    "name": "/Preferences/HubAim/x_offset",
+    "type": "double",
+    "value": 0.0,
+    "properties": {
+      "cached": true,
+      "persistent": true,
+      "retained": true
+    }
+  },
+  {
+    "name": "/Preferences/HubAim/y_offset",
+    "type": "double",
+    "value": 0.0,
+    "properties": {
+      "cached": true,
+      "persistent": true,
+      "retained": true
+    }
   }
 ]

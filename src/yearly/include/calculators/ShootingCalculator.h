@@ -28,6 +28,7 @@ class ShootingCalculator {
 public:
   static void Setup();
 
+  static void setFullEffortDistance(foot_t maxDistance);
   static void Calculate(
       const RobotContainer* container_, bool effort_when_invald = false);
 
