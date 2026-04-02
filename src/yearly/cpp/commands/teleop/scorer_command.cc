@@ -23,7 +23,14 @@ void ScorerCommand::Periodic() {
   bool mirror_ =
       frc::DriverStation::GetAlliance() == frc::DriverStation::Alliance::kBlue;
 
-  if (ci_readings_.pass_mode) {
+  double x_override = GetPreferenceValue_double("drivetrain/x_location");
+  double y_override = GetPreferenceValue_double("drivetrain/y_location");
+  if (x_override != 0.0 && y_override != 0.0) {
+     pdcsu::util::math::Vector2D pass_point{inch_t{x_override}, inch_t{y_override}};
+     funkit::math::FieldPoint field_point = {pass_point, 0_deg_, 0_fps_};
+     field_point = field_point.mirrorOnlyY(mirror_);
+     ShootingCalculator::target = field_point.point;
+  } else if (ci_readings_.pass_mode) {
     pdcsu::util::math::Vector2D pass_point{-1000_in_, -1000_in_};
     if (container_.drivetrain_.GetReadings().estimated_pose.position[0] <
         158.5_in_) {
@@ -138,6 +145,7 @@ void ScorerCommand::Periodic() {
           "pass_point", {-1000_in_, -1000_in_}, 0.0_deg_);
     }
   }
+
 
   container_.scorer_ss_.SetTarget(target);
 }
