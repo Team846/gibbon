@@ -32,6 +32,7 @@ struct ControlInputReadings {
   bool evac_storage;
   bool rev_dye_rotor;
   bool home;
+  double dye_rotor_pct_override;
 
   // Operator Keyboard Overrides
   bool turret_no_spin;

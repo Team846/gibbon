@@ -21,6 +21,7 @@ struct DyeRotorReadings {
 
 struct DyeRotorTarget {
   DyeRotorState target_state;
+  double dye_rotor_pct_override = 0.0;
 };
 
 class DyeRotorSubsystem

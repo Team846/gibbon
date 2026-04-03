@@ -38,6 +38,7 @@ void FunkyRobot::OnInitialize() {
 
   ADD_AUTO_VARIANTS(CS2Auto, "CS2");
   ADD_AUTO_VARIANTS(CompatibilityAuto, "LEM");
+  ADD_AUTO_VARIANTS(OPAuto, "OP");
 
   // Add dashboard buttons
   frc::SmartDashboard::PutData("set_cancoder_offsets",
@@ -63,6 +64,10 @@ void FunkyRobot::OnInitialize() {
   frc::SmartDashboard::PutData("zero_pivot_at_hardstop",
       new funkit::wpilib::NTAction(
           [this] { container_.hoptake_ss_.pivot.ZeroSubsystem(true); }));
+
+  frc::SmartDashboard::PutData("clear_bearing_corr",
+      new funkit::wpilib::NTAction(
+          [this] { container_.drivetrain_.bearing_correction_at_ = 0_deg_; }));
 
   // Add path recording controls
   frc::SmartDashboard::PutData(
@@ -203,11 +208,11 @@ void FunkyRobot::OnPeriodic() {
 
   if (!isDisabled) {
     shift_data = AllianceShiftCalculator::Calculate();
-    Graph("game_data/shift_active", shift_data.our_hub_active);
-    Graph("game_data/active_first", shift_data.won_auto);
+    Graph("game_data/shift_active", shift_data.our_hub_active, true);
+    Graph("game_data/active_first", shift_data.won_auto, true);
     Graph("game_data/shift", shift_data.shift);
-    Graph("game_data/until_flip", shift_data.until_flip);
-    Graph("game_data/our_time_left", shift_data.our_time_left);
+    Graph("game_data/until_flip", shift_data.until_flip, true);
+    Graph("game_data/our_time_left", shift_data.our_time_left, true);
   }
 
   if (container_.control_input_.GetReadings().die_robot_die)

@@ -8,7 +8,7 @@ using namespace funkit::control::config;
 
 IntakeSubsystem::IntakeSubsystem()
     : GenericSubsystem("Intake"),
-      esc_{base::TALON_FX_KRAKENX44, ports::intake_::kIntakeParams} {
+      esc_{base::TALON_FX_KRAKENX60, ports::intake_::kIntakeParams} {
   RegisterPreference("speed_idle", 15.0_fps_);
   RegisterPreference("speed_intake", 55.0_fps_);
   RegisterPreference("speed_evac", -25.0_fps_);
@@ -28,7 +28,7 @@ void IntakeSubsystem::Setup() {
       *this, "genome", genome_backup);
 
   auto motor_specs =
-      base::MotorSpecificationPresets::get(base::TALON_FX_KRAKENX44);
+      base::MotorSpecificationPresets::get(base::TALON_FX_KRAKENX60);
 
   DefBLDC def_bldc(motor_specs.stall_current, motor_specs.free_current,
       motor_specs.stall_torque, motor_specs.free_speed, 12_V_);

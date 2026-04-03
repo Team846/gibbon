@@ -35,6 +35,8 @@ struct ScorerSSTarget {
 
   // Overrides
   bool reverse_rotor = false;
+  double dye_rotor_pct_override = 0.0;
+
 };
 
 class ScorerSuperstructure

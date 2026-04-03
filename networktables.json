@@ -250,7 +250,7 @@
   {
     "name": "/Preferences/SwerveDrivetrain/max_omega_cut (s^-1 deg)",
     "type": "double",
-    "value": 180.0,
+    "value": 90.0,
     "properties": {
       "persistent": true
     }
@@ -922,7 +922,7 @@
   {
     "name": "/Preferences/ShootingCalculator/2ptvel/kAdditive",
     "type": "double",
-    "value": 3.95,
+    "value": 2.8,
     "properties": {
       "persistent": true
     }

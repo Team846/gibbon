@@ -104,6 +104,11 @@ void DyeRotorSubsystem::WriteToHardware(DyeRotorTarget target) {
     if (reset_ctr_ > 0) reset_ctr_--;
   }
 
+  if (std::abs(target.dye_rotor_pct_override) > 0.12) {
+    trgt_vel_ = target.dye_rotor_pct_override *
+                GetPreferenceValue_unit_type<rpm_t>("speed_84bps");
+  }
+
   current_state = target.target_state;
   esc_.WriteVelocity(trgt_vel_);
 }

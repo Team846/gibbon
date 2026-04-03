@@ -26,3 +26,9 @@ public:
   CompatibilityAuto(
       RobotContainer& container, bool is_blue_side, bool is_left_side);
 };
+
+class OPAuto : public funkit::robot::GenericCommandGroup<RobotContainer, OPAuto,
+                   frc2::SequentialCommandGroup> {
+public:
+  OPAuto(RobotContainer& container, bool is_blue_side, bool is_left_side);
+};

@@ -215,6 +215,7 @@ void ScorerSuperstructure::WriteToHardware(ScorerSSTarget target) {
   if (target.reverse_rotor) { dye_rotor_trgt = {DyeRotorState::kRotorReverse}; }
 
   turret_trgt.pos_ += turret_adjustment_;
+  dye_rotor_trgt.dye_rotor_pct_override = target.dye_rotor_pct_override;
 
   hood.SetTarget(hood_trgt);
   turret.SetTarget(turret_trgt);

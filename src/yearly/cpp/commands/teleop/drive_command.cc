@@ -123,18 +123,23 @@ void DriveCommand::Periodic() {
   }
 
   if (container_.control_input_.GetReadings().diagonalize_bump) {
-    auto bearing = container_.drivetrain_.GetReadings().pose.bearing % 360_deg_;
-    degree_t target_bearing = 45_deg_;
-    if (bearing >= 90_deg_ && bearing < 180_deg_) {
-      target_bearing = 135_deg_;
-    } else if (bearing >= 180_deg_ && bearing < 270_deg_) {
-      target_bearing = 225_deg_;
-    } else if (bearing >= 270_deg_) {
-      target_bearing = 315_deg_;
-    }
-    target.angular_velocity =
-        container_.drivetrain_.ApplyBearingPID(target_bearing, 0.0_radps_);
+    // auto bearing = container_.drivetrain_.GetReadings().pose.bearing %
+    // 360_deg_; degree_t target_bearing = 45_deg_; if (bearing >= 90_deg_ &&
+    // bearing < 180_deg_) {
+    //   target_bearing = 135_deg_;
+    // } else if (bearing >= 180_deg_ && bearing < 270_deg_) {
+    //   target_bearing = 225_deg_;
+    // } else if (bearing >= 270_deg_) {
+    //   target_bearing = 315_deg_;
+    // }
+    // target.angular_velocity =
+    //     container_.drivetrain_.ApplyBearingPID(target_bearing, 0.0_radps_);
+    // funkit::robot::calculators::AprilTagCalculator::turret_angle = 0.0_deg_;
+    // funkit::robot::calculators::AprilTagCalculator::turret_vel = 0.0_radps_;
+    target.angular_velocity = container_.drivetrain_.ApplyBearingPID(
+        ShootingCalculator::GetOutputs().aim_angle, 0.0_radps_);
   }
+
 
   target.kill_robot = ci_readings_.die_robot_die;
 

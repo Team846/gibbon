@@ -210,6 +210,7 @@ private:
   pdcsu::units::degree_t prev_odom_bearing_{0};
   second_t prev_odom_bearing_time_{-1};
 
+public:
   degree_t bearing_correction_at_ = 0_deg_;
 };
 

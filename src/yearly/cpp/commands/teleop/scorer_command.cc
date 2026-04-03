@@ -139,6 +139,8 @@ void ScorerCommand::Periodic() {
     }
   }
 
+  target.dye_rotor_pct_override = ci_readings_.dye_rotor_pct_override;
+
   container_.scorer_ss_.SetTarget(target);
 }
 
