@@ -7,6 +7,7 @@
 #include "calculators/AllianceShiftCalculator.h"
 #include "calculators/ShootingCalculator.h"
 #include "funkit/math/fieldpoints.h"
+#include <iostream>
 
 ScorerCommand::ScorerCommand(RobotContainer &container)
     : funkit::robot::GenericCommand<RobotContainer, ScorerCommand>{
@@ -18,18 +19,21 @@ void ScorerCommand::OnInit() {}
 
 void ScorerCommand::Periodic() {
   ControlInputReadings ci_readings_{container_.control_input_.GetReadings()};
-  ScorerSSTarget target{};
+  ScorerSSTarget target{}; 
   ShootingCalculatorOutputs shooting_outputs;
   bool mirror_ =
       frc::DriverStation::GetAlliance() == frc::DriverStation::Alliance::kBlue;
 
-  double x_override = GetPreferenceValue_double("drivetrain/x_location");
-  double y_override = GetPreferenceValue_double("drivetrain/y_location");
-  if (x_override != 0.0 && y_override != 0.0) {
-     pdcsu::util::math::Vector2D pass_point{inch_t{x_override}, inch_t{y_override}};
-     funkit::math::FieldPoint field_point = {pass_point, 0_deg_, 0_fps_};
-     field_point = field_point.mirrorOnlyY(mirror_);
-     ShootingCalculator::target = field_point.point;
+  
+  double x_override = container_.drivetrain_.GetPreferenceValue_double("location/x_location");
+  double y_override = container_.drivetrain_.GetPreferenceValue_double("location/y_location");
+  if (((x_override * x_override) >= 0.1) && ((y_override * y_override) >= 0.1)) {
+    std::cout << "Entering manual turret aim" << std::endl;
+    pdcsu::util::math::Vector2D pass_point{
+        inch_t{x_override}, inch_t{y_override}};
+    funkit::math::FieldPoint field_point = {pass_point, 0_deg_, 0_fps_};
+    field_point = field_point.mirrorOnlyY(mirror_);
+    ShootingCalculator::target = field_point.point;
   } else if (ci_readings_.pass_mode) {
     pdcsu::util::math::Vector2D pass_point{-1000_in_, -1000_in_};
     if (container_.drivetrain_.GetReadings().estimated_pose.position[0] <
@@ -116,7 +120,7 @@ void ScorerCommand::Periodic() {
           !frc::DriverStation::IsTest() &&
           container_.drivetrain_.variance < 16.0 &&
           !container_.scorer_ss_.turret.GetReadings()
-               .about_to_wrap_ /* && AllianceShiftCalculator::shot_valid*/) ||  // TODO fix variance case
+              .about_to_wrap_ /* && AllianceShiftCalculator::shot_valid*/) ||  // TODO fix variance case
       ci_readings_.force_shoot ||
       (ci_readings_.pass_mode &&
           !container_.scorer_ss_.turret.GetReadings().about_to_wrap_ &&
@@ -145,7 +149,6 @@ void ScorerCommand::Periodic() {
           "pass_point", {-1000_in_, -1000_in_}, 0.0_deg_);
     }
   }
-
 
   container_.scorer_ss_.SetTarget(target);
 }

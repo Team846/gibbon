@@ -42,7 +42,7 @@
   {
     "name": "/Preferences/SwerveDrivetrain/FR/cancoder_offset_ (deg)",
     "type": "double",
-    "value": -114.8125,
+    "value": -115.22460937500001,
     "properties": {
       "persistent": true
     }
@@ -50,7 +50,7 @@
   {
     "name": "/Preferences/SwerveDrivetrain/FL/cancoder_offset_ (deg)",
     "type": "double",
-    "value": 166.8828125,
+    "value": 166.025390625,
     "properties": {
       "persistent": true
     }
@@ -58,7 +58,7 @@
   {
     "name": "/Preferences/SwerveDrivetrain/BL/cancoder_offset_ (deg)",
     "type": "double",
-    "value": 50.8125,
+    "value": 50.9765625,
     "properties": {
       "persistent": true
     }
@@ -66,7 +66,7 @@
   {
     "name": "/Preferences/SwerveDrivetrain/BR/cancoder_offset_ (deg)",
     "type": "double",
-    "value": -149.150390625,
+    "value": -149.0625,
     "properties": {
       "persistent": true
     }
@@ -74,7 +74,7 @@
   {
     "name": "/Preferences/SwerveDrivetrain/drive_genome/motor_current_limit (A)",
     "type": "double",
-    "value": 60.0,
+    "value": 80.0,
     "properties": {
       "persistent": true
     }
@@ -82,7 +82,7 @@
   {
     "name": "/Preferences/SwerveDrivetrain/drive_genome/smart_current_limit (A)",
     "type": "double",
-    "value": 60.0,
+    "value": 80.0,
     "properties": {
       "persistent": true
     }
@@ -354,7 +354,7 @@
   {
     "name": "/Preferences/SwerveDrivetrain/drive_to_point/kC",
     "type": "double",
-    "value": 0.7,
+    "value": 1.0,
     "properties": {
       "persistent": true
     }
@@ -1122,7 +1122,7 @@
   {
     "name": "/Preferences/turret/encoder/offset1 (rot)",
     "type": "double",
-    "value": 0.3447265625,
+    "value": -0.16796875,
     "properties": {
       "persistent": true
     }
@@ -1130,7 +1130,7 @@
   {
     "name": "/Preferences/turret/encoder/offset2 (rot)",
     "type": "double",
-    "value": -0.254638671875,
+    "value": 0.2587890625,
     "properties": {
       "persistent": true
     }
@@ -1162,7 +1162,7 @@
   {
     "name": "/Preferences/turret/wrap/positive (deg)",
     "type": "double",
-    "value": 195.0,
+    "value": 220.0,
     "properties": {
       "persistent": true
     }
@@ -1170,7 +1170,7 @@
   {
     "name": "/Preferences/turret/wrap/negative (deg)",
     "type": "double",
-    "value": -270.0,
+    "value": -260.0,
     "properties": {
       "persistent": true
     }
@@ -1242,7 +1242,7 @@
   {
     "name": "/Preferences/DyeRotor/speed_idle (min^-1 rot)",
     "type": "double",
-    "value": 0.0,
+    "value": -35.0,
     "properties": {
       "persistent": true
     }
@@ -1298,7 +1298,7 @@
   {
     "name": "/Preferences/scorer_ss/point_blank/shooter_vel (ft s^-1)",
     "type": "double",
-    "value": 23.0,
+    "value": 33.76,
     "properties": {
       "persistent": true
     }
@@ -1594,7 +1594,7 @@
   {
     "name": "/Preferences/DyeRotor/genome/smart_current_limit (A)",
     "type": "double",
-    "value": 60.0,
+    "value": 15.0,
     "properties": {
       "persistent": true
     }
@@ -1810,7 +1810,7 @@
   {
     "name": "/Preferences/ShootingCalculator/swim/tofGain",
     "type": "double",
-    "value": 0.32,
+    "value": 0.25,
     "properties": {
       "persistent": true
     }
@@ -1948,7 +1948,7 @@
   {
     "name": "/Preferences/SwerveDrivetrain/april_tags/bearing_corr_gain",
     "type": "double",
-    "value": 0.0,
+    "value": 0.002,
     "properties": {
       "persistent": true
     }
@@ -1986,19 +1986,47 @@
     }
   },
   {
-    "name": "/Preferences/DyeRotor/use_modulation",
-    "type": "boolean",
-    "value": false,
-    "properties": {
-      "persistent": true
-    }
-  },
-  {
     "name": "/Preferences/DyeRotor/pos_thresh (deg)",
     "type": "double",
     "value": 180.0,
     "properties": {
       "persistent": true
+    }
+  },
+  {
+    "name": "/Preferences/SwerveDrivetrain/location/x_location",
+    "type": "double",
+    "value": 0.0,
+    "properties": {
+      "persistent": true
+    }
+  },
+  {
+    "name": "/Preferences/SwerveDrivetrain/location/y_location",
+    "type": "double",
+    "value": 0.0,
+    "properties": {
+      "persistent": true
+    }
+  },
+  {
+    "name": "/Preferences/location/x_location",
+    "type": "double",
+    "value": 416.02265228328173,
+    "properties": {
+      "cached": true,
+      "persistent": true,
+      "retained": true
+    }
+  },
+  {
+    "name": "/Preferences/location/y_location",
+    "type": "double",
+    "value": 46.2021537383126,
+    "properties": {
+      "cached": true,
+      "persistent": true,
+      "retained": true
     }
   }
 ]

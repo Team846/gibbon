@@ -1992,5 +1992,41 @@
     "properties": {
       "persistent": true
     }
+  },
+  {
+    "name": "/Preferences/SwerveDrivetrain/location/x_location",
+    "type": "double",
+    "value": 0.0,
+    "properties": {
+      "persistent": true
+    }
+  },
+  {
+    "name": "/Preferences/SwerveDrivetrain/location/y_location",
+    "type": "double",
+    "value": 0.0,
+    "properties": {
+      "persistent": true
+    }
+  },
+  {
+    "name": "/Preferences/location/x_location",
+    "type": "double",
+    "value": 0.0,
+    "properties": {
+      "cached": true,
+      "persistent": true,
+      "retained": true
+    }
+  },
+  {
+    "name": "/Preferences/location/y_location",
+    "type": "double",
+    "value": 0.0,
+    "properties": {
+      "cached": true,
+      "persistent": true,
+      "retained": true
+    }
   }
 ]
