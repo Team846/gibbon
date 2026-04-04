@@ -19,6 +19,7 @@ struct HoptakeSSReadings {};
 struct HoptakeSSTarget {
   HoptakeState target_state;
   fps_t drivetrain_vel;
+  bool force_down_intake = false;
 };
 
 class HoptakeSuperstructure

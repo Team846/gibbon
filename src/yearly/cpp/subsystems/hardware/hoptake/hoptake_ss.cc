@@ -59,6 +59,8 @@ void HoptakeSuperstructure::WriteToHardware(HoptakeSSTarget target) {
   intake_trgt.dt_vel_ = target.drivetrain_vel;
 
   intake.SetTarget(intake_trgt);
+
+  pivot_trgt.force_down = target.force_down_intake;
   pivot.SetTarget(pivot_trgt);
 
   intake.UpdateHardware();

@@ -42,7 +42,7 @@
   {
     "name": "/Preferences/SwerveDrivetrain/FR/cancoder_offset_ (deg)",
     "type": "double",
-    "value": -114.0125,
+    "value": -114.8125,
     "properties": {
       "persistent": true
     }
@@ -138,7 +138,7 @@
   {
     "name": "/Preferences/SwerveDrivetrain/steer_genome/motor_current_limit (A)",
     "type": "double",
-    "value": 30.0,
+    "value": 40.0,
     "properties": {
       "persistent": true
     }
@@ -146,7 +146,7 @@
   {
     "name": "/Preferences/SwerveDrivetrain/steer_genome/smart_current_limit (A)",
     "type": "double",
-    "value": 30.0,
+    "value": 40.0,
     "properties": {
       "persistent": true
     }
@@ -354,7 +354,7 @@
   {
     "name": "/Preferences/SwerveDrivetrain/drive_to_point/kC",
     "type": "double",
-    "value": 0.9,
+    "value": 0.8,
     "properties": {
       "persistent": true
     }
@@ -922,7 +922,7 @@
   {
     "name": "/Preferences/ShootingCalculator/2ptvel/kAdditive",
     "type": "double",
-    "value": 4.35,
+    "value": 3.87,
     "properties": {
       "persistent": true
     }
@@ -1002,7 +1002,7 @@
   {
     "name": "/Preferences/SwerveDrivetrain/scalar_pigeon",
     "type": "double",
-    "value": 1.006784215435713,
+    "value": 1.01010101010101,
     "properties": {
       "persistent": true
     }
@@ -1218,7 +1218,7 @@
   {
     "name": "/Preferences/DyeRotor/speed_84bps (min^-1 rot)",
     "type": "double",
-    "value": 100.0,
+    "value": 170.0,
     "properties": {
       "persistent": true
     }
@@ -1298,7 +1298,7 @@
   {
     "name": "/Preferences/scorer_ss/point_blank/shooter_vel (ft s^-1)",
     "type": "double",
-    "value": 22.0,
+    "value": 34.67,
     "properties": {
       "persistent": true
     }
@@ -1850,7 +1850,7 @@
   {
     "name": "/Preferences/turret/accel_factor",
     "type": "double",
-    "value": 5.0,
+    "value": 3.0,
     "properties": {
       "persistent": true
     }
@@ -1866,7 +1866,7 @@
   {
     "name": "/Preferences/ShootingCalculator/swim/yawRateFactor",
     "type": "double",
-    "value": 1.35,
+    "value": 1.11,
     "properties": {
       "persistent": true
     }

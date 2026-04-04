@@ -19,7 +19,7 @@ const foot_t kPointblankDistance = 41.925_in_;
 const foot_t fullEffortDistance = 235.0_in_;
 
 const degree_t kSWIM_max_angle_reduc = 8_deg_;
-const auto kSWIM_reduc_accum_fac = 5_deg_ / (15_fps_ * 1_s_);
+const auto kSWIM_reduc_accum_fac = 0_deg_ / (15_fps_ * 1_s_);
 const fps_t kSWIM_minvel_reduc = 5_fps_;
 
 void ShootingCalculator::Setup() {

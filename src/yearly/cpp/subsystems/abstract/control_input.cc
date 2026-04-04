@@ -108,7 +108,7 @@ ControlInputReadings ControlInputSubsystem::UpdateWithInput() {
 
   ci_readings_.dye_rotor_pct_override = op_readings.right_stick_y;
 
-  // ci_readings_.stop_turret = op_readings.x_button;
+  ci_readings_.force_down_intake = op_readings.x_button;
 
   previous_driver_ = dr_readings;
   previous_operator_ = op_readings;

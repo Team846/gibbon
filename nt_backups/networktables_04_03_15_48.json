@@ -138,7 +138,7 @@
   {
     "name": "/Preferences/SwerveDrivetrain/steer_genome/motor_current_limit (A)",
     "type": "double",
-    "value": 30.0,
+    "value": 40.0,
     "properties": {
       "persistent": true
     }
@@ -146,7 +146,7 @@
   {
     "name": "/Preferences/SwerveDrivetrain/steer_genome/smart_current_limit (A)",
     "type": "double",
-    "value": 30.0,
+    "value": 40.0,
     "properties": {
       "persistent": true
     }
@@ -354,7 +354,7 @@
   {
     "name": "/Preferences/SwerveDrivetrain/drive_to_point/kC",
     "type": "double",
-    "value": 0.9,
+    "value": 0.8,
     "properties": {
       "persistent": true
     }
@@ -922,7 +922,7 @@
   {
     "name": "/Preferences/ShootingCalculator/2ptvel/kAdditive",
     "type": "double",
-    "value": 4.35,
+    "value": 4.29,
     "properties": {
       "persistent": true
     }
@@ -1218,7 +1218,7 @@
   {
     "name": "/Preferences/DyeRotor/speed_84bps (min^-1 rot)",
     "type": "double",
-    "value": 100.0,
+    "value": 110.0,
     "properties": {
       "persistent": true
     }

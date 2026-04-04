@@ -36,11 +36,11 @@ using FPT = funkit::math::FieldPoint;
 
 #define MAX_ACCEL_CS2_BUMP 35_fps2_
 #define MAX_DECEL_CS2_BUMP 35_fps2_
-#define MAX_VEL_CS2_BUMP 6_fps_
+#define MAX_VEL_CS2_BUMP 8_fps_
 
 #define MAX_ACCEL_CS2_SWIM 4_fps2_
 #define MAX_DECEL_CS2_SWIM 4_fps2_
-#define MAX_VEL_CS2_SWIM 4_fps_
+#define MAX_VEL_CS2_SWIM 6_fps_
 
 #define START_Y (298.5_in_ - 16.5_in_)
 
@@ -112,12 +112,12 @@ using FPT = funkit::math::FieldPoint;
 
 #define PASS() AutoScorerCommand(container, false, true)
 
-#define END_BUMPC1_PT MKPT(98_in_, 223.61_in_, 0_deg_, 2.5_fps_)
-#define START_BUMPC1_PT MKPT(98_in_, 125.61_in_, 35_deg_, 2.5_fps_)
+#define END_BUMPC1_PT MKPT(98_in_, 223.61_in_, 0_deg_, 7_fps_)
+#define START_BUMPC1_PT MKPT(98_in_, 125.61_in_, 35_deg_, 8_fps_)
 // 8_fps
 #define END_BUMPC23_PT MKPT(107_in_, 223.61_in_, 0_deg_ + 180_deg_, 3_fps_)
-#define START_BUMPC23_PT MKPT(107_in_, 135.61_in_, 35_deg_ + 180_deg_, 3_fps_)
-#define START_BUMPC23_PT_R MKPT(107_in_, 120.61_in_, 35_deg_ + 180_deg_, 3_fps_)
+#define START_BUMPC23_PT MKPT(107_in_, 135.61_in_, 35_deg_ + 180_deg_, 8_fps_)
+#define START_BUMPC23_PT_R MKPT(107_in_, 120.61_in_, 35_deg_ + 180_deg_, 8_fps_)
 
 #define P1C1_INTAKE_PT MKPT(94.5_in_, 260.35_in_, 45_deg_, 11_fps_)
 #define P2C1_INTAKE_PT MKPT(89.25_in_, 290.6_in_, 55_deg_, 7_fps_)
@@ -163,12 +163,11 @@ END DEFINE MACROS
 __AUTO__(CS2Auto, "CS2")
 SEQUENCE {
   START2(92.5_in_, 144.54_in_, 0_deg_),
-      PARALLEL_DEADLINE(DRIVE_PT(CS2, END_BUMPC1_PT, BUMP),
+      PARALLEL_DEADLINE(DRIVE_PT(CS2, END_BUMPC1_PT, NORM),
           SEQUENCE(WAIT{0.25_s}, INTAKE(HoptakeState::kIntake))),
       INTAKE(HoptakeState::kIntake), DRIVE_PT_TANK(CS2, P1C1_INTAKE_PT, NORM),
       TRACK(), DRIVE_PT_TANK(CS2, P2C1_INTAKE_PT, NORM),
-      DRIVE_PT_TANK(CS2, P3C1_INTAKE_PT, NORM),
-      DRIVE_PT_TANK(CS2, P4C1_INTAKE_PT, NORM), TRACK(),
+      DRIVE_PT_TANK(CS2, P3C1_INTAKE_PT, NORM), TRACK(),
       DRIVE_PT(CS2, P1C1_INTAKE_PT, NORM), INTAKE(HoptakeState::kBump),
       DRIVE_PT(CS2, END_BUMPC1_PT, NORM), TRACK(),
       DRIVE_PT(CS2, START_BUMPC1_PT, BUMP),

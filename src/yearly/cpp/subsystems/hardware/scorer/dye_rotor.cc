@@ -49,7 +49,7 @@ void DyeRotorSubsystem::Setup() {
   DefArmSys DyeRotor_plant(
       def_bldc, 1, 35_rot_ / 1_rot_,
       [&](radian_t x, radps_t v) -> nm_t { return 0.0_Nm_; },
-      3_lb_ * 7_in_ * 7_in_, 4.0_Nm_, 2.0_Nm_ / 628_radps_, 10_ms_);
+      3_lb_ * 7_in_ * 7_in_, 4.0_Nm_, 2.0_Nm_ / 628_radps_, 10_ms_, 0.004_ohm_);
 
   esc_.Setup(genome_backup, DyeRotor_plant);
 

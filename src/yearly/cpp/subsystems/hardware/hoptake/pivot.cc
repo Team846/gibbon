@@ -108,6 +108,12 @@ void PivotSubsystem::WriteToHardware(PivotTarget target) {
   esc_.ModifyGenome(genome);
   esc2_.ModifyGenome(genome);
 
+  if (target.force_down) {
+    esc_.WriteDC(-0.05);
+    esc2_.WriteDC(-0.05);
+    return;
+  }
+
   if (target.target_state == PivotState::kStow) {
     trgt_pos_ = GetPreferenceValue_unit_type<degree_t>("pos_stow");
   } else if (target.target_state == PivotState::kCollapsed) {
@@ -129,14 +135,14 @@ void PivotSubsystem::WriteToHardware(PivotTarget target) {
   degree_t target_pos_a = trgt_pos_;
   degree_t target_pos_b = trgt_pos_;
 
-  if (ctr_impact_follow_a > 0) {
-    target_pos_a = GetReadings().pos2_;
-    ctr_impact_follow_a--;
-  }
-  if (ctr_impact_follow_b > 0) {
-    target_pos_b = GetReadings().pos_;
-    ctr_impact_follow_b--;
-  }
+  // if (ctr_impact_follow_a > 0) {
+  //   target_pos_a = GetReadings().pos2_;
+  //   ctr_impact_follow_a--;
+  // }
+  // if (ctr_impact_follow_b > 0) {
+  //   target_pos_b = GetReadings().pos_;
+  //   ctr_impact_follow_b--;
+  // }
 
   esc_.WriteDC((target_pos_a - GetReadings().pos_).value() * genome.gains.kP +
                genome.gains.kF * u_sin(GetReadings().pos_) -

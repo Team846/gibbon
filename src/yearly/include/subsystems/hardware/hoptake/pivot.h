@@ -18,6 +18,7 @@ struct PivotReadings {
 
 struct PivotTarget {
   PivotState target_state;
+  bool force_down = false;
 };
 
 class PivotSubsystem

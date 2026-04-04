@@ -42,7 +42,7 @@
   {
     "name": "/Preferences/SwerveDrivetrain/FR/cancoder_offset_ (deg)",
     "type": "double",
-    "value": -114.0125,
+    "value": -114.8125,
     "properties": {
       "persistent": true
     }
@@ -138,7 +138,7 @@
   {
     "name": "/Preferences/SwerveDrivetrain/steer_genome/motor_current_limit (A)",
     "type": "double",
-    "value": 30.0,
+    "value": 40.0,
     "properties": {
       "persistent": true
     }
@@ -146,7 +146,7 @@
   {
     "name": "/Preferences/SwerveDrivetrain/steer_genome/smart_current_limit (A)",
     "type": "double",
-    "value": 30.0,
+    "value": 40.0,
     "properties": {
       "persistent": true
     }
@@ -354,7 +354,7 @@
   {
     "name": "/Preferences/SwerveDrivetrain/drive_to_point/kC",
     "type": "double",
-    "value": 0.9,
+    "value": 0.7,
     "properties": {
       "persistent": true
     }
@@ -922,7 +922,7 @@
   {
     "name": "/Preferences/ShootingCalculator/2ptvel/kAdditive",
     "type": "double",
-    "value": 4.35,
+    "value": 3.95,
     "properties": {
       "persistent": true
     }
@@ -1002,7 +1002,7 @@
   {
     "name": "/Preferences/SwerveDrivetrain/scalar_pigeon",
     "type": "double",
-    "value": 1.006784215435713,
+    "value": 1.01010101010101,
     "properties": {
       "persistent": true
     }
@@ -1018,7 +1018,7 @@
   {
     "name": "/Preferences/scorer_ss/init_turret",
     "type": "boolean",
-    "value": true,
+    "value": false,
     "properties": {
       "persistent": true
     }
@@ -1122,7 +1122,7 @@
   {
     "name": "/Preferences/turret/encoder/offset1 (rot)",
     "type": "double",
-    "value": -0.3408203125,
+    "value": 0.3447265625,
     "properties": {
       "persistent": true
     }
@@ -1130,7 +1130,7 @@
   {
     "name": "/Preferences/turret/encoder/offset2 (rot)",
     "type": "double",
-    "value": -0.239013671875,
+    "value": -0.254638671875,
     "properties": {
       "persistent": true
     }
@@ -1218,7 +1218,7 @@
   {
     "name": "/Preferences/DyeRotor/speed_84bps (min^-1 rot)",
     "type": "double",
-    "value": 100.0,
+    "value": 170.0,
     "properties": {
       "persistent": true
     }
@@ -1242,7 +1242,7 @@
   {
     "name": "/Preferences/DyeRotor/speed_idle (min^-1 rot)",
     "type": "double",
-    "value": -35.0,
+    "value": 0.0,
     "properties": {
       "persistent": true
     }
@@ -1298,7 +1298,7 @@
   {
     "name": "/Preferences/scorer_ss/point_blank/shooter_vel (ft s^-1)",
     "type": "double",
-    "value": 22.0,
+    "value": 23.0,
     "properties": {
       "persistent": true
     }
@@ -1306,7 +1306,7 @@
   {
     "name": "/Preferences/scorer_ss/rotor_reset_loops",
     "type": "int",
-    "value": 0,
+    "value": 3,
     "properties": {
       "persistent": true
     }
@@ -1322,7 +1322,7 @@
   {
     "name": "/Preferences/Intake/speed_intake (ft s^-1)",
     "type": "double",
-    "value": 56.0,
+    "value": 55.0,
     "properties": {
       "persistent": true
     }
@@ -1802,7 +1802,7 @@
   {
     "name": "/Preferences/Intake/dynamic_intake_gain",
     "type": "double",
-    "value": 1.875,
+    "value": 1.5,
     "properties": {
       "persistent": true
     }
@@ -1850,7 +1850,7 @@
   {
     "name": "/Preferences/turret/accel_factor",
     "type": "double",
-    "value": 5.0,
+    "value": 3.0,
     "properties": {
       "persistent": true
     }
@@ -1866,7 +1866,7 @@
   {
     "name": "/Preferences/ShootingCalculator/swim/yawRateFactor",
     "type": "double",
-    "value": 1.35,
+    "value": 1.11,
     "properties": {
       "persistent": true
     }
@@ -1964,7 +1964,7 @@
   {
     "name": "/Preferences/ShootingCalculator/pass/passGain",
     "type": "double",
-    "value": 1.45,
+    "value": 1.2,
     "properties": {
       "persistent": true
     }
