@@ -17,6 +17,7 @@ inch_t AprilTagCalculator::view_turret_off_x = 0.0_in_;
 inch_t AprilTagCalculator::view_turret_off_y = 0.0_in_;
 degree_t AprilTagCalculator::view_full_turret_angle = 0_deg_;
 
+
 void AprilTagCalculator::AddToHistory(pdcsu::units::second_t time,
     Vector2D position, pdcsu::units::degree_t bearing,
     pdcsu::units::degree_t turret_angle) {

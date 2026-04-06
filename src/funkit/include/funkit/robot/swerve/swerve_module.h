@@ -63,8 +63,6 @@ struct SwerveModuleCommonConfig {
  * and a CANcoder. Meant to be constructed as a child subsystem of
  * DrivetrainSubsystem.
  */
-
-
 class SwerveModuleSubsystem
     : public funkit::robot::GenericSubsystem<SwerveModuleReadings,
           SwerveModuleTarget> {
@@ -84,7 +82,7 @@ public:
   SwerveModuleTarget ZeroTarget() const override;
 
   bool VerifyHardware() override;
-
+  
   void SetCANCoderOffset();
   void SetCANCoderOffset(pdcsu::units::degree_t offset);
 
@@ -105,7 +103,7 @@ public:
   void SetSteerGenome(funkit::control::config::MotorGenome genome);
 
   /**
-   *  ModifyGenomes()
+   * ModifyGenomes()
    * 
    * Modifies the genome for the steer and drive motor controllers. Should be 
    * called after SwerveModuleSubsystem Setup, in DrivetrainSubsystem Setup.

@@ -68,11 +68,25 @@ struct ATCalculatorConstants {
   std::optional<TurretTagCamera> turret_camera;
 };
 
+/**
+ * AprilTagCalculator
+ * 
+ * A class that inherits from Calculator. 
+ * Uses AprilTags to determine position and bearing of robot, and angle of turret.
+ */
 class AprilTagCalculator : public funkit::math::Calculator<ATCalculatorInput,
                                ATCalculatorOutput, ATCalculatorConstants> {
 public:
   AprilTagCalculator() {};
 
+  /**
+   * calculate()
+   * 
+   * Uses AprilTags to create fused/estimated positions. 
+   * Using odometry history and variances compensates for latencies and account for uncertainty. 
+   * @param input - An ATCalculatorInput with current readings and calculations of the robot
+   * @return The calculated ATCalculatorOutput 
+   */
   ATCalculatorOutput calculate(ATCalculatorInput input) override;
 
   static pdcsu::units::degree_t turret_angle;
@@ -91,11 +105,39 @@ public:
   std::deque<HistoryEntry> odom_history_{};
   static constexpr size_t kMaxHistorySize = 500;
 
+  /**
+   * AddToHistory() 
+   * 
+   * Adds a record of the most recent positions to odom_history. Pops the oldest records if maximum count is exceeded. 
+   * @param time - the most recent time
+   * @param position - the most recent position
+   * @param bearing - the bearing of the robot
+   * @param turret_angle - the most recent turret angle
+   */
   void AddToHistory(pdcsu::units::second_t time, Vector2D position,
       pdcsu::units::degree_t bearing, pdcsu::units::degree_t turret_angle);
+
+  /**
+   * InterpolatePosition()
+   * 
+   * Finds the estimated position given a time.
+   * @param time - the time for finding the position
+   */
   Vector2D InterpolatePosition(pdcsu::units::second_t time) const;
+  /**
+   * InterpolateRobotBearing()
+   * 
+   * Finds the estimated bearing given a time.
+   * @param time - the time for finding the bearing
+   */
   pdcsu::units::degree_t InterpolateRobotBearing(
       pdcsu::units::second_t time) const;
+  /**
+   * InterpolateTurretAngle()
+   * 
+   * Finds the estimated turret angle given a time.
+   * @param time - the time for finding the turret angle
+   */
   pdcsu::units::degree_t InterpolateTurretAngle(
       pdcsu::units::second_t time) const;
 
