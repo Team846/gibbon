@@ -226,6 +226,12 @@ void DrivetrainSubsystem::ZeroBearing() {
           GetReadings().april_point[1].value()});
 }
 
+void DrivetrainSubsystem::ZeroWithCANCoders() {
+  for (auto& module : modules_) {
+    module->ZeroWithCANcoder();
+  }
+}
+
 void DrivetrainSubsystem::SetBearing(pdcsu::units::degree_t bearing) {
   bearing_offset_ = bearing - (GetReadings().pose.bearing - bearing_offset_);
 }

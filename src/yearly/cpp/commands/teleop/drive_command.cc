@@ -140,7 +140,6 @@ void DriveCommand::Periodic() {
         ShootingCalculator::GetOutputs().aim_angle, 0.0_radps_);
   }
 
-
   target.kill_robot = ci_readings_.die_robot_die;
 
   container_.drivetrain_.SetTarget({target});

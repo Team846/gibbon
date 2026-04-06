@@ -32,7 +32,7 @@ SwerveModuleSubsystem::SwerveModuleSubsystem(Loggable& parent,
       cancoder_{unique_config.cancoder_id, common_config.bus},
       steer_load_factor_{common_config.steer_load_factor} {
   cancoder_.OptimizeBusUtilization();
-  cancoder_.GetAbsolutePosition().SetUpdateFrequency(20_Hz);
+  cancoder_.GetAbsolutePosition().SetUpdateFrequency(100_Hz);
 
   RegisterPreference("cancoder_offset_", degree_t{0.0});
 

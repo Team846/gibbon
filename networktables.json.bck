@@ -34,7 +34,7 @@
   {
     "name": "/Preferences/SwerveDrivetrain/steer_genome/brake_mode",
     "type": "boolean",
-    "value": false,
+    "value": true,
     "properties": {
       "persistent": true
     }
@@ -138,7 +138,7 @@
   {
     "name": "/Preferences/SwerveDrivetrain/steer_genome/motor_current_limit (A)",
     "type": "double",
-    "value": 30.0,
+    "value": 20.0,
     "properties": {
       "persistent": true
     }
@@ -826,7 +826,7 @@
   {
     "name": "/Preferences/SwerveDrivetrain/steer_genome/voltage_compensation (m^2 kg s^-3 A^-1)",
     "type": "double",
-    "value": 8.0,
+    "value": 7.0,
     "properties": {
       "persistent": true
     }
@@ -1122,7 +1122,7 @@
   {
     "name": "/Preferences/turret/encoder/offset1 (rot)",
     "type": "double",
-    "value": -0.3408203125,
+    "value": -0.0126953125,
     "properties": {
       "persistent": true
     }
@@ -1130,7 +1130,7 @@
   {
     "name": "/Preferences/turret/encoder/offset2 (rot)",
     "type": "double",
-    "value": -0.239013671875,
+    "value": -0.029052734375,
     "properties": {
       "persistent": true
     }
@@ -1940,7 +1940,7 @@
   {
     "name": "/Preferences/SwerveDrivetrain/ramp_rate_limit_step",
     "type": "double",
-    "value": 0.5,
+    "value": 0.3,
     "properties": {
       "persistent": true
     }

@@ -99,6 +99,7 @@ public:
   bool VerifyHardware() override;
 
   void ZeroBearing();
+  void ZeroWithCANCoders();
 
   void SetBearing(pdcsu::units::degree_t bearing);
   void SetPosition(Vector2D position);

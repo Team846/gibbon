@@ -88,7 +88,8 @@ ControlInputReadings ControlInputSubsystem::UpdateWithInput() {
   ci_readings_.agitate = op_readings.lsb;
 
   ci_readings_.hood_trim_cw = op_readings.pov == funkit::robot::XboxPOV::kUp;
-  ci_readings_.hood_trim_ccw = op_readings.pov == funkit::robot::XboxPOV::kDown;
+  ci_readings_.hood_trim_ccw =
+      false;  // op_readings.pov == funkit::robot::XboxPOV::kDown;
 
   ci_readings_.turret_trim_cw =
       op_readings.pov == funkit::robot::XboxPOV::kLeft;
@@ -109,6 +110,9 @@ ControlInputReadings ControlInputSubsystem::UpdateWithInput() {
   ci_readings_.dye_rotor_pct_override = op_readings.right_stick_y;
 
   ci_readings_.force_down_intake = op_readings.x_button;
+
+  ci_readings_.reset_cancoders =
+      op_readings.pov == funkit::robot::XboxPOV::kDown;
 
   previous_driver_ = dr_readings;
   previous_operator_ = op_readings;

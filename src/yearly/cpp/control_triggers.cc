@@ -13,4 +13,10 @@ void ControlTriggerInitializer::InitTeleopTriggers(RobotContainer& container) {
   drivetrain_zero_bearing_trigger.WhileTrue(frc2::InstantCommand([&] {
     container.drivetrain_.ZeroBearing();
   }).ToPtr());
+
+  frc2::Trigger{[&] {
+    return container.control_input_.GetReadings().reset_cancoders;
+  }}.OnTrue(frc2::InstantCommand([&] {
+    container.drivetrain_.ZeroWithCANCoders();
+  }).ToPtr());
 }

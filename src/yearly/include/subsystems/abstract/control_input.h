@@ -36,6 +36,8 @@ struct ControlInputReadings {
 
   bool force_down_intake;
 
+  bool reset_cancoders;
+
   // Operator Keyboard Overrides
   bool turret_no_spin;
 
