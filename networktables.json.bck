@@ -1996,7 +1996,7 @@
   {
     "name": "/Preferences/SwerveDrivetrain/location/x_location",
     "type": "double",
-    "value": 0.0,
+    "value": 431.9101217970183,
     "properties": {
       "persistent": true
     }
@@ -2004,7 +2004,7 @@
   {
     "name": "/Preferences/SwerveDrivetrain/location/y_location",
     "type": "double",
-    "value": 0.0,
+    "value": 40.04539623650368,
     "properties": {
       "persistent": true
     }
@@ -2012,7 +2012,7 @@
   {
     "name": "/Preferences/location/x_location",
     "type": "double",
-    "value": 416.02265228328173,
+    "value": 0.0,
     "properties": {
       "cached": true,
       "persistent": true,
@@ -2022,7 +2022,27 @@
   {
     "name": "/Preferences/location/y_location",
     "type": "double",
-    "value": 46.2021537383126,
+    "value": 0.0,
+    "properties": {
+      "cached": true,
+      "persistent": true,
+      "retained": true
+    }
+  },
+  {
+    "name": "/Preferences/SwerveDrivetrain/x_location",
+    "type": "double",
+    "value": 0.0,
+    "properties": {
+      "cached": true,
+      "persistent": true,
+      "retained": true
+    }
+  },
+  {
+    "name": "/Preferences/SwerveDrivetrain/y_location",
+    "type": "double",
+    "value": 0.0,
     "properties": {
       "cached": true,
       "persistent": true,

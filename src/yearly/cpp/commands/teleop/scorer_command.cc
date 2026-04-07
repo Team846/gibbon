@@ -25,15 +25,18 @@ void ScorerCommand::Periodic() {
       frc::DriverStation::GetAlliance() == frc::DriverStation::Alliance::kBlue;
 
   
-  double x_override = container_.drivetrain_.GetPreferenceValue_double("location/x_location");
-  double y_override = container_.drivetrain_.GetPreferenceValue_double("location/y_location");
-  if (((x_override * x_override) >= 0.1) && ((y_override * y_override) >= 0.1)) {
+  double x_override = container_.drivetrain_.GetPreferenceValue_double("location/y_location");
+  double y_override = container_.drivetrain_.GetPreferenceValue_double("location/x_location");
+  Graph("a", false);
+  if ((x_override <= 650) && ((y_override) <= 316)) {
+    Graph("a", true);
     std::cout << "Entering manual turret aim" << std::endl;
     pdcsu::util::math::Vector2D pass_point{
         inch_t{x_override}, inch_t{y_override}};
     funkit::math::FieldPoint field_point = {pass_point, 0_deg_, 0_fps_};
     field_point = field_point.mirrorOnlyY(mirror_);
     ShootingCalculator::target = field_point.point;
+    // shooting_outputs.is_valid = true;
   } else if (ci_readings_.pass_mode) {
     pdcsu::util::math::Vector2D pass_point{-1000_in_, -1000_in_};
     if (container_.drivetrain_.GetReadings().estimated_pose.position[0] <
@@ -97,11 +100,17 @@ void ScorerCommand::Periodic() {
         container_.drivetrain_.GetReadings().estimated_pose.position[1] >
             141.61_in_) {
       shooting_outputs.is_valid = false;
+      if ((x_override <= 650) && ((y_override) <= 316)) {
+        shooting_outputs.is_valid = true;
+      }
     }
     if (mirror_ &&
         container_.drivetrain_.GetReadings().estimated_pose.position[1] <
             509.61_in_) {
       shooting_outputs.is_valid = false;
+      if ((x_override <= 650) && ((y_override) <= 316)) {
+        shooting_outputs.is_valid = true;
+      }
     }
   }
 
