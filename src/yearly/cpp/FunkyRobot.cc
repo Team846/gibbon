@@ -39,6 +39,9 @@ void FunkyRobot::OnInitialize() {
   ADD_AUTO_VARIANTS(CS2Auto, "CS2");
   ADD_AUTO_VARIANTS(CompatibilityAuto, "LEM");
   ADD_AUTO_VARIANTS(OPAuto, "OP");
+  ADD_AUTO_VARIANTS(SafeOPAuto, "SafeOP");
+  ADD_AUTO_VARIANTS(Center8, "C8");
+  ADD_AUTO_VARIANTS(Center8Depot, "C8D");
 
   // Add dashboard buttons
   frc::SmartDashboard::PutData("set_cancoder_offsets",

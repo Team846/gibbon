@@ -135,6 +135,10 @@ using FPT = funkit::math::FieldPoint;
 #define P2C2_COMPATIBILITY_PT MKPT(155.35_in_, 305.42_in_, 30_deg_, 7_fps_)
 #define P3C2_COMPATIBILITY_PT MKPT(170.85_in_, 324.35_in_, 45_deg_, 0_fps_)
 
+#define CENTER8_SHOT MKPT(158.85_in_, 125.35_in_, 0_deg_, 0_fps_)
+
+#define P3C1_INTAKE_PT_SAFEOP MKPT(120.75_in_, 305.2_in_, 70_deg_, 0_fps_)
+
 #define DEPOT                                                            \
   MKPT(funkit::math::FieldPoint::field_size_x / 2.0 - 78.38_in_, 20_in_, \
       180_deg_, 0_fps_)
@@ -195,44 +199,23 @@ SEQUENCE {
 
 __AUTO__(CompatibilityAuto, "Compatibility")
 SEQUENCE {
-  START2(92.5_in_, 144.54_in_, 0_deg_), DRIVE_PT(CS2, END_BUMPC1_PT, BUMP),
-      TRACK(), INTAKE(HoptakeState::kIntake),
-      DRIVE_PT_TANK(CS2, P1C1_INTAKE_PT, NORM),
-      DRIVE_PT_TANK(CS2, P2C1_INTAKE_PT, NORM),
+  START2(92.5_in_, 144.54_in_, 0_deg_),
+      PARALLEL_DEADLINE(DRIVE_PT(CS2, END_BUMPC1_PT, NORM),
+          SEQUENCE(WAIT{0.25_s}, INTAKE(HoptakeState::kIntake))),
+      INTAKE(HoptakeState::kIntake), DRIVE_PT_TANK(CS2, P1C1_INTAKE_PT, NORM),
+      TRACK(), DRIVE_PT_TANK(CS2, P2C1_INTAKE_PT, NORM),
       DRIVE_PT_TANK(CS2, P3C1_INTAKE_PT, NORM), TRACK(),
       DRIVE_PT(CS2, P1C1_INTAKE_PT, NORM), INTAKE(HoptakeState::kBump),
       DRIVE_PT(CS2, END_BUMPC1_PT, NORM), TRACK(),
       DRIVE_PT(CS2, START_BUMPC1_PT, BUMP),
       PARALLEL_DEADLINE(WAIT{3_s}, SHOOT()), TRACK(),
-      DRIVE_PT(CS2, END_BUMPC1_PT, NORM), INTAKE(HoptakeState::kIntake),
+      PARALLEL_DEADLINE(DRIVE_PT(CS2, END_BUMPC1_PT, BUMP),
+          SEQUENCE(WAIT{0.25_s}, INTAKE(HoptakeState::kIntake))),
       DRIVE_PT_TANK(CS2, P1C2_COMPATIBILITY_PT, NORM),
       DRIVE_PT_TANK(CS2, P2C2_COMPATIBILITY_PT, NORM), TRACK(),
       DRIVE_PT_TANK(CS2, P3C2_COMPATIBILITY_PT, NORM),
       DRIVE_PT(CS2, P1C2_COMPATIBILITY_PT, NORM), INTAKE(HoptakeState::kBump),
       DRIVE_PT(CS2, END_BUMPC23_PT, NORM),
-      DRIVE_PT(CS2, START_BUMPC23_PT, BUMP), INTAKE(HoptakeState::kIntake),
-      frc2::ConditionalCommand(
-          frc2::ParallelDeadlineGroup(
-              frc2::SequentialCommandGroup{
-                  DRIVE_PT_BEARING(CS2, DEPOT, SWIM), WAIT{5_s}},
-              SHOOT()),
-          frc2::ParallelDeadlineGroup(WAIT{10_s}, SHOOT()),
-          [left = is_left_side]() { return left; })
-}
-}
-{}
-
-__AUTO__(OPAuto, "OP")
-SEQUENCE {
-  START2(92.5_in_, 144.54_in_, 0_deg_), DRIVE_PT(CS2, END_BUMPC1_PT, BUMP),
-      TRACK(), INTAKE(HoptakeState::kIntake),
-      DRIVE_PT_TANK(CS2, P1C1_INTAKE_PT, NORM),
-      DRIVE_PT_TANK(CS2, P2C1_INTAKE_PT, NORM),
-      DRIVE_PT_TANK(CS2, P3C1_INTAKE_PT_OP, NORM), TRACK(),
-      DRIVE_PT(CS2, P1C1_INTAKE_PT, NORM), INTAKE(HoptakeState::kBump),
-      DRIVE_PT(CS2, END_BUMPC1_PT, NORM), TRACK(),
-      DRIVE_PT(CS2, START_BUMPC1_PT, BUMP),
-      PARALLEL_DEADLINE(WAIT{1_s}, SHOOT()),
       DRIVE_PT(CS2, START_BUMPC23_PT, BUMP), INTAKE(HoptakeState::kIntake),
       frc2::ConditionalCommand(
           frc2::ParallelDeadlineGroup(
@@ -246,6 +229,74 @@ SEQUENCE {
 }
 {}
 
+__AUTO__(OPAuto, "OP")
+SEQUENCE {
+  START2(92.5_in_, 144.54_in_, 0_deg_),
+      PARALLEL_DEADLINE(DRIVE_PT(CS2, END_BUMPC1_PT, NORM),
+          SEQUENCE(WAIT{0.25_s}, INTAKE(HoptakeState::kIntake))),
+      INTAKE(HoptakeState::kIntake), DRIVE_PT_TANK(CS2, P1C1_INTAKE_PT, NORM),
+      TRACK(), DRIVE_PT_TANK(CS2, P2C1_INTAKE_PT, NORM),
+      DRIVE_PT_TANK(CS2, P3C1_INTAKE_PT, NORM), TRACK(),
+      DRIVE_PT(CS2, P1C1_INTAKE_PT, NORM), INTAKE(HoptakeState::kBump),
+      DRIVE_PT(CS2, END_BUMPC1_PT, NORM), TRACK(),
+      DRIVE_PT(CS2, START_BUMPC1_PT, BUMP),
+      PARALLEL_DEADLINE(WAIT{3_s}, SHOOT()),
+      frc2::ConditionalCommand(
+          frc2::ParallelDeadlineGroup(
+              frc2::SequentialCommandGroup{
+                  DRIVE_PT_BEARING(CS2, DEPOT, SWIM), WAIT{5_s}},
+              SHOOT()),
+          frc2::ParallelDeadlineGroup(WAIT{10_s}, SHOOT()),
+          [left = is_left_side]() { return left; })
+}
+}
+{}
+
+__AUTO__(SafeOPAuto, "SafeOP")
+SEQUENCE {
+  START2(92.5_in_, 144.54_in_, 0_deg_),
+      PARALLEL_DEADLINE(DRIVE_PT(CS2, END_BUMPC1_PT, NORM),
+          SEQUENCE(WAIT{0.25_s}, INTAKE(HoptakeState::kIntake))),
+      INTAKE(HoptakeState::kIntake), DRIVE_PT_TANK(CS2, P1C1_INTAKE_PT, NORM),
+      TRACK(), DRIVE_PT_TANK(CS2, P2C1_INTAKE_PT, NORM),
+      DRIVE_PT_TANK(CS2, P3C1_INTAKE_PT_SAFEOP, NORM), TRACK(),
+      DRIVE_PT(CS2, P1C1_INTAKE_PT, NORM), INTAKE(HoptakeState::kBump),
+      DRIVE_PT(CS2, END_BUMPC1_PT, NORM), TRACK(),
+      DRIVE_PT(CS2, START_BUMPC1_PT, BUMP),
+      PARALLEL_DEADLINE(WAIT{3_s}, SHOOT()),
+      frc2::ConditionalCommand(
+          frc2::ParallelDeadlineGroup(
+              frc2::SequentialCommandGroup{
+                  DRIVE_PT_BEARING(CS2, DEPOT, SWIM), WAIT{5_s}},
+              SHOOT()),
+          frc2::ParallelDeadlineGroup(WAIT{10_s}, SHOOT()),
+          [left = is_left_side]() { return left; })
+}
+}
+{}
+
+__AUTO__(Center8, "C8")
+SEQUENCE {
+  START2(157.8_in_, 144.54_in_, 0_deg_), DRIVE_PT(CS2, CENTER8_SHOT, NORM),
+      PARALLEL_DEADLINE(WAIT{10_s}, SHOOT()),
+}
+}
+{}
+
+__AUTO__(Center8Depot, "C8D")
+SEQUENCE {
+  START2(157.8_in_, 144.54_in_, 0_deg_), DRIVE_PT(CS2, CENTER8_SHOT, NORM),
+      PARALLEL_DEADLINE(WAIT{2.5_s}, SHOOT()), INTAKE(HoptakeState::kIntake),
+      frc2::ConditionalCommand(
+          frc2::ParallelDeadlineGroup(
+              frc2::SequentialCommandGroup{
+                  DRIVE_PT_BEARING(CS2, DEPOT, SWIM), WAIT{5_s}},
+              SHOOT()),
+          frc2::ParallelDeadlineGroup(WAIT{10_s}, SHOOT()),
+          [left = is_left_side]() { return left; })
+}
+}
+{}
 /***********************
 | --------------------- |
 | AUTONOMOUS SEQUENCES  |

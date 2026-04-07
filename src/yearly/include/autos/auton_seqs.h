@@ -32,3 +32,21 @@ class OPAuto : public funkit::robot::GenericCommandGroup<RobotContainer, OPAuto,
 public:
   OPAuto(RobotContainer& container, bool is_blue_side, bool is_left_side);
 };
+
+class SafeOPAuto : public funkit::robot::GenericCommandGroup<RobotContainer, SafeOPAuto,
+                   frc2::SequentialCommandGroup> {
+public:
+  SafeOPAuto(RobotContainer& container, bool is_blue_side, bool is_left_side);
+};
+
+class Center8 : public funkit::robot::GenericCommandGroup<RobotContainer,
+                    Center8, frc2::SequentialCommandGroup> {
+public:
+  Center8(RobotContainer& container, bool is_blue_side, bool is_left_side);
+};
+
+class Center8Depot : public funkit::robot::GenericCommandGroup<RobotContainer,
+                    Center8Depot, frc2::SequentialCommandGroup> {
+public:
+  Center8Depot(RobotContainer& container, bool is_blue_side, bool is_left_side);
+};
