@@ -1,5 +1,6 @@
 #include "subsystems/hardware/hoptake/intake.h"
 
+#include "funkit/control/calculators/CircuitResistanceCalculator.h"
 #include "funkit/control/config/genome.h"
 #include "ports.h"
 
@@ -35,7 +36,9 @@ void IntakeSubsystem::Setup() {
 
   DefLinearSys intake_plant(def_bldc, 1,
       20_rot_ / 12_rot_ * 1_rad_ / 2.0625_in_, 0.0_mps2_, 1.0_kg_, 0.5_N_,
-      0.5_N_ / 700_radps_, 20_ms_);
+      0.5_N_ / 700_radps_, 20_ms_,
+      funkit::control::calculators::CircuitResistanceCalculator::calculate(
+          inch_t{70}, funkit::control::calculators::WireGauge::ten_gauge, 0));
 
   esc_.Setup(genome_backup, intake_plant);
 

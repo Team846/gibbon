@@ -361,6 +361,22 @@ template <> inline mps_t HigherMotorController::GetVelocity<mps_t>() {
   }
 }
 
+template <> inline rpm_t HigherMotorController::GetVelocity<rpm_t>() {
+  if (!plant_.has_value()) {
+    throw std::runtime_error("Plant must be set before using GetVelocity");
+  }
+
+  auto response =
+      MonkeyMaster::Read(slot_id_, hardware::ReadType::kReadVelocity);
+  radps_t velocity_native{response};
+
+  if (auto* arm = std::get_if<pdcsu::util::DefArmSys>(&plant_.value())) {
+    return arm->toReal(velocity_native);
+  } else {
+    throw std::runtime_error("GetVelocity<rpm_t> requires DefArmSys plant");
+  }
+}
+
 template <> inline radps_t HigherMotorController::GetVelocity<radps_t>() {
   if (!plant_.has_value()) {
     throw std::runtime_error("Plant must be set before using GetVelocity");

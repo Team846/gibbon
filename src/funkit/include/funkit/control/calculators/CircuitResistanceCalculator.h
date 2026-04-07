@@ -15,13 +15,20 @@ struct KnownResistances {
 
   static constexpr pdcsu::units::ohm_t kConnectorResistance{0.0006};
 
+  static constexpr ohms_per_meter_t kTenGaugeResistance{0.00328};
   static constexpr ohms_per_meter_t kTwelveGaugeResistance{0.00521};
   static constexpr ohms_per_meter_t kFourteenGaugeResistance{0.00829};
   static constexpr ohms_per_meter_t kSixteenGaugeResistance{0.0132};
   static constexpr ohms_per_meter_t kEighteenGaugeResistance{0.0209};
 };
 
-enum WireGauge { twelve_gauge, fourteen_gauge, sixteen_gauge, eighteen_gauge };
+enum WireGauge {
+  ten_gauge,
+  twelve_gauge,
+  fourteen_gauge,
+  sixteen_gauge,
+  eighteen_gauge
+};
 
 class CircuitResistanceCalculator {
 public:
@@ -30,6 +37,9 @@ public:
       unsigned int num_connectors) {
     ohms_per_meter_t resistance_per_meter;
     switch (gauge) {
+    case ten_gauge:
+      resistance_per_meter = KnownResistances::kTenGaugeResistance;
+      break;
     case twelve_gauge:
       resistance_per_meter = KnownResistances::kTwelveGaugeResistance;
       break;

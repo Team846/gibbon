@@ -7,6 +7,7 @@
 #include "calculators/AllianceShiftCalculator.h"
 #include "calculators/ShootingCalculator.h"
 #include "funkit/math/fieldpoints.h"
+#include <iostream>
 
 ScorerCommand::ScorerCommand(RobotContainer &container)
     : funkit::robot::GenericCommand<RobotContainer, ScorerCommand>{
@@ -18,12 +19,25 @@ void ScorerCommand::OnInit() {}
 
 void ScorerCommand::Periodic() {
   ControlInputReadings ci_readings_{container_.control_input_.GetReadings()};
-  ScorerSSTarget target{};
+  ScorerSSTarget target{}; 
   ShootingCalculatorOutputs shooting_outputs;
   bool mirror_ =
       frc::DriverStation::GetAlliance() == frc::DriverStation::Alliance::kBlue;
 
-  if (ci_readings_.pass_mode) {
+  
+  double x_override = container_.drivetrain_.GetPreferenceValue_double("location/y_location");
+  double y_override = container_.drivetrain_.GetPreferenceValue_double("location/x_location");
+  Graph("a", false);
+  if ((x_override <= 650) && ((y_override) <= 316)) {
+    Graph("a", true);
+    std::cout << "Entering manual turret aim" << std::endl;
+    pdcsu::util::math::Vector2D pass_point{
+        inch_t{x_override}, inch_t{y_override}};
+    funkit::math::FieldPoint field_point = {pass_point, 0_deg_, 0_fps_};
+    field_point = field_point.mirrorOnlyY(mirror_);
+    ShootingCalculator::target = field_point.point;
+    // shooting_outputs.is_valid = true;
+  } else if (ci_readings_.pass_mode) {
     pdcsu::util::math::Vector2D pass_point{-1000_in_, -1000_in_};
     if (container_.drivetrain_.GetReadings().estimated_pose.position[0] <
         158.5_in_) {
@@ -86,11 +100,17 @@ void ScorerCommand::Periodic() {
         container_.drivetrain_.GetReadings().estimated_pose.position[1] >
             141.61_in_) {
       shooting_outputs.is_valid = false;
+      if ((x_override <= 650) && ((y_override) <= 316)) {
+        shooting_outputs.is_valid = true;
+      }
     }
     if (mirror_ &&
         container_.drivetrain_.GetReadings().estimated_pose.position[1] <
             509.61_in_) {
       shooting_outputs.is_valid = false;
+      if ((x_override <= 650) && ((y_override) <= 316)) {
+        shooting_outputs.is_valid = true;
+      }
     }
   }
 
@@ -109,7 +129,7 @@ void ScorerCommand::Periodic() {
           !frc::DriverStation::IsTest() &&
           container_.drivetrain_.variance < 16.0 &&
           !container_.scorer_ss_.turret.GetReadings()
-               .about_to_wrap_ /* && AllianceShiftCalculator::shot_valid*/) ||  // TODO fix variance case
+              .about_to_wrap_ /* && AllianceShiftCalculator::shot_valid*/) ||  // TODO fix variance case
       ci_readings_.force_shoot ||
       (ci_readings_.pass_mode &&
           !container_.scorer_ss_.turret.GetReadings().about_to_wrap_ &&

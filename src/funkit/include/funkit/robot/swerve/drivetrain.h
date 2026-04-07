@@ -105,7 +105,7 @@ public:
   void SetPosition(Vector2D position);
   void SetOdomBearing(pdcsu::units::degree_t odom_bearing);
 
-  void SetCANCoderOffsets();
+  void SetCANCoderOffsets(bool offset_90 = false);
 
   pdcsu::units::degps_t ApplyBearingPID(pdcsu::units::degree_t target_bearing,
       pdcsu::units::radps_t dAE = 0.0_radps_);

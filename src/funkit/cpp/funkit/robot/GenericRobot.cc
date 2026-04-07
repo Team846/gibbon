@@ -36,7 +36,7 @@ GenericRobot::GenericRobot(GenericRobotContainer* container)
 
   HAL_SetNotifierName(notifier_, "Robot", &status);
 
-  RegisterPreference("sim_fms", false);
+  RegisterPreference("override_fms", false);
   RegisterPreference("update_tick_1", 100);
   RegisterPreference("update_tick_2", 201);
   RegisterPreference("update_reset_tick", 200);
@@ -141,8 +141,8 @@ void GenericRobot::StartCompetition() {
     }
 
     funkit::base::Loggable::SetFMSConnected(
-        (word.IsFMSAttached() && frc::RobotBase::IsReal()) ||
-        GetPreferenceValue_bool("sim_fms"));
+        (word.IsFMSAttached() && frc::RobotBase::IsReal()) &&
+        !GetPreferenceValue_bool("override_fms"));
     Graph("fms_connected", word.IsFMSAttached(), true);
 
     if (last_mode_ != mode) {

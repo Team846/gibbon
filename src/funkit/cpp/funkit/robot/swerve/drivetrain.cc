@@ -79,6 +79,8 @@ DrivetrainSubsystem::DrivetrainSubsystem(DrivetrainConfigs configs)
   RegisterPreference("steer_lag", pdcsu::units::second_t{0.05});
   RegisterPreference("bearing_latency", pdcsu::units::second_t{0.0});
 
+  RegisterPreference("location/x_location", 0.0);
+  RegisterPreference("location/y_location", 0.0);
   RegisterPreference("pose_estimator/override", false);
 
   RegisterPreference("pitch_roll_thresh", pdcsu::units::degree_t{10});
@@ -245,9 +247,9 @@ void DrivetrainSubsystem::SetOdomBearing(pdcsu::units::degree_t odom_bearing) {
   odometry_.SetOdomBearing(odom_bearing);
 }
 
-void DrivetrainSubsystem::SetCANCoderOffsets() {
+void DrivetrainSubsystem::SetCANCoderOffsets(bool offset_90) {
   for (auto& module : modules_) {
-    module->SetCANCoderOffset();
+    module->SetCANCoderOffset(offset_90);
   }
 }
 

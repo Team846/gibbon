@@ -47,6 +47,11 @@ void FunkyRobot::OnInitialize() {
   frc::SmartDashboard::PutData("set_cancoder_offsets",
       new funkit::wpilib::NTAction(
           [this] { container_.drivetrain_.SetCANCoderOffsets(); }));
+
+  frc::SmartDashboard::PutData("set_cancoder_offsets_90_",
+      new funkit::wpilib::NTAction(
+          [this] { container_.drivetrain_.SetCANCoderOffsets(true); }));
+
   frc::SmartDashboard::PutData(
       "zero_bearing", new funkit::wpilib::NTAction(
                           [this] { container_.drivetrain_.ZeroBearing(); }));
