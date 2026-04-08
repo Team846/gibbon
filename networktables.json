@@ -1924,7 +1924,7 @@
   {
     "name": "/Preferences/Robot/sim_fms",
     "type": "boolean",
-    "value": false,
+    "value": true,
     "properties": {
       "persistent": true
     }

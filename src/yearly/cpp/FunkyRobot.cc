@@ -2,6 +2,7 @@
 
 #include <cameraserver/CameraServer.h>
 #include <frc/DSControlWord.h>
+#include <frc/DriverStation.h>
 #include <frc/Filesystem.h>
 #include <frc/RobotBase.h>
 #include <frc/RobotController.h>
@@ -11,6 +12,8 @@
 #include <frc2/command/button/Trigger.h>
 #include <hal/Notifier.h>
 #include <networktables/NetworkTableInstance.h>
+
+#include <string>
 
 #include "autos/auton_seqs.h"
 #include "calculators/AllianceShiftCalculator.h"
@@ -207,16 +210,21 @@ void FunkyRobot::OnPeriodic() {
 
   bool isDisabled = frc::DriverStation::IsDisabled();
 
+  bool is_blue_alliance = frc::DriverStation::GetAlliance() ==
+                          frc::DriverStation::Alliance::kBlue;
+  Graph("AllianceColor", is_blue_alliance ? std::string("Blue") : std::string("Red"), true);
+
   AllianceShiftOutputs shift_data{};
 
   if (!isDisabled) {
     shift_data = AllianceShiftCalculator::Calculate();
     Graph("game_data/shift_active", shift_data.our_hub_active, true);
     Graph("game_data/active_first", shift_data.won_auto, true);
-    Graph("game_data/shift", shift_data.shift);
+    Graph("game_data/shift", shift_data.shift, true);
     Graph("game_data/until_flip", shift_data.until_flip, true);
     Graph("game_data/our_time_left", shift_data.our_time_left, true);
   }
+  Graph("game_data/Match_Timer", true, true);
 
   if (container_.control_input_.GetReadings().die_robot_die)
     LEDsLogic::SetLEDsState(&container_, kLEDsKillRobot);
