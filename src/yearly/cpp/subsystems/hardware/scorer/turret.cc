@@ -61,6 +61,7 @@ TurretSubsystem::TurretSubsystem()
   RegisterPreference("wrap/positive", 220_deg_);
   RegisterPreference("wrap/negative", -240_deg_);
   RegisterPreference("wrap/project_stop", 0.1_s_);
+  RegisterPreference("wrap/hysteresis", 5_deg_);
 
   RegisterPreference("accel_factor", 4.0);
   RegisterPreference("accel_alpha", 0.3);
@@ -247,20 +248,29 @@ void TurretSubsystem::WriteToHardware(TurretTarget target) {
       GetPreferenceValue_unit_type<degree_t>("wrap/positive");
   degree_t wrap_negative =
       GetPreferenceValue_unit_type<degree_t>("wrap/negative");
-  if (target.pos_ > wrap_positive) {
-    double n = std::floor((target.pos_ - wrap_positive).value() / 360.0);
-    target.pos_ -= degree_t{360.0 * n};
-  }
-  if (target.pos_ < wrap_negative) {
-    double n = std::floor((wrap_negative - target.pos_).value() / 360.0);
-    target.pos_ += degree_t{360.0 * n};
-  }
+  degree_t wrap_hysteresis =
+      u_abs(GetPreferenceValue_unit_type<degree_t>("wrap/hysteresis"));
 
-  while (target.pos_ > wrap_positive) {
-    target.pos_ -= 360_deg_;
-  }
-  while (target.pos_ < wrap_negative) {
-    target.pos_ += 360_deg_;
+  radian_t current_pos = esc_.GetPosition<radian_t>();
+  target.pos_ = current_pos +
+                funkit::math::CoterminalDifference(target.pos_, current_pos);
+
+  if (target.pos_ > wrap_positive) {
+    degree_t diff = target.pos_ - wrap_positive;
+    degree_t wrapped = target.pos_ - 360_deg_;
+    if (diff <= wrap_hysteresis || wrapped < wrap_negative) {
+      target.pos_ = wrap_positive;
+    } else {
+      target.pos_ = wrapped;
+    }
+  } else if (target.pos_ < wrap_negative) {
+    degree_t diff = wrap_negative - target.pos_;
+    degree_t wrapped = target.pos_ + 360_deg_;
+    if (diff <= wrap_hysteresis || wrapped > wrap_positive) {
+      target.pos_ = wrap_negative;
+    } else {
+      target.pos_ = wrapped;
+    }
   }
 
   Graph("target/pos", target.pos_, true);
