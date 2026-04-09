@@ -242,7 +242,7 @@
   {
     "name": "/Preferences/SwerveDrivetrain/max_omega (s^-1 deg)",
     "type": "double",
-    "value": 180.0,
+    "value": 20.0,
     "properties": {
       "persistent": true
     }

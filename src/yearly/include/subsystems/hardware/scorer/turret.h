@@ -64,4 +64,6 @@ private:
   radps2_t accel_est_ = 0.0_radps2_;
 
   size_t zero_walk_ctr_ = 0;
+
+  degree_t wrap_offset_ = 0.0_deg_;
 };
