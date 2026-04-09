@@ -43,6 +43,7 @@
     "name": "/Preferences/SwerveDrivetrain/FR/cancoder_offset_ (deg)",
     "type": "double",
     "value": -115.22460937500001,
+    "value": -115.22460937500001,
     "properties": {
       "persistent": true
     }
@@ -50,6 +51,7 @@
   {
     "name": "/Preferences/SwerveDrivetrain/FL/cancoder_offset_ (deg)",
     "type": "double",
+    "value": 166.025390625,
     "value": 166.025390625,
     "properties": {
       "persistent": true
@@ -59,6 +61,7 @@
     "name": "/Preferences/SwerveDrivetrain/BL/cancoder_offset_ (deg)",
     "type": "double",
     "value": 50.9765625,
+    "value": 50.9765625,
     "properties": {
       "persistent": true
     }
@@ -67,6 +70,7 @@
     "name": "/Preferences/SwerveDrivetrain/BR/cancoder_offset_ (deg)",
     "type": "double",
     "value": -149.0625,
+    "value": -149.0625,
     "properties": {
       "persistent": true
     }
@@ -74,6 +78,7 @@
   {
     "name": "/Preferences/SwerveDrivetrain/drive_genome/motor_current_limit (A)",
     "type": "double",
+    "value": 80.0,
     "value": 80.0,
     "properties": {
       "persistent": true
@@ -354,6 +359,7 @@
   {
     "name": "/Preferences/SwerveDrivetrain/drive_to_point/kC",
     "type": "double",
+    "value": 1.0,
     "value": 1.0,
     "properties": {
       "persistent": true
@@ -1123,6 +1129,7 @@
     "name": "/Preferences/turret/encoder/offset1 (rot)",
     "type": "double",
     "value": -0.16796875,
+    "value": -0.16796875,
     "properties": {
       "persistent": true
     }
@@ -1130,6 +1137,7 @@
   {
     "name": "/Preferences/turret/encoder/offset2 (rot)",
     "type": "double",
+    "value": 0.2587890625,
     "value": 0.2587890625,
     "properties": {
       "persistent": true
@@ -1163,6 +1171,7 @@
     "name": "/Preferences/turret/wrap/positive (deg)",
     "type": "double",
     "value": 220.0,
+    "value": 220.0,
     "properties": {
       "persistent": true
     }
@@ -1170,6 +1179,7 @@
   {
     "name": "/Preferences/turret/wrap/negative (deg)",
     "type": "double",
+    "value": -260.0,
     "value": -260.0,
     "properties": {
       "persistent": true
@@ -1243,6 +1253,7 @@
     "name": "/Preferences/DyeRotor/speed_idle (min^-1 rot)",
     "type": "double",
     "value": -35.0,
+    "value": -35.0,
     "properties": {
       "persistent": true
     }
@@ -1298,6 +1309,7 @@
   {
     "name": "/Preferences/scorer_ss/point_blank/shooter_vel (ft s^-1)",
     "type": "double",
+    "value": 33.76,
     "value": 33.76,
     "properties": {
       "persistent": true
@@ -1595,6 +1607,7 @@
     "name": "/Preferences/DyeRotor/genome/smart_current_limit (A)",
     "type": "double",
     "value": 15.0,
+    "value": 15.0,
     "properties": {
       "persistent": true
     }
@@ -1811,6 +1824,7 @@
     "name": "/Preferences/ShootingCalculator/swim/tofGain",
     "type": "double",
     "value": 0.25,
+    "value": 0.25,
     "properties": {
       "persistent": true
     }
@@ -1949,6 +1963,7 @@
     "name": "/Preferences/SwerveDrivetrain/april_tags/bearing_corr_gain",
     "type": "double",
     "value": 0.002,
+    "value": 0.002,
     "properties": {
       "persistent": true
     }
@@ -1967,6 +1982,106 @@
     "value": 1.2,
     "properties": {
       "persistent": true
+    }
+  },
+  {
+    "name": "/Preferences/Robot/override_fms",
+    "type": "boolean",
+    "value": false,
+    "properties": {
+      "persistent": true
+    }
+  },
+  {
+    "name": "/Preferences/DyeRotor/stall_threshold_rpm (min^-1 rot)",
+    "type": "double",
+    "value": 10.0,
+    "properties": {
+      "persistent": true
+    }
+  },
+  {
+    "name": "/Preferences/DyeRotor/pos_thresh (deg)",
+    "type": "double",
+    "value": 180.0,
+    "properties": {
+      "persistent": true
+    }
+  },
+  {
+    "name": "/Preferences/SwerveDrivetrain/location/x_location",
+    "type": "double",
+    "value": 476.6809997546624,
+    "properties": {
+      "persistent": true
+    }
+  },
+  {
+    "name": "/Preferences/SwerveDrivetrain/location/y_location",
+    "type": "double",
+    "value": 157.53567440989136,
+    "properties": {
+      "persistent": true
+    }
+  },
+  {
+    "name": "/Preferences/location/x_location",
+    "type": "double",
+    "value": 0.0,
+    "properties": {
+      "cached": true,
+      "persistent": true,
+      "retained": true
+    }
+  },
+  {
+    "name": "/Preferences/location/y_location",
+    "type": "double",
+    "value": 0.0,
+    "properties": {
+      "cached": true,
+      "persistent": true,
+      "retained": true
+    }
+  },
+  {
+    "name": "/Preferences/SwerveDrivetrain/x_location",
+    "type": "double",
+    "value": 0.0,
+    "properties": {
+      "cached": true,
+      "persistent": true,
+      "retained": true
+    }
+  },
+  {
+    "name": "/Preferences/SwerveDrivetrain/y_location",
+    "type": "double",
+    "value": 0.0,
+    "properties": {
+      "cached": true,
+      "persistent": true,
+      "retained": true
+    }
+  },
+  {
+    "name": "/Preferences/HubAim/x_offset",
+    "type": "double",
+    "value": 0.0,
+    "properties": {
+      "cached": true,
+      "persistent": true,
+      "retained": true
+    }
+  },
+  {
+    "name": "/Preferences/HubAim/y_offset",
+    "type": "double",
+    "value": 0.0,
+    "properties": {
+      "cached": true,
+      "persistent": true,
+      "retained": true
     }
   }
 ]

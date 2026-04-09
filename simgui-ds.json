@@ -24,13 +24,17 @@
       "axisConfig": [
         {
           "decKey": 264,
+          "decKey": 264,
           "decayRate": 0.5,
+          "incKey": 265,
           "incKey": 265,
           "keyRate": 0.5
         },
         {
           "decKey": 263,
+          "decKey": 263,
           "decayRate": 0.5,
+          "incKey": 262,
           "incKey": 262,
           "keyRate": 0.5
         },
@@ -121,7 +125,9 @@
   "robotJoysticks": [
     {
       "guid": "Keyboard0"
+      "guid": "Keyboard0"
     },
+    {},
     {},
     {},
     {

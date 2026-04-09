@@ -16,7 +16,7 @@ const degree_t kShotAngleMin = 50_deg_;
 const foot_t kShotMaxDist = 24_ft_;
 const foot_t kPointblankDistance = 41.925_in_;
 
-const foot_t fullEffortDistance = 235.0_in_;
+foot_t fullEffortDistance = 235.0_in_;
 
 const degree_t kSWIM_max_angle_reduc = 8_deg_;
 const auto kSWIM_reduc_accum_fac = 0_deg_ / (15_fps_ * 1_s_);
@@ -59,6 +59,9 @@ fps_t ShootingCalculator::GetBaseVelocity(
   UnitCompound<fps_t, fps_t> physics_vel_sksq =
       16.0_fps2_ * shot_distance * shot_distance / denom;
   return u_sqrt(physics_vel_sksq) / u_cos(shot_angle);
+}
+void ShootingCalculator::setFullEffortDistance(foot_t maxDistance) {
+    fullEffortDistance = maxDistance;
 }
 
 void ShootingCalculator::Calculate(
@@ -171,8 +174,8 @@ void ShootingCalculator::Calculate(
       1_rad_ * (cross_product / distance_squared), -300_degps_, 300_degps_);
 
   /* Determine shot validity and whether to apply full effort */
-  outputs_.is_valid =
-      delta_mag >= kPointblankDistance && delta_mag <= fullEffortDistance;
+  outputs_.is_valid = 
+    delta_mag >= kPointblankDistance && delta_mag <= fullEffortDistance;
 
   if (delta_mag > fullEffortDistance) {
     if (effort_when_invald) {
