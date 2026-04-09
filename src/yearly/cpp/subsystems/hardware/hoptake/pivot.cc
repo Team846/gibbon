@@ -27,7 +27,7 @@ void PivotSubsystem::Setup() {
       .smart_current_limit = 200_A_,
       .voltage_compensation = 12_V_,
       .brake_mode = false,
-      .gains = {.kP = 0.007, .kI = -0.03, .kD = 0.0, .kF = -0.12}};
+      .gains = {.kP = 0.007, .kI = -0.03, .kD = 0.0, .kF = -0.03}};
 
   funkit::control::config::SubsystemGenomeHelper::CreateGenomePreferences(
       *this, "genome", genome_backup);

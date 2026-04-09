@@ -10,9 +10,9 @@ IntakeSubsystem::IntakeSubsystem()
     : GenericSubsystem("Intake"),
       esc_{base::TALON_FX_KRAKENX60, ports::intake_::kIntakeParams} {
   RegisterPreference("speed_idle", 15.0_fps_);
-  RegisterPreference("speed_intake", 55.0_fps_);
-  RegisterPreference("speed_evac", -25.0_fps_);
-  RegisterPreference("dynamic_intake_gain", 1.0);
+  RegisterPreference("speed_intake", 56.0_fps_);
+  RegisterPreference("speed_evac", -35.0_fps_);
+  RegisterPreference("dynamic_intake_gain", 1.875);
 }
 
 IntakeSubsystem::~IntakeSubsystem() = default;
@@ -22,7 +22,7 @@ void IntakeSubsystem::Setup() {
       .smart_current_limit = 80_A_,
       .voltage_compensation = 12_V_,
       .brake_mode = true,
-      .gains = {.kP = 0.001, .kI = 0.0, .kD = 0.0, .kF = 0.00127}};
+      .gains = {.kP = 0.0005, .kI = 0.0, .kD = 0.0, .kF = 0.00127}};
 
   funkit::control::config::SubsystemGenomeHelper::CreateGenomePreferences(
       *this, "genome", genome_backup);

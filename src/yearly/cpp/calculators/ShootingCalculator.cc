@@ -30,9 +30,9 @@ void ShootingCalculator::Setup() {
   loggable_opt->RegisterPreference("swim/twistGain", -0.074);
   loggable_opt->RegisterPreference("swim/tofGain", 0.023);
   loggable_opt->RegisterPreference("swim/twistVelCompensation", 0.54);
-  loggable_opt->RegisterPreference("swim/yawRateFactor", 1.01);
-  loggable_opt->RegisterPreference("swim/drawTwdDriver", 0.25);
-  loggable_opt->RegisterPreference("pass/passGain", 1.07);
+  loggable_opt->RegisterPreference("swim/yawRateFactor", 1.35);
+  loggable_opt->RegisterPreference("swim/drawTwdDriver", 0.0);
+  loggable_opt->RegisterPreference("pass/passGain", 1.35);
 }
 
 double ShootingCalculator::GetYawRateFactor() {

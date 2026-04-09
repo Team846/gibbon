@@ -36,8 +36,8 @@ HoodSubsystem::HoodSubsystem()
       esc_{base::SPARK_MAX_NEO550, ports::hood_::kHoodParams} {
   RegisterPreference("icnor/IPG", 1.0);
   RegisterPreference("icnor/friction_nm", 0.0_Nm_);
-  RegisterPreference("encoder/offset", 0.0_rot_);
-  RegisterPreference("encoder/scale", 1.0);
+  RegisterPreference("encoder/offset", 0.049_rot_);
+  RegisterPreference("encoder/scale", 1.08);
   RegisterPreference("tolerance", 3.0_deg_);
 }
 

@@ -17,7 +17,7 @@ ShooterSubsystem::ShooterSubsystem()
 
   RegisterPreference("coast_down_tolerance", 5_fps_);
 
-  RegisterPreference("accel_factor", 3.0);
+  RegisterPreference("accel_factor", 2.0);
   RegisterPreference("accel_alpha", 0.3);
 }
 
@@ -28,7 +28,7 @@ void ShooterSubsystem::Setup() {
       .smart_current_limit = 140_A_,
       .voltage_compensation = 12_V_,
       .brake_mode = true,
-      .gains = {.kP = 0.45, .kI = 0.0, .kD = 0.0, .kF = 0.118}};
+      .gains = {.kP = 0.6, .kI = 0.0, .kD = 0.0, .kF = 0.1185}};
 
   funkit::control::config::SubsystemGenomeHelper::CreateGenomePreferences(
       *this, "genome", genome_backup);

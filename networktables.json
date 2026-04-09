@@ -34,7 +34,7 @@
   {
     "name": "/Preferences/SwerveDrivetrain/steer_genome/brake_mode",
     "type": "boolean",
-    "value": false,
+    "value": true,
     "properties": {
       "persistent": true
     }
@@ -42,7 +42,7 @@
   {
     "name": "/Preferences/SwerveDrivetrain/FR/cancoder_offset_ (deg)",
     "type": "double",
-    "value": -115.22460937500001,
+    "value": -114.0125,
     "properties": {
       "persistent": true
     }
@@ -50,7 +50,7 @@
   {
     "name": "/Preferences/SwerveDrivetrain/FL/cancoder_offset_ (deg)",
     "type": "double",
-    "value": 166.025390625,
+    "value": 166.8828125,
     "properties": {
       "persistent": true
     }
@@ -58,7 +58,7 @@
   {
     "name": "/Preferences/SwerveDrivetrain/BL/cancoder_offset_ (deg)",
     "type": "double",
-    "value": 50.9765625,
+    "value": 50.8125,
     "properties": {
       "persistent": true
     }
@@ -66,7 +66,7 @@
   {
     "name": "/Preferences/SwerveDrivetrain/BR/cancoder_offset_ (deg)",
     "type": "double",
-    "value": -149.0625,
+    "value": -149.150390625,
     "properties": {
       "persistent": true
     }
@@ -74,7 +74,7 @@
   {
     "name": "/Preferences/SwerveDrivetrain/drive_genome/motor_current_limit (A)",
     "type": "double",
-    "value": 80.0,
+    "value": 60.0,
     "properties": {
       "persistent": true
     }
@@ -82,15 +82,7 @@
   {
     "name": "/Preferences/SwerveDrivetrain/drive_genome/smart_current_limit (A)",
     "type": "double",
-    "value": 80.0,
-    "properties": {
-      "persistent": true
-    }
-  },
-  {
-    "name": "/Preferences/SwerveDrivetrain/SwerveDrivetrain/drive_genome/voltage_compensation (m^2 kg s^-3 A^-1)",
-    "type": "double",
-    "value": 16.0,
+    "value": 60.0,
     "properties": {
       "persistent": true
     }
@@ -138,7 +130,7 @@
   {
     "name": "/Preferences/SwerveDrivetrain/steer_genome/motor_current_limit (A)",
     "type": "double",
-    "value": 40.0,
+    "value": 20.0,
     "properties": {
       "persistent": true
     }
@@ -146,15 +138,7 @@
   {
     "name": "/Preferences/SwerveDrivetrain/steer_genome/smart_current_limit (A)",
     "type": "double",
-    "value": 40.0,
-    "properties": {
-      "persistent": true
-    }
-  },
-  {
-    "name": "/Preferences/SwerveDrivetrain/SwerveDrivetrain/steer_genome/voltage_compensation (m^2 kg s^-3 A^-1)",
-    "type": "double",
-    "value": 8.0,
+    "value": 30.0,
     "properties": {
       "persistent": true
     }
@@ -242,7 +226,7 @@
   {
     "name": "/Preferences/SwerveDrivetrain/max_omega (s^-1 deg)",
     "type": "double",
-    "value": 20.0,
+    "value": 180.0,
     "properties": {
       "persistent": true
     }
@@ -250,7 +234,7 @@
   {
     "name": "/Preferences/SwerveDrivetrain/max_omega_cut (s^-1 deg)",
     "type": "double",
-    "value": 90.0,
+    "value": 180.0,
     "properties": {
       "persistent": true
     }
@@ -354,7 +338,7 @@
   {
     "name": "/Preferences/SwerveDrivetrain/drive_to_point/kC",
     "type": "double",
-    "value": 1.0,
+    "value": 0.9,
     "properties": {
       "persistent": true
     }
@@ -427,166 +411,6 @@
     "name": "/Preferences/GPD/use_diff_thresh (in)",
     "type": "double",
     "value": 40.0,
-    "properties": {
-      "persistent": true
-    }
-  },
-  {
-    "name": "/Preferences/TurretTestSubsystem/offset1 (rot)",
-    "type": "double",
-    "value": 0.0,
-    "properties": {
-      "persistent": true
-    }
-  },
-  {
-    "name": "/Preferences/TurretTestSubsystem/offset2 (rot)",
-    "type": "double",
-    "value": 0.0,
-    "properties": {
-      "persistent": true
-    }
-  },
-  {
-    "name": "/Preferences/TurretTestSubsystem/min_rots (rot)",
-    "type": "double",
-    "value": -0.5,
-    "properties": {
-      "persistent": true
-    }
-  },
-  {
-    "name": "/Preferences/TurretTestSubsystem/max_rots (rot)",
-    "type": "double",
-    "value": 3.0,
-    "properties": {
-      "persistent": true
-    }
-  },
-  {
-    "name": "/Preferences/ictest/genome/motor_current_limit (A)",
-    "type": "double",
-    "value": 40.0,
-    "properties": {
-      "persistent": true
-    }
-  },
-  {
-    "name": "/Preferences/ictest/genome/smart_current_limit (A)",
-    "type": "double",
-    "value": 30.0,
-    "properties": {
-      "persistent": true
-    }
-  },
-  {
-    "name": "/Preferences/ictest/ictest/genome/voltage_compensation (m^2 kg s^-3 A^-1)",
-    "type": "double",
-    "value": 12.0,
-    "properties": {
-      "persistent": true
-    }
-  },
-  {
-    "name": "/Preferences/ictest/genome/brake_mode",
-    "type": "boolean",
-    "value": false,
-    "properties": {
-      "persistent": true
-    }
-  },
-  {
-    "name": "/Preferences/ictest/genome/gains/kP",
-    "type": "double",
-    "value": 0.0,
-    "properties": {
-      "persistent": true
-    }
-  },
-  {
-    "name": "/Preferences/ictest/genome/gains/kI",
-    "type": "double",
-    "value": 0.0,
-    "properties": {
-      "persistent": true
-    }
-  },
-  {
-    "name": "/Preferences/ictest/genome/gains/kD",
-    "type": "double",
-    "value": 0.0,
-    "properties": {
-      "persistent": true
-    }
-  },
-  {
-    "name": "/Preferences/ictest/genome/gains/kF",
-    "type": "double",
-    "value": 0.0,
-    "properties": {
-      "persistent": true
-    }
-  },
-  {
-    "name": "/Preferences/ictest/end_mass_lbs",
-    "type": "double",
-    "value": 12.0,
-    "properties": {
-      "persistent": true
-    }
-  },
-  {
-    "name": "/Preferences/ictest/circuit_resistance (m^2 kg s^-3 A^-2)",
-    "type": "double",
-    "value": 0.01,
-    "properties": {
-      "persistent": true
-    }
-  },
-  {
-    "name": "/Preferences/ictest/friction_newtons (m kg s^-2)",
-    "type": "double",
-    "value": 1.0,
-    "properties": {
-      "persistent": true
-    }
-  },
-  {
-    "name": "/Preferences/ictest/num_motors",
-    "type": "int",
-    "value": 2,
-    "properties": {
-      "persistent": true
-    }
-  },
-  {
-    "name": "/Preferences/ictest/viscous_damping",
-    "type": "double",
-    "value": 0.0,
-    "properties": {
-      "persistent": true
-    }
-  },
-  {
-    "name": "/Preferences/ictest/gear_ratio_in_per_rot",
-    "type": "double",
-    "value": 2.2146,
-    "properties": {
-      "persistent": true
-    }
-  },
-  {
-    "name": "/Preferences/ictest/ipg",
-    "type": "double",
-    "value": 1.0,
-    "properties": {
-      "persistent": true
-    }
-  },
-  {
-    "name": "/Preferences/Shooter/kP",
-    "type": "double",
-    "value": 1.0,
     "properties": {
       "persistent": true
     }
@@ -680,142 +504,6 @@
     }
   },
   {
-    "name": "/Preferences/Shooter/ShooterGenome/motor_current_limit (A)",
-    "type": "double",
-    "value": 45.0,
-    "properties": {
-      "persistent": true
-    }
-  },
-  {
-    "name": "/Preferences/Shooter/ShooterGenome/smart_current_limit (A)",
-    "type": "double",
-    "value": 45.0,
-    "properties": {
-      "persistent": true
-    }
-  },
-  {
-    "name": "/Preferences/Shooter/Shooter/ShooterGenome/voltage_compensation (m^2 kg s^-3 A^-1)",
-    "type": "double",
-    "value": 14.0,
-    "properties": {
-      "persistent": true
-    }
-  },
-  {
-    "name": "/Preferences/Shooter/ShooterGenome/brake_mode",
-    "type": "boolean",
-    "value": true,
-    "properties": {
-      "persistent": true
-    }
-  },
-  {
-    "name": "/Preferences/Shooter/ShooterGenome/gains/kP",
-    "type": "double",
-    "value": 0.0,
-    "properties": {
-      "persistent": true
-    }
-  },
-  {
-    "name": "/Preferences/Shooter/ShooterGenome/gains/kI",
-    "type": "double",
-    "value": 0.0,
-    "properties": {
-      "persistent": true
-    }
-  },
-  {
-    "name": "/Preferences/Shooter/ShooterGenome/gains/kD",
-    "type": "double",
-    "value": 0.0,
-    "properties": {
-      "persistent": true
-    }
-  },
-  {
-    "name": "/Preferences/Shooter/ShooterGenome/gains/kF",
-    "type": "double",
-    "value": 0.0,
-    "properties": {
-      "persistent": true
-    }
-  },
-  {
-    "name": "/Preferences/Shooter/shooter_kP",
-    "type": "double",
-    "value": 1.0,
-    "properties": {
-      "persistent": true
-    }
-  },
-  {
-    "name": "/Preferences/Shooter/genome/motor_current_limit (A)",
-    "type": "double",
-    "value": 120.0,
-    "properties": {
-      "persistent": true
-    }
-  },
-  {
-    "name": "/Preferences/Shooter/genome/smart_current_limit (A)",
-    "type": "double",
-    "value": 120.0,
-    "properties": {
-      "persistent": true
-    }
-  },
-  {
-    "name": "/Preferences/Shooter/Shooter/genome/voltage_compensation (m^2 kg s^-3 A^-1)",
-    "type": "double",
-    "value": 14.0,
-    "properties": {
-      "persistent": true
-    }
-  },
-  {
-    "name": "/Preferences/Shooter/genome/brake_mode",
-    "type": "boolean",
-    "value": true,
-    "properties": {
-      "persistent": true
-    }
-  },
-  {
-    "name": "/Preferences/Shooter/genome/gains/kP",
-    "type": "double",
-    "value": 0.0,
-    "properties": {
-      "persistent": true
-    }
-  },
-  {
-    "name": "/Preferences/Shooter/genome/gains/kI",
-    "type": "double",
-    "value": 0.0,
-    "properties": {
-      "persistent": true
-    }
-  },
-  {
-    "name": "/Preferences/Shooter/genome/gains/kD",
-    "type": "double",
-    "value": 0.0,
-    "properties": {
-      "persistent": true
-    }
-  },
-  {
-    "name": "/Preferences/Shooter/genome/gains/kF",
-    "type": "double",
-    "value": 0.0001,
-    "properties": {
-      "persistent": true
-    }
-  },
-  {
     "name": "/Preferences/SwerveDrivetrain/drive_genome/voltage_compensation (m^2 kg s^-3 A^-1)",
     "type": "double",
     "value": 16.0,
@@ -826,7 +514,7 @@
   {
     "name": "/Preferences/SwerveDrivetrain/steer_genome/voltage_compensation (m^2 kg s^-3 A^-1)",
     "type": "double",
-    "value": 8.0,
+    "value": 7.0,
     "properties": {
       "persistent": true
     }
@@ -904,14 +592,6 @@
     }
   },
   {
-    "name": "/Preferences/ictest/genome/voltage_compensation (m^2 kg s^-3 A^-1)",
-    "type": "double",
-    "value": 12.0,
-    "properties": {
-      "persistent": true
-    }
-  },
-  {
     "name": "/Preferences/ShootingCalculator/2ptvel/kPointBlank (ft s^-1)",
     "type": "double",
     "value": 25.0,
@@ -922,7 +602,7 @@
   {
     "name": "/Preferences/ShootingCalculator/2ptvel/kAdditive",
     "type": "double",
-    "value": 2.8,
+    "value": 4.35,
     "properties": {
       "persistent": true
     }
@@ -960,49 +640,9 @@
     }
   },
   {
-    "name": "/Preferences/ictest/offset1 (rot)",
-    "type": "double",
-    "value": -0.281494140625,
-    "properties": {
-      "persistent": true
-    }
-  },
-  {
-    "name": "/Preferences/ictest/offset2 (rot)",
-    "type": "double",
-    "value": 0.278564453125,
-    "properties": {
-      "persistent": true
-    }
-  },
-  {
-    "name": "/Preferences/ictest/min_rots (rot)",
-    "type": "double",
-    "value": -0.5,
-    "properties": {
-      "persistent": true
-    }
-  },
-  {
-    "name": "/Preferences/ictest/max_rots (rot)",
-    "type": "double",
-    "value": 3.0,
-    "properties": {
-      "persistent": true
-    }
-  },
-  {
-    "name": "/Preferences/ictest/max_tolerance (rot)",
-    "type": "double",
-    "value": 0.025,
-    "properties": {
-      "persistent": true
-    }
-  },
-  {
     "name": "/Preferences/SwerveDrivetrain/scalar_pigeon",
     "type": "double",
-    "value": 1.01010101010101,
+    "value": 1.006784215435713,
     "properties": {
       "persistent": true
     }
@@ -1066,7 +706,7 @@
   {
     "name": "/Preferences/turret/encoder/max_tolerance (rot)",
     "type": "double",
-    "value": 0.015,
+    "value": 0.012,
     "properties": {
       "persistent": true
     }
@@ -1122,7 +762,7 @@
   {
     "name": "/Preferences/turret/encoder/offset1 (rot)",
     "type": "double",
-    "value": -0.16796875,
+    "value": -0.0126953125,
     "properties": {
       "persistent": true
     }
@@ -1130,7 +770,7 @@
   {
     "name": "/Preferences/turret/encoder/offset2 (rot)",
     "type": "double",
-    "value": 0.2587890625,
+    "value": -0.029052734375,
     "properties": {
       "persistent": true
     }
@@ -1162,7 +802,7 @@
   {
     "name": "/Preferences/turret/wrap/positive (deg)",
     "type": "double",
-    "value": 220.0,
+    "value": 195.0,
     "properties": {
       "persistent": true
     }
@@ -1170,7 +810,7 @@
   {
     "name": "/Preferences/turret/wrap/negative (deg)",
     "type": "double",
-    "value": -260.0,
+    "value": -270.0,
     "properties": {
       "persistent": true
     }
@@ -1218,7 +858,7 @@
   {
     "name": "/Preferences/DyeRotor/speed_84bps (min^-1 rot)",
     "type": "double",
-    "value": 180.0,
+    "value": 100.0,
     "properties": {
       "persistent": true
     }
@@ -1298,7 +938,7 @@
   {
     "name": "/Preferences/scorer_ss/point_blank/shooter_vel (ft s^-1)",
     "type": "double",
-    "value": 33.76,
+    "value": 22.0,
     "properties": {
       "persistent": true
     }
@@ -1306,7 +946,7 @@
   {
     "name": "/Preferences/scorer_ss/rotor_reset_loops",
     "type": "int",
-    "value": 3,
+    "value": 0,
     "properties": {
       "persistent": true
     }
@@ -1322,7 +962,7 @@
   {
     "name": "/Preferences/Intake/speed_intake (ft s^-1)",
     "type": "double",
-    "value": 55.0,
+    "value": 56.0,
     "properties": {
       "persistent": true
     }
@@ -1594,7 +1234,7 @@
   {
     "name": "/Preferences/DyeRotor/genome/smart_current_limit (A)",
     "type": "double",
-    "value": 15.0,
+    "value": 60.0,
     "properties": {
       "persistent": true
     }
@@ -1610,7 +1250,7 @@
   {
     "name": "/Preferences/DyeRotor/genome/brake_mode",
     "type": "boolean",
-    "value": true,
+    "value": false,
     "properties": {
       "persistent": true
     }
@@ -1754,7 +1394,7 @@
   {
     "name": "/Preferences/pivot/genome/gains/kF",
     "type": "double",
-    "value": -0.12,
+    "value": -0.03,
     "properties": {
       "persistent": true
     }
@@ -1802,7 +1442,7 @@
   {
     "name": "/Preferences/Intake/dynamic_intake_gain",
     "type": "double",
-    "value": 1.5,
+    "value": 1.875,
     "properties": {
       "persistent": true
     }
@@ -1810,7 +1450,7 @@
   {
     "name": "/Preferences/ShootingCalculator/swim/tofGain",
     "type": "double",
-    "value": 0.25,
+    "value": 0.32,
     "properties": {
       "persistent": true
     }
@@ -1850,7 +1490,7 @@
   {
     "name": "/Preferences/turret/accel_factor",
     "type": "double",
-    "value": 3.0,
+    "value": 5.0,
     "properties": {
       "persistent": true
     }
@@ -1866,7 +1506,7 @@
   {
     "name": "/Preferences/ShootingCalculator/swim/yawRateFactor",
     "type": "double",
-    "value": 1.11,
+    "value": 1.35,
     "properties": {
       "persistent": true
     }
@@ -1940,7 +1580,7 @@
   {
     "name": "/Preferences/SwerveDrivetrain/ramp_rate_limit_step",
     "type": "double",
-    "value": 0.5,
+    "value": 0.3,
     "properties": {
       "persistent": true
     }
@@ -1948,7 +1588,7 @@
   {
     "name": "/Preferences/SwerveDrivetrain/april_tags/bearing_corr_gain",
     "type": "double",
-    "value": 0.002,
+    "value": 0.0,
     "properties": {
       "persistent": true
     }
@@ -1964,7 +1604,23 @@
   {
     "name": "/Preferences/ShootingCalculator/pass/passGain",
     "type": "double",
-    "value": 1.2,
+    "value": 1.45,
+    "properties": {
+      "persistent": true
+    }
+  },
+  {
+    "name": "/Preferences/Robot/override_fms",
+    "type": "boolean",
+    "value": false,
+    "properties": {
+      "persistent": true
+    }
+  },
+  {
+    "name": "/Preferences/DyeRotor/stall_threshold_rpm (min^-1 rot)",
+    "type": "double",
+    "value": 10.0,
     "properties": {
       "persistent": true
     }

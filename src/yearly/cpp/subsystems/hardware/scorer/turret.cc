@@ -51,18 +51,18 @@ TurretSubsystem::TurretSubsystem()
   RegisterPreference("icnor/IPG", 1.0);
   RegisterPreference("icnor/friction_nm", 2.0_Nm_);
   RegisterPreference("icnor/load_nm", 2.5_Nm_);
-  RegisterPreference("encoder/offset1", 0.0_rot_);
-  RegisterPreference("encoder/offset2", 0.0_rot_);
+  RegisterPreference("encoder/offset1", -0.0126953125_rot_);
+  RegisterPreference("encoder/offset2", -0.029052734375_rot_);
   RegisterPreference("encoder/min_rots", -3.0_rot_);
   RegisterPreference("encoder/max_rots", 3.0_rot_);
-  RegisterPreference("encoder/max_tolerance", 0.015_rot_);
+  RegisterPreference("encoder/max_tolerance", 0.012_rot_);
   RegisterPreference("tolerance", 20_deg_);
 
-  RegisterPreference("wrap/positive", 220_deg_);
-  RegisterPreference("wrap/negative", -240_deg_);
-  RegisterPreference("wrap/project_stop", 0.1_s_);
+  RegisterPreference("wrap/positive", 195_deg_);
+  RegisterPreference("wrap/negative", -270_deg_);
+  RegisterPreference("wrap/project_stop", 0.38_s_);
 
-  RegisterPreference("accel_factor", 4.0);
+  RegisterPreference("accel_factor", 5.0);
   RegisterPreference("accel_alpha", 0.3);
 }
 
