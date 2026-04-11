@@ -23,7 +23,7 @@ public:
    * The constructor for the LinearKalmanFilter. 
    * Initially assumes the covariance (uncertainty) to be within one unit of the estimate.
    * @param starterState - The initial state of the dynamic system
-   * @param transformerMatrix - A matrix which transforms your state into its updated values.
+   * @param transformerMatrix - A matrix which transforms the state into its updated values.                                                                                                                                                                                                                                                                                                                                                                                                                                                           state into its updated values.
    */
   LinearKalmanFilter(mat starterState, mat transformerMatrix) {
     pTransformer = transformerMatrix;
@@ -47,10 +47,10 @@ public:
   /**
    * Update()
    * 
-   * Updates the covariance of the dynamic system
-   * @param H - 
-   * @param z - 
-   * @param var - 
+   * Updates the state vector covariance matrix of the dynamic system using sensor data and measurement variances
+   * @param H - The "expected" state matrix 
+   * @param z - The estimated state matrix
+   * @param var - The variance in the state matrix
    */
   void Update(mat H, mat z, mat var) {
     mat upCov = var.asDiagonal();
