@@ -11,7 +11,11 @@
 
 namespace funkit::robot::swerve::odometry {
 
-  
+/**
+ * PoseEstimator
+ * 
+ * A class that applies linear algebraic math and kalman filters to estimate robot pose. 
+ */
 class PoseEstimator {
 public:
   PoseEstimator(
