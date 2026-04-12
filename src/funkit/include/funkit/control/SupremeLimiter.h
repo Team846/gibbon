@@ -17,11 +17,11 @@ struct PerDeviceInformation {
   bool is_limitable;
 };
 
-/*
-Supreme Limiter.
-
-Manages power draw across all devices that run custom control loops on the Rio.
-*/
+/**
+ * Supreme Limiter.
+ * 
+ * Manages power draw across all devices that run custom control loops on the Rio.
+ */
 class SupremeLimiter {
 public:
   /* Limits duty cycle to implement current limit across all devices. No

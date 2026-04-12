@@ -16,7 +16,7 @@ public:
   /**
    * limit()
    * 
-   * Limits the maximum change in a value. If a value exceeds the rateLimit, apply the maximum rate
+   * Limits the maximum change in a value. If a value exceeds the rateLimit, apply only the maximum rate
    */
   double limit(double value, double rateLimit);
 
