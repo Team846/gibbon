@@ -4,6 +4,12 @@
 #include <vector>
 
 namespace funkit::base {
+/**
+ * Compression
+ * 
+ * A class that compresses log messages to save bandwidth for FunkyLogSystem
+ * Uses custom 6-bit encoding and packing
+ */
 class Compression {
 private:
   /**
