@@ -19,6 +19,8 @@ ShooterSubsystem::ShooterSubsystem()
 
   RegisterPreference("accel_factor", 3.0);
   RegisterPreference("accel_alpha", 0.3);
+
+  RegisterPreference("ramp_rate", 40.0);
 }
 
 ShooterSubsystem::~ShooterSubsystem() = default;
@@ -125,6 +127,9 @@ void ShooterSubsystem::WriteToHardware(ShooterTarget target) {
 
   fps2_t accel_inst = 0.0_fps2_;
 
+  bool apply_ramp_limiter = target.target_vel < GetReadings().vel &&
+                            u_abs(target.target_vel) < 22_fps_;
+
   if (last_time_ > 0.0_ms_) {
     auto dt = u_max(9.0_ms_, (funkit::wpilib::CurrentFPGATime() - last_time_));
     accel_inst = (target.target_vel - last_vel_) / dt *
@@ -144,6 +149,11 @@ void ShooterSubsystem::WriteToHardware(ShooterTarget target) {
   Graph("debug/accel", accel_est_);
 
   target.target_vel += accel_est_ * 0.1_s_;
+
+  fps_t limited_target_vel = fps_t(ramp_rate.limit(
+      target.target_vel.value(), GetPreferenceValue_double("ramp_rate")));
+
+  if (apply_ramp_limiter) { target.target_vel = limited_target_vel; }
 
   if ((target.target_vel < 5_fps_) &&
       (u_abs(GetReadings().vel) - u_abs(target.target_vel)) >=

@@ -15,7 +15,8 @@ enum LEDsState {
   kLEDsTheirShift,
   kLEDsNearOurShift,
   kLEDsHomingGyro,
-  kLEDsHoming
+  kLEDsHoming,
+  kLEDsPassing
 };
 
 struct LEDsReadings {};

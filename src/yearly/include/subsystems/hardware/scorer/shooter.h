@@ -9,6 +9,8 @@
 #include "funkit/wpilib/time.h"
 #include "pdcsu_control.h"
 
+#include "funkit/math/RampRateLimiter.h"
+
 struct ShooterReadings {
   fps_t vel;
   bool is_spun_up;
@@ -53,4 +55,6 @@ private:
   ms_t last_time_ = -1.0_ms_;
 
   fps2_t accel_est_ = 0.0_mps2_;
+
+  funkit::math::RampRateLimiter ramp_rate{};
 };

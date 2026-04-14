@@ -9,6 +9,8 @@
 #include "funkit/wpilib/time.h"
 #include "pdcsu_control.h"
 
+#include "funkit/math/RampRateLimiter.h"
+
 enum class DyeRotorState {
   kRotor84bps,
   kRotorSlowFeed,
@@ -47,6 +49,8 @@ private:
   funkit::control::HigherMotorController esc_;
 
   DyeRotorState current_state;
+
+  funkit::math::RampRateLimiter ramp_rate{};
 
   int reset_ctr_ = 0;
   int stall_ctr_ = 0;

@@ -232,6 +232,8 @@ void FunkyRobot::OnPeriodic() {
     LEDsLogic::SetLEDsState(&container_, kLEDsUnready);
   else if (isDisabled)
     LEDsLogic::SetLEDsState(&container_, kLEDsDisabled);
+  else if (container_.control_input_.GetReadings().pass_mode) 
+    LEDsLogic::SetLEDsState(&container_, kLEDsPassing);
   else if (shift_data.our_hub_active && shift_data.phase_countdown < 4.0)
     LEDsLogic::SetLEDsState(&container_, kLEDsNearOurShift);
   else if (shift_data.our_hub_active)

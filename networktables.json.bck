@@ -242,7 +242,7 @@
   {
     "name": "/Preferences/SwerveDrivetrain/max_omega (s^-1 deg)",
     "type": "double",
-    "value": 180.0,
+    "value": 20.0,
     "properties": {
       "persistent": true
     }
@@ -914,7 +914,7 @@
   {
     "name": "/Preferences/ShootingCalculator/2ptvel/kPointBlank (ft s^-1)",
     "type": "double",
-    "value": 25.0,
+    "value": 23.5,
     "properties": {
       "persistent": true
     }
@@ -922,7 +922,7 @@
   {
     "name": "/Preferences/ShootingCalculator/2ptvel/kAdditive",
     "type": "double",
-    "value": 2.8,
+    "value": 3.3,
     "properties": {
       "persistent": true
     }
@@ -1965,6 +1965,22 @@
     "name": "/Preferences/ShootingCalculator/pass/passGain",
     "type": "double",
     "value": 1.2,
+    "properties": {
+      "persistent": true
+    }
+  },
+  {
+    "name": "/Preferences/shooter/ramp_rate",
+    "type": "double",
+    "value": 40.0,
+    "properties": {
+      "persistent": true
+    }
+  },
+  {
+    "name": "/Preferences/DyeRotor/ramp_rate",
+    "type": "double",
+    "value": 30.0,
     "properties": {
       "persistent": true
     }
