@@ -5,12 +5,12 @@
 
 namespace funkit::control::base {
 
-/*
-MotorMonkeyType (enum)
-
-Contains all motor and speed controller combinations compatible with the
-funkit architecture.
-*/
+/**
+ * MotorMonkeyType (enum)
+ * 
+ * Contains all motor and speed controller combinations compatible with the
+ * funkit architecture.
+ */
 enum MotorMonkeyType {
   TALON_FX_KRAKENX60,
   TALON_FX_KRAKENX44,
@@ -25,11 +25,11 @@ enum LimitSwitchDefaultState {
   kNormallyOff,
 };
 
-/*
-MotorMonkeyTypeHelper
-
-Provides static methods to help determine the type of motor controller.
-*/
+/** 
+ * MotorMonkeyTypeHelper
+ * 
+ * Provides static methods to help determine the type of motor controller.
+ */
 class MotorMonkeyTypeHelper {
 public:
   static bool is_talon_fx(MotorMonkeyType mmtype) {
@@ -57,11 +57,11 @@ public:
   }
 };
 
-/*
-ControlRequest
-
-Variant type representing possible motor control requests.
-*/
+/**
+ * ControlRequest
+ * 
+ * Variant type representing possible motor control requests.
+ */
 using ControlRequest = std::variant<double,  // duty cycle
     pdcsu::units::radps_t,                   // velocity
     pdcsu::units::radian_t>;                 // position

@@ -18,26 +18,26 @@
 
 namespace funkit::control {
 
-/*
-MonkeyMaster
-
-A class that provides higher level management for all motor controllers. Manages
-CAN utilization as well as power.
-*/
+/**
+ * MonkeyMaster
+ * 
+ * A class that provides higher level management for all motor controllers. 
+ * Manages CAN utilization as well as power.
+ */
 class MonkeyMaster {
 public:
-  /*
-  Setup()
-
-  Sets up the preferences used by MonkeyMaster.
-  */
+  /**
+   * Setup()
+   * 
+   * Sets up the preferences used by MonkeyMaster.
+   */
   static void Setup();
 
-  /*
-  Tick()
-
-  Updates all motor controllers. Should be called each loop.
-  */
+  /**
+   * Tick()
+   * 
+   * Updates all motor controllers. Should be called each loop.
+   */
   static void Tick(bool disabled);
 
   static void SetNeutralMode(size_t slot_id, bool brake_mode);
