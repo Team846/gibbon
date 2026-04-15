@@ -14,6 +14,8 @@ DyeRotorSubsystem::DyeRotorSubsystem()
   RegisterPreference("speed_slow_feed", 120_rpm_);
   RegisterPreference("speed_reverse", -100_rpm_);
   RegisterPreference("speed_idle", 0_rpm_);
+
+  RegisterPreference("ramp_rate", 30.0);
 }
 
 radps_t DyeRotorSubsystem::getTargetRotorSpeed(DyeRotorState rotor_state) {
@@ -108,6 +110,9 @@ void DyeRotorSubsystem::WriteToHardware(DyeRotorTarget target) {
     trgt_vel_ = target.dye_rotor_pct_override *
                 GetPreferenceValue_unit_type<rpm_t>("speed_84bps");
   }
+
+  trgt_vel_ = rpm_t(ramp_rate.limit(
+      rpm_t(trgt_vel_).value(), GetPreferenceValue_double("ramp_rate")));
 
   current_state = target.target_state;
   esc_.WriteVelocity(trgt_vel_);

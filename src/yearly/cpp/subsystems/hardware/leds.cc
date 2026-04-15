@@ -63,6 +63,9 @@ void LEDsSubsystem::WriteToHardware(TLTGT target) {
       SetStrip(RED);
     } else if (tgt->state == kLEDsDisabled) {
       SetStrip(ORANGE);
+    } else if (tgt->state == kLEDsPassing) {
+      SetStrip(PURPLE);
+      Flash(MED_FLASH);
     } else if (tgt->state == kLEDsOurShift) {
       SetStrip(BLUE);
     } else if (tgt->state == kLEDsTheirShift) {

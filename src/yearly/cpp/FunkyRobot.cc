@@ -212,10 +212,11 @@ void FunkyRobot::OnPeriodic() {
   if (!isDisabled) {
     shift_data = AllianceShiftCalculator::Calculate();
     Graph("game_data/shift_active", shift_data.our_hub_active, true);
-    Graph("game_data/active_first", shift_data.won_auto, true);
-    Graph("game_data/shift", shift_data.shift);
-    Graph("game_data/until_flip", shift_data.until_flip, true);
-    Graph("game_data/our_time_left", shift_data.our_time_left, true);
+    Graph("game_data/active_first", shift_data.auto_winner);
+    Graph("game_data/shift", shift_data.phase_idx);
+    Graph("game_data/until_flip", shift_data.phase_countdown, true);
+    Graph("game_data/our_time_left", shift_data.total_countdown, true);
+    Graph("game_data/shot_valid", AllianceShiftCalculator::shot_valid, true);
   }
 
   if (container_.control_input_.GetReadings().die_robot_die)
@@ -231,10 +232,12 @@ void FunkyRobot::OnPeriodic() {
     LEDsLogic::SetLEDsState(&container_, kLEDsUnready);
   else if (isDisabled)
     LEDsLogic::SetLEDsState(&container_, kLEDsDisabled);
+  else if (container_.control_input_.GetReadings().pass_mode) 
+    LEDsLogic::SetLEDsState(&container_, kLEDsPassing);
+  else if (shift_data.our_hub_active && shift_data.phase_countdown < 4.0)
+    LEDsLogic::SetLEDsState(&container_, kLEDsNearOurShift);
   else if (shift_data.our_hub_active)
     LEDsLogic::SetLEDsState(&container_, kLEDsOurShift);
-  else if (shift_data.our_hub_active && shift_data.until_flip < 4.0)
-    LEDsLogic::SetLEDsState(&container_, kLEDsNearOurShift);
   else
     LEDsLogic::SetLEDsState(&container_, kLEDsTheirShift);
 }

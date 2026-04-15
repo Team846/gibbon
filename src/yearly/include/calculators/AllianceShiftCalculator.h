@@ -1,11 +1,13 @@
 #pragma once
 
+#include <string>
+
 struct AllianceShiftOutputs {
   bool our_hub_active;
-  bool won_auto;
-  int shift;
-  double until_flip;
-  double our_time_left;
+  std::string auto_winner;
+  int phase_idx;
+  double phase_countdown;
+  double total_countdown;
 };
 
 class AllianceShiftCalculator {

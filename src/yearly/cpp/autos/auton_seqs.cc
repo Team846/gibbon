@@ -131,17 +131,24 @@ using FPT = funkit::math::FieldPoint;
 #define P4C2_INTAKE_PT MKPT(160.85_in_, 278.35_in_, 0_deg_, 4_fps_)
 #define P5C2_INTAKE_PT MKPT(110.85_in_, 260.35_in_, 0_deg_, 2_fps_)
 
-#define P1C2_COMPATIBILITY_PT MKPT(135.1_in_, 280.5_in_, 15_deg_, 11_fps_)
-#define P2C2_COMPATIBILITY_PT MKPT(155.35_in_, 305.42_in_, 30_deg_, 7_fps_)
-#define P3C2_COMPATIBILITY_PT MKPT(170.85_in_, 324.35_in_, 45_deg_, 0_fps_)
+#define P1C2_COMPATIBILITY_PT MKPT(125.1_in_, 280.5_in_, 15_deg_, 11_fps_)
+#define P2C2_COMPATIBILITY_PT MKPT(135.35_in_, 305.42_in_, 30_deg_, 7_fps_)
+#define P3C2_COMPATIBILITY_PT MKPT(145.85_in_, 324.35_in_, 45_deg_, 0_fps_)
 
-#define CENTER8_SHOT MKPT(158.85_in_, 125.35_in_, 0_deg_, 0_fps_)
+#define CENTER8_SHOT MKPT(158.85_in_, 125.35_in_, 180_deg_, 0_fps_)
 
 #define P3C1_INTAKE_PT_SAFEOP MKPT(120.75_in_, 305.2_in_, 70_deg_, 0_fps_)
 
 #define DEPOT                                                            \
   MKPT(funkit::math::FieldPoint::field_size_x / 2.0 - 78.38_in_, 20_in_, \
       180_deg_, 0_fps_)
+
+#define PDEPOT                                                            \
+  MKPT(funkit::math::FieldPoint::field_size_x / 2.0 - 78.38_in_, 20_in_, \
+      135_deg_, 0_fps_)
+#define DEPOT94                                                          \
+  MKPT(funkit::math::FieldPoint::field_size_x / 2.0 - 58.38_in_, 20_in_, \
+      135_deg_, 0_fps_)
 
 #define __AUTO__(codeName, stringName)                                 \
   codeName::codeName(                                                  \
@@ -285,15 +292,11 @@ SEQUENCE {
 
 __AUTO__(Center8Depot, "C8D")
 SEQUENCE {
-  START2(157.8_in_, 144.54_in_, 0_deg_), DRIVE_PT(CS2, CENTER8_SHOT, NORM),
-      PARALLEL_DEADLINE(WAIT{2.5_s}, SHOOT()), INTAKE(HoptakeState::kIntake),
-      frc2::ConditionalCommand(
-          frc2::ParallelDeadlineGroup(
-              frc2::SequentialCommandGroup{
-                  DRIVE_PT_BEARING(CS2, DEPOT, SWIM), WAIT{5_s}},
-              SHOOT()),
-          frc2::ParallelDeadlineGroup(WAIT{10_s}, SHOOT()),
-          [left = is_left_side]() { return left; })
+  START2(157.8_in_, 144.54_in_, 180_deg_), TRACK(), DRIVE_PT(CS2, CENTER8_SHOT, NORM),  INTAKE(HoptakeState::kIntake),
+      DRIVE_PT_BEARING(CS2, PDEPOT, NORM), WAIT{1.0_s},
+      PARALLEL_DEADLINE(WAIT{2.5_s}, SHOOT()), TRACK(),
+                  DRIVE_PT_BEARING(CS2, DEPOT, SWIM), DRIVE_PT_BEARING(CS2, PDEPOT, NORM),
+          frc2::ParallelDeadlineGroup(WAIT{10_s}, SHOOT())
 }
 }
 {}

@@ -247,32 +247,27 @@ void TurretSubsystem::WriteToHardware(TurretTarget target) {
       GetPreferenceValue_unit_type<degree_t>("wrap/positive");
   degree_t wrap_negative =
       GetPreferenceValue_unit_type<degree_t>("wrap/negative");
-  if (target.pos_ > wrap_positive) {
-    double n = std::floor((target.pos_ - wrap_positive).value() / 360.0);
-    target.pos_ -= degree_t{360.0 * n};
+
+  degree_t ntarget = wrap_offset_ + target.pos_;
+
+  while (ntarget > wrap_positive) {
+    wrap_offset_ -= 360_deg_;
+    ntarget = wrap_offset_ + target.pos_;
   }
-  if (target.pos_ < wrap_negative) {
-    double n = std::floor((wrap_negative - target.pos_).value() / 360.0);
-    target.pos_ += degree_t{360.0 * n};
+  while (ntarget < wrap_negative) {
+    wrap_offset_ += 360_deg_;
+    ntarget = wrap_offset_ + target.pos_;
   }
 
-  while (target.pos_ > wrap_positive) {
-    target.pos_ -= 360_deg_;
-  }
-  while (target.pos_ < wrap_negative) {
-    target.pos_ += 360_deg_;
-  }
+  target.pos_ = ntarget;
 
-  Graph("target/pos", target.pos_, true);
+  Graph("target/pos", ntarget);
   Graph("target/vel", target.vel_);
-
-  radian_t current_pos_real = esc_.GetPosition<radian_t>();
-  radps_t current_vel_real = esc_.GetVelocity<radps_t>();
-  radian_t current_pos_native = arm_sys_->toNative(current_pos_real);
-  radps_t current_vel_native = arm_sys_->toNative(current_vel_real);
 
   radian_t target_pos_native = arm_sys_->toNative(target.pos_);
   radps_t target_vel_native = arm_sys_->toNative(target.vel_);
+  radian_t current_pos_native = arm_sys_->toNative(GetReadings().pos_);
+  radps_t current_vel_native = arm_sys_->toNative(GetReadings().vel_);
 
   radps2_t accel_inst = 0.0_radps2_;
 
