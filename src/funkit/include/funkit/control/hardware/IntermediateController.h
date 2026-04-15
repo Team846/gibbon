@@ -37,6 +37,13 @@ using ReadResponse = double;
 
 using SpecialConfigureType = base::LimitSwitchDefaultState;
 
+/**
+ * IntermediateController
+ * 
+ * A low-level interface that communicates with the motor API itself. 
+ * A base class that is inherited from SparkMXFX_interm and TalonFX_interm
+ * Handles and receives requests from MonkeyMaster. 
+ */
 class IntermediateController {
 public:
   IntermediateController() = default;

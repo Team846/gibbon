@@ -89,7 +89,7 @@ public:
 /**
  * OverrideStatusFramePeriod()
  * 
- * Overrides all other status frame periods with the given status frame. 
+ * Overrides the period for the specific status frame. 
  * @param slot_id - the slot_id for the motor controller
  * @param frame - the frame to override others
  * @param period - the update interval for the status frame
@@ -129,16 +129,16 @@ public:
   /**
    * WriteVelocity()
    * 
-   * Writes a velocity setpoint to the motor controller by sending a request to an IntermediateController. PID calculations performed
-   * onboard the motor controller.
+   * Writes a velocity setpoint to the motor controller by sending a request to an IntermediateController. 
+   * PID calculations performed onboard the motor controller.
    */
   static void WriteVelocity(size_t slot_id, pdcsu::units::radps_t velocity);
 
   /**
    * WritePosition()
    * 
-   * Writes a position setpoint to the motor controller by sending a request to an IntermediateController PID calculations
-   * performed onboard the motor controller.
+   * Writes a position setpoint to the motor controller by sending a request to an IntermediateController.
+   * PID calculations performed onboard the motor controller.
    */
   static void WritePosition(size_t slot_id, pdcsu::units::radian_t position);
 

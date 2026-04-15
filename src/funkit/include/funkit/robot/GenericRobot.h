@@ -29,7 +29,18 @@ public:
 
   ~GenericRobot() override;
 
+  /**
+   * StartCompetition() 
+   * 
+   * Initializes robot services and enters the competition lifecycle loop
+   */
   void StartCompetition() override final;
+  
+  /**
+   * EndCompetition()
+   * 
+   * Logs the competition end.
+   */
   void EndCompetition() override final;
 
   virtual void OnInitialize() = 0;
@@ -42,13 +53,31 @@ public:
   virtual void InitTeleop() = 0;
   virtual void InitTest() = 0;
 
+  // 
   virtual void ClearDefaultCommands() = 0;
 
+  // Verifies all hardware is connected
   void VerifyHardware();
 
+  /**
+   * AddAuto()
+   * 
+   * Adds an autonomous sequence option for GenericRobot to run through the SmartDashboard
+   * @param name - the name to reference the auto by
+   * @param command - a pointer to the auto command 
+   */
   void AddAuto(std::string name, frc2::Command* command);
+  
+  /**
+   * AddDefaultAuto()
+   * 
+   * Adds a default autonomous sequence for GenericRobot to run through the SmartDashboard unless specified otherwise
+   * @param name - the name to reference the auto by 
+   * @param command - a pointer to the auto command 
+   */
   void AddDefaultAuto(std::string name, frc2::Command* command);
 
+  // Getter method for a selected auto
   static std::string GetSelectedAuto() { return auto_chooser_.GetSelected(); }
 
 private:

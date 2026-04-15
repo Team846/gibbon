@@ -13,7 +13,7 @@ namespace funkit::control::simulation {
 /**
  * VirtualMonkey
  * 
- * A class that implements a simulation of IntermediateController
+ * A class that implements a simulation of a motor controller/IntermediateController
  * Allows for physics simulation by acting as a controller using given configs. 
  */
 class VirtualMonkey : public funkit::control::hardware::IntermediateController {
@@ -21,10 +21,11 @@ public:
   /**
    * VirtualMonkey()
    * 
+   * A constructor for a simulated motor controller backend
    * @param specs - the simulated motor specs 
    * @param circuit_resistance - the amount of resistance present
    * @param rotational_inertia - the amount of rotational inertia present in the motor
-   * @param friction - the coefficient of friction force
+   * @param friction - the friction scaling factor
    */
   VirtualMonkey(funkit::control::base::MotorSpecs specs,
       pdcsu::units::ohm_t circuit_resistance,
@@ -74,6 +75,8 @@ public:
   }
 
   void SetLoad(pdcsu::units::nm_t load);
+
+  // Setter method for battery voltage
   void SetBatteryVoltage(pdcsu::units::volt_t voltage);
 
 private:
