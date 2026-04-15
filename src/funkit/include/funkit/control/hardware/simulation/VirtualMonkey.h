@@ -10,12 +10,29 @@
 
 namespace funkit::control::simulation {
 
+/**
+ * VirtualMonkey
+ * 
+ * A class that implements a simulation of IntermediateController
+ * Allows for physics simulation by acting as a controller using given configs. 
+ */
 class VirtualMonkey : public funkit::control::hardware::IntermediateController {
 public:
+  /**
+   * VirtualMonkey()
+   * 
+   * @param specs - the simulated motor specs 
+   * @param circuit_resistance - the amount of resistance present
+   * @param rotational_inertia - the amount of rotational inertia present in the motor
+   * @param friction - the coefficient of friction force
+   */
   VirtualMonkey(funkit::control::base::MotorSpecs specs,
       pdcsu::units::ohm_t circuit_resistance,
       pdcsu::units::kgm2_t rotational_inertia, double friction);
 
+  /**
+   * Tick() 
+   */
   void Tick() override;
 
   bool VerifyConnected() override { return true; }

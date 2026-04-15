@@ -59,12 +59,12 @@ struct FollowerConfig {
  *
  * Contains all configuration parameters for a motor controller.
  *
- * @param motor_current_limit: The maximum current the hardware motor
+ * @param motor_current_limit - the maximum current the hardware motor
  * controller will allow to the motor.
- * @param smart_current_limit: The maximum current funkit software will allow
+ * @param smart_current_limit - the maximum current software will allow
  * to the motor.
- * @param voltage_compensation: Maximum voltage applied.
- * @param brake_mode: Whether the motor is in brake mode.
+ * @param voltage_compensation - maximum voltage applied.
+ * @param brake_mode - whether the motor is in brake mode.
  */
 struct MotorGenome {
   pdcsu::units::amp_t motor_current_limit{40.0};
@@ -171,6 +171,7 @@ struct SubsystemGenomeHelper {
  * StatusFrame
  * 
  * Enum with types representing the status frame categories for common motor controllers.
+ * Status frames hold information from the motor that is sent over CAN
  */
 enum StatusFrame {
   kPositionFrame,
