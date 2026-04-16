@@ -47,10 +47,22 @@ public:
   /**
    * Update()
    * 
-   * Updates the state vector covariance matrix of the dynamic system using sensor data and measurement variances
-   * @param H - The "expected" state matrix 
-   * @param z - The estimated state matrix
-   * @param var - The variance in the state matrix
+   * @brief Updates the state vector and covariance matrix of the dynamic system using sensor data and measurement variances
+   * @param H - The measurement matrix, maps the state into useable measurements
+   * @param z - The actual readings from the sensor
+   * @param var - The measurement variance used to find the measurement noise matrix (R) 
+   * 
+   * @details 
+   * The matrix upCov takes only diagonal values from the measurement variance, giving us R (measurement noise), helping determine how trustworthy the prediction is. 
+   * Subtracting H * state from z gives the residual, or measurement error of the sensor compared to the prediction
+   * Using the formula S = HP'H^T + R, the next line represents the Innovation Covariance in a kalman filter. 
+   * We then use this to find the Kalman Gain (K = P * H^T * S^-1), which determines how trustworthy the measurement is compared to the model prediction. 
+   * 
+   * Using the Kalman Gain, we then properly update the state (state = state + kalm_gain * pre_fit_resid) 
+   * and find the bel_factor, or how much uncertainty was removed from the state estimate
+   * 
+   * Lastly, we then use the bel_factor to update the covariance to remove accumulated uncertainty
+   * @see Linear Kalman Filters
    */
   void Update(mat H, mat z, mat var) {
     mat upCov = var.asDiagonal();
@@ -107,11 +119,32 @@ public:
   mat getCoVar() { return covar; };
 
 protected:
+  // Represents the state of a dynamic system. It is used specifically for pose in this codebase. 
   mat state{N, 1};
+  /**
+   * The Covariance Matrix represents the uncertainty in estimate of the system's state. 
+   * Diagonal entries represent the variance of each state component
+   * Non diagonal entries represent the correlation between error between state components.
+   * 
+   *                              ––– EXAMPLE ––– 
+   * For a 2x1 state matrix of [position, velocity], the Covariance Matrix would be: 
+   *                        [   Var(p)     Covar(p, v) ]
+   *                        [ Covar(v, p)    Var(v)    ]
+   * If Covar() was positive, then an overestimate in one variable correlates to an overestimate in the other
+   * If Covar() was negative, then an overestimate in one variable correlates to an underestimate in the other, or vice versa
+   */
   mat covar{N, N};
+  /**
+   * The pTransformer matrix is a matrix which predicts the next state of a system. 
+   *                              ––– EXAMPLE ––– 
+   * For a 2x1 state matrix of [position, velocity], the transformer matrix would be:
+   *                        [ 1  Δt ]
+   *                        [ 0  1  ]
+   * As multiplying the state by pTransformer predicts the state matrix to be [position + velocity * Δt, velocity] Δt seconds into the future
+   */
   mat pTransformer{N, N};
 
   // MatrixXd x;
 };
 
-};  // namespace funkit::math
+};  // namespace funkit::matht
