@@ -64,14 +64,8 @@ public:
    */ 
   [[nodiscard]] amp_t Record(
       amp_t current, radps_t speed, double measured_temp);
-  /**
-   * Record()
-   * 
-   * @param dc - the current duty cycle
-   * @param speed - the current speed
-   * @param measured_temp - the current measured temperature
-   * @return the new safe duty cycle limit to prevent the motor from overcooking
-   */
+
+  // Returns the new safe duty cycle limit to prevent the motor from overcooking
   [[nodiscard]] double Record(double dc, radps_t speed, double measured_temp);
 
 private:

@@ -117,31 +117,21 @@ public:
     write_counter++;
   }
 
-  /**
-   * Setup()
-   * 
-   * Sets up all subsystems
-   */
+  // Sets up all subsystems
   void Setup() {
     for (auto subsystem : all_subsystems_) {
       subsystem->Setup();
     }
   }
 
-  /**
-   * ZeroTargets()
-   * 
-   * Sets targets to zero for all subsystems
-   */
+  // Sets targets to zero for all subsystems
   void ZeroTargets() {
     for (auto subsystem : all_subsystems_) {
       subsystem->SetTargetZero();
     }
   }
 
-  /**
-   * Verify hardware for all subsystems
-   */
+  // Verify hardware for all subsystems
   void VerifyHardware() {
     for (auto subsystem : all_subsystems_) {
       subsystem->VerifyHardware();

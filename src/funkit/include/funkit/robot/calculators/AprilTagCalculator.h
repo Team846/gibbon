@@ -117,27 +117,15 @@ public:
   void AddToHistory(pdcsu::units::second_t time, Vector2D position,
       pdcsu::units::degree_t bearing, pdcsu::units::degree_t turret_angle);
 
-  /**
-   * InterpolatePosition()
-   * 
-   * Finds the estimated position given a time.
-   * @param time - the time for finding the position
-   */
+
+  // Finds the estimated position at a given time.
   Vector2D InterpolatePosition(pdcsu::units::second_t time) const;
-  /**
-   * InterpolateRobotBearing()
-   * 
-   * Finds the estimated bearing given a time.
-   * @param time - the time for finding the bearing
-   */
+
+  // Finds the estimated bearing at a given time.
   pdcsu::units::degree_t InterpolateRobotBearing(
       pdcsu::units::second_t time) const;
-  /**
-   * InterpolateTurretAngle()
-   * 
-   * Finds the estimated turret angle given a time.
-   * @param time - the time for finding the turret angle
-   */
+
+  // Finds the estimated turret angle at a given time.
   pdcsu::units::degree_t InterpolateTurretAngle(
       pdcsu::units::second_t time) const;
 

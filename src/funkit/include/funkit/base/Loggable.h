@@ -80,14 +80,7 @@ public:
   void Graph(std::string_view key, const std::string& value,
       bool persist = false) const;
 
-  /**
-   * Graph()
-   * 
-   * A templated function to Graph an object only if its of PDCSU unit type
-   * @param key - the key to access the graph
-   * @param value - the value to be graphed
-   * @tparam U - the type of object to be graphed
-   */
+  // A templated function to Graph an object only if its of PDCSU unit type
   template <typename U>
   void Graph(std::string_view key, U value, bool persist = false) const {
     if constexpr (detail::is_pdcsu_unit_v<U>) {
@@ -99,14 +92,7 @@ public:
     }
   }
 
-  /**
-   * RegisterPreference()
-   * 
-   * A templated function to register a preference only if its of PDCSU unit type
-   * @param key - the key to access the preference
-   * @param fallback - the fallback value if a preference fails to be registered
-   * @tparam U - the type of object to be registered as a preference
-   */
+  // A templated function to register a preference only if its of PDCSU unit type
   template <typename U>
   void RegisterPreference(std::string_view key, U fallback) {
     if constexpr (detail::is_pdcsu_unit_v<U>) {
@@ -129,14 +115,7 @@ public:
   // Creates a string preference.
   void RegisterPreference(std::string_view key, const std::string& fallback);
 
-  /**
-   * GetPreferenceValue_unit_type()
-   * 
-   * A templated function that gets the preference value only if its of PDCSU unit type.
-   * @param key - the key to access the preference
-   * @tparam U - the type of object to get a preference value for
-   * @return an object of type U with the preference value
-   */
+  // A templated function that gets the preference value only if its of PDCSU unit type.
   template <typename U> U GetPreferenceValue_unit_type(std::string_view key) {
     if constexpr (detail::is_pdcsu_unit_v<U>) {
       U sample{};
@@ -159,14 +138,8 @@ public:
   // Returns the value of the preference for a string.
   std::string GetPreferenceValue_string(std::string_view key);
 
-  /**
-   * SetPreferenceValue()
-   * 
-   * A templated function that sets the preference value only if its of PDCSU unit type.
-   * @param key - the key to access the preference
-   * @param value - the value to be set to
-   * @tparam U - The type of object for the preference
-   */
+
+  // A templated function that sets the preference value only if its of PDCSU unit type.
   template <typename U> void SetPreferenceValue(std::string_view key, U value) {
     if constexpr (detail::is_pdcsu_unit_v<U>) {
       std::string modkey = fmt::format("{} ({})", key, value.dims());
@@ -196,19 +169,10 @@ public:
   // Joins together two strings 
   static std::string Join(const std::string& p, const std::string& n);
 
-  /**
-   * ListKeysToPrune()
-   * 
-   * @return a list of keys that reference unused preferences
-   */
+  // Returns a list of keys that reference unused preferences
   static std::vector<std::string> ListKeysToPrune();
 
-  /**
-   * PrunePreferences()
-   * 
-   * Removes all unused preferences
-   * @param caller - logs preferences being pruned
-   */
+  // Logs and removes all unused preferences 
   static void PrunePreferences(const Loggable* caller);
 
 private:

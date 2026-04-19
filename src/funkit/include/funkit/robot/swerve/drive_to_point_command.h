@@ -43,17 +43,7 @@ class DriveToPointCommand
     : public frc2::CommandHelper<frc2::Command, DriveToPointCommand>,
       public funkit::base::Loggable {
 public:
-/**
- * DriveToPointCommand()
- * 
- * Constructor for class
- * @param drivetrain - the robot's drivetrain
- * @param target - the target location to go to
- * @param max_speed - the max speed of the drivetrain
- * @param max_acceleration - the max acceleration of the drivetrain
- * @param max_deceleration - the max deceleration of the drivetrain
- * @param flags - specific flags for implementable drivetrain behavior
- */
+
   DriveToPointCommand(funkit::robot::swerve::DrivetrainSubsystem* drivetrain,
       funkit::math::FieldPoint target, pdcsu::units::fps_t max_speed,
       pdcsu::units::fps2_t max_acceleration,

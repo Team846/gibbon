@@ -13,11 +13,8 @@ namespace funkit::math {
  */
 class DoubleSyncBuffer {
 public:
-  /** 
-   * DoubleSyncBuffer()
-   * 
-   * Constructs a DoubleSyncBuffer with the given size.
-   */
+
+  // Constructs a DoubleSyncBuffer with the given size.
   DoubleSyncBuffer(size_t sz = 50U, int max_sync_diff = 15);
 
   /**

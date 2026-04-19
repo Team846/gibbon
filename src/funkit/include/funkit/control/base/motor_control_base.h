@@ -28,7 +28,7 @@ enum LimitSwitchDefaultState {
 /** 
  * MotorMonkeyTypeHelper
  * 
- * Provides static methods to help determine the type of motor controller.
+ * A class which provides static methods to help determine the type of motor controller.
  */
 class MotorMonkeyTypeHelper {
 public:

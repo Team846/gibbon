@@ -37,12 +37,8 @@ class SwerveOpenLoopCalculator
     : public funkit::math::Calculator<SwerveOpenLoopCalculatorInputs,
           SwerveOpenLoopCalculatorOutput, SwerveOpenLoopCalculatorConstants> {
 public:
-  /**
-   * calculate()
-   * 
-   * @param inputs - target values and current conditions
-   * @return the necessary outputs for swerve modules to achieve desired target velocities.
-   */
+
+  // Calculates the necessary outputs for swerve modules to achieve desired target velocities.
   SwerveOpenLoopCalculatorOutput calculate(
       SwerveOpenLoopCalculatorInputs inputs) override;
 };

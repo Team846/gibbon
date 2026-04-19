@@ -45,12 +45,9 @@ struct LoggingClient {
  * A class which represents UDP logging server which sends logs to all clients
  */
 class LoggingServer {
-private:
-  /**
-   * getTime()
-   * 
-   * @return the time in milliseconds since the Unix epoch (the current clock-time)
-   */
+private: 
+
+   // Returns the time in milliseconds since the Unix epoch (the current clock-time)
   std::chrono::milliseconds getTime() {
     return std::chrono::duration_cast<std::chrono::milliseconds>(
         std::chrono::system_clock::now().time_since_epoch());

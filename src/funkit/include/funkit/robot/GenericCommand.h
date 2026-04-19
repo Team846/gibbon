@@ -17,10 +17,6 @@ namespace funkit::robot {
  * A class that creates a generalized command. It inherits from both CommandHelper and Loggable, helping provide logging utilities beyond WPILibs Commands.
  * 
  * The following functions are native command lifecycle methods inherited from frc2::Command that log and call their respective custom behavior implemented in GenericCommand.
- *    Initialize() - Initialization of the command which calls OnInit()
- *    End() - Ending of the command which calls OnEnd()
- *    Execute() - The periodic cycle of the command which calls Periodic()
- * 
  * A command represents a schedulable robot behavior. It gets called by the CommandScheduler periodically while active, and ended when finished or interrupted
  */
 template <typename RobotContainer, typename Subclass>
@@ -43,33 +39,16 @@ public:
     Log("Destroying instance of command {}.", name());
   }
 
-  /**
-   * OnInit()
-   * 
-   * A method that gets called at the beginning of a command's lifecycle
-   */
+  // A method that gets called at the beginning of a command's lifecycle
   virtual void OnInit() = 0;
 
-  /**
-   * OnEnd()
-   * 
-   * @param interrupted: A boolean stating if the command was interrupted
-   * A method that gets called at the end of a command's lifecycle
-   */
+  // A method that gets called at the end of a command's lifecycle
   virtual void OnEnd(bool interrupted) = 0;
 
-  /**
-   * Periodic()
-   * 
-   * A method that gets called periodically during the command's lifecycle
-   */
+  // A method that gets called periodically during the command's lifecycle
   virtual void Periodic() = 0;
 
-  /**
-   * Initialize()
-   * 
-   * A native WPILib command lifecycle method. It logs initialization, start time, and calls the custom implementation of GenericCommand, OnInit()
-   */
+  // A native WPILib command lifecycle method. It logs initialization, start time, and calls the custom implementation of GenericCommand, OnInit()
   void Initialize() override final {
     Log("Command {} initialized.", name());
     OnInit();
@@ -77,13 +56,7 @@ public:
     command_start_time_ = funkit::wpilib::CurrentFPGATime();
   }
 
-  /**
-   * End()
-   * 
-   * @param interrupted: Whether or not the command was interrupted early
-   * 
-   * A native WPILib command lifecycle method. It logs the total time of the command lifecycle, and calls the custom implementation of GenericCommand, OnEnd()
-   */
+  // A native WPILib command lifecycle method. It logs the total time of the command lifecycle, and calls the custom implementation of GenericCommand, OnEnd()
   void End(bool interrupted) override final {
     pdcsu::units::second_t total_time =
         funkit::wpilib::CurrentFPGATime() - command_start_time_;

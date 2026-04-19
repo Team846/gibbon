@@ -35,11 +35,7 @@ public:
   void Setup(config::MotorGenome genome,
       std::variant<pdcsu::util::DefLinearSys, pdcsu::util::DefArmSys> plant);
 
-  /**
-   * ModifyGenome()
-   * 
-   * Setter method for a motor genome
-   */
+  // Setter method for a motor genome
   void ModifyGenome(config::MotorGenome genome);
 
   /**

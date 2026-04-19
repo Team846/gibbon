@@ -28,6 +28,7 @@ namespace funkit::control {
  */
 class MonkeyMaster {
 public:
+
   /**
    * Setup()
    * 
@@ -142,31 +143,14 @@ public:
    */
   static void WritePosition(size_t slot_id, pdcsu::units::radian_t position);
 
-  /**
-   * Read()
-   *
-   * @param slot_id - the slot id for the motor controller
-   * @param type - the type of value to be read
-   * @return a value from a motor controller given a ReadType 
-   */
+  // Reads a value from a motor controller given a ReadType 
   static hardware::ReadResponse Read(size_t slot_id, hardware::ReadType type);
 
-  /**
-   * SpecialConfigure()
-   * 
-   * Sets special configurations of a motor
-   */
+  // Sets special configurations of a motor
   static void SpecialConfigure(
       size_t slot_id, hardware::SpecialConfigureType type);
 
-  /**
-   * SetSoftLimits() 
-   * 
-   * Sets the soft limits of a motor controller
-   * @see soft_limits.h
-   * @param forward_limit - the upper position soft limit
-   * @param reverse_limit - the lower position soft limit
-   */
+  // Sets the soft limits of a motor controller
   static void SetSoftLimits(size_t slot_id,
       pdcsu::units::radian_t forward_limit,
       pdcsu::units::radian_t reverse_limit);
@@ -193,11 +177,7 @@ public:
   // Verifies a motor controller with a given slot_id is connected
   static bool VerifyConnected(size_t slot_id);
 
-  /**
-   * CheckForResets()
-   * 
-   * Checks if a motor controller needs to be reconfigured automatically
-   */
+  // Checks if a motor controller needs to be reconfigured automatically
   static void CheckForResets();
 
 private:

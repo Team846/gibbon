@@ -67,38 +67,24 @@ private:
   }
 
 public:
-  /**
-   * FunkyLogger() 
-   * 
-   * Constructor for FunkyLogger that initializes its members
-   */
+
+  // Constructor for FunkyLogger that initializes its members
   FunkyLogger(std::string_view pname) : pname_{pname} {};
 
-  /**
-   * Log()
-   * 
-   * Calls HandleLogMessage for messages of type 0 
-   */
+
+  // Calls HandleLogMessage for messages of type 0 
   template <typename... T>
   void Log(fmt::format_string<T...> fmt, T&&... args) const {
     HandleLogMessage(0, fmt, std::forward<T>(args)...);
   }
 
-  /**
-   * Warn()
-   * 
-   * Calls HandleLogMessage for messages of type 1 (Warning Logs)
-   */
+  // Calls HandleLogMessage for messages of type 1 (Warning Logs)
   template <typename... T>
   void Warn(fmt::format_string<T...> fmt, T&&... args) const {
     HandleLogMessage(1, fmt, std::forward<T>(args)...);
   }
 
-  /**
-   * Error()
-   * 
-   * Calls HandleLogMessage for messages of type 2 (Error Logs)
-   */
+  // Calls HandleLogMessage for messages of type 2 (Error Logs)
   template <typename... T>
   void Error(fmt::format_string<T...> fmt, T&&... args) const {
     HandleLogMessage(2, fmt, std::forward<T>(args)...);

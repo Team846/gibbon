@@ -40,11 +40,6 @@ struct NavXConnection {
 
 using Vector2D = pdcsu::util::math::uVec<pdcsu::units::inch_t, 2>;
 
-/**
- * DrivetrainConfigs
- * 
- * Contains all configs related to the specific drivetrain in use.
- */
 struct DrivetrainConfigs {
   std::variant<PigeonConnection, NavXConnection> imu_connection;
 
@@ -65,11 +60,6 @@ struct DrivetrainConfigs {
   pdcsu::units::fps2_t max_accel;
 };
 
-/**
- * DrivetrainReadings
- * 
- * Contains all readings from the drivetrain
- */
 struct DrivetrainReadings {
   funkit::robot::swerve::odometry::SwervePose pose;
   Vector2D april_point;
@@ -79,11 +69,6 @@ struct DrivetrainReadings {
   int see_tag_counter;
 };
 
-/**
- * DrivetrainTarget
- * 
- * Contains the target values for the drivetrain to reach
- */
 struct DrivetrainTarget {
   pdcsu::util::math::uVec<pdcsu::units::fps_t, 2> velocity;
   pdcsu::units::degps_t angular_velocity;
@@ -194,13 +179,8 @@ private:
   pdcsu::util::math::uVec<pdcsu::units::fps_t, 2> compensateForSteerLag(
       pdcsu::util::math::uVec<pdcsu::units::fps_t, 2> uncompensated);
 
-  /**
-   * accelClampHelper()
-   * 
-   * Helper method designated for clamping acceleration to a max value if needed
-   * @param velocity - the target velocity
-   * @param accel_clamp - the acceleration clamp setting 
-   */
+
+  // Helper method designated for clamping acceleration to a max value if needed
   pdcsu::util::math::uVec<pdcsu::units::fps_t, 2> accelClampHelper(
       pdcsu::util::math::uVec<pdcsu::units::fps_t, 2> velocity,
       pdcsu::units::fps2_t accel_clamp);
@@ -218,12 +198,8 @@ private:
       pdcsu::util::math::uVec<pdcsu::units::fps_t, 2> velocity,
       pdcsu::units::degps_t angular_velocity, bool cut_excess_steering,
       pdcsu::units::fps_t speed_limit);
-  /**
-   * WriteToHardware()
-   * 
-   * Writes to drivetrain hardware
-   * @param target - the target values for drivetrain to reach
-   */
+
+  // Writes to drivetrain hardware
   void WriteToHardware(DrivetrainTarget target) override;
 
   // returns the yaw angle (bearing)

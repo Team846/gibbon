@@ -41,20 +41,12 @@ public:
    */
   SwerveOdometryOutput calculate(SwerveOdometryInputs inputs) override;
 
-  /**
-   * SetPosition() 
-   * 
-   * Set a specific position offset
-   */
+  // Sets a specific position offset
   void SetPosition(Vector2D position) {
     position_offset_ = position - last_position_;
   }
   
-  /**
-   * SetOdomBearing()
-   * 
-   * Set a specific bearing
-   */
+  // Sets a specific odometry bearing
   void SetOdomBearing(pdcsu::units::degree_t bearing) {
     odom_bearing_ = bearing;
   }

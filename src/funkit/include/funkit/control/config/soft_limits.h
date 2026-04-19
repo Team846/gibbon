@@ -30,35 +30,15 @@ public:
       pdcsu::units::radian_t forward_reduce,
       pdcsu::units::radian_t reverse_reduce, double reduce_max_dc);
 
-  /**
-   * LimitPosition()
-   * 
-   * Limits position if value goes beyond the forward/reverse limits. Otherwise returns original position.
-   * @param position - the current position
-   * @return a position constrained by given limits
-   */
+  // Limits position if value goes beyond the forward/reverse limits. Otherwise returns original position.
   pdcsu::units::radian_t LimitPosition(pdcsu::units::radian_t position);
 
-  /**
-   * LimitVelocity()
-   * 
-   * Limits velocity to zero if position goes beyond the forward/reverse limits. Otherwise returns original velocity.
-   * @param velocity - the current velocity
-   * @param position - the current position
-   * @return a velocity constrained by given limits
-   */
+  // Limits velocity to zero if position goes beyond the forward/reverse limits. Otherwise returns original velocity.
   pdcsu::units::radps_t LimitVelocity(
       pdcsu::units::radps_t velocity, pdcsu::units::radian_t position);
 
-  /**
-   * LimitDC()
-   * 
-   * Limits the duty cycle to zero if duty cycle would continue to push beyond hard limits. 
-   * Otherwise, limits the duty cycle to maximum given value if beyond soft limits. 
-   * @param dc - the current duty cycle
-   * @param position - the current position
-   * @return the duty cycle constrained by given limits
-   */
+  // Limits the duty cycle to zero if duty cycle would continue to push beyond hard limits. 
+  // Otherwise, limits the duty cycle to maximum given value if beyond soft limits. 
   double LimitDC(double dc, pdcsu::units::radian_t position);
 
   bool using_limits_;
