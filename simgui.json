@@ -52,22 +52,6 @@
         "window": {
           "visible": true
         }
-      },
-      "/SmartDashboard/MainField": {
-        "bottom": 1914,
-        "height": 8.069275856018066,
-        "left": 245,
-        "right": 3942,
-        "top": 118,
-        "width": 16.54119300842285,
-        "window": {
-          "visible": true
-        }
-      },
-      "/SmartDashboard/SendableChooser[0]": {
-        "window": {
-          "visible": true
-        }
       }
     }
   },
@@ -249,7 +233,7 @@
             0.0,
             0.8500000238418579
           ],
-          "height": -6
+          "height": 252
         }
       ]
     }
