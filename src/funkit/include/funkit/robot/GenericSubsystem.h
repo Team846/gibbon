@@ -25,7 +25,10 @@ namespace funkit::robot {
 /**
  * SubsystemBase
  * 
- * A non-templated subsystem base class that inherits from Loggable for logging utilities. 
+ * A non-templated class that inherits from Loggable for logging utilities beyond WPILib's SubsystemBase.
+ * 
+ * A funkit SubsystemBase represents the non-templated base class for a subsystem which has lifecycle functionality.
+ * All subsystems inherit from funkit SubsystemBase to allow simple handling in GenericRobotContainer. 
  */
 class SubsystemBase : public funkit::base::Loggable {
 public:
@@ -64,11 +67,13 @@ public:
 /**
  * GenericSubsystem
  * 
- * A templated base class for robot subsystems. 
- * Inherits from frc2::SubsystemBase (WPILib command subsystem) and SubsystemBase for logging and lifecycle utilities.
+ * A templated class for robot subsystems. 
+ * Inherits from frc2::SubsystemBase (WPILib's implementation) and funkit::robot::SubsystemBase for logging and lifecycle utilities.
  * 
  * @tparam Readings - A struct holding information returned by ReadFromHardware(). 
  * @tparam Target - A struct holding commanded outputs that get passed to WriteToHardware(). 
+ * 
+ * A subsystem is meant to represent a specialized unit that talks with robot hardware. Behavior determined by its commands. 
  */
 template <class Readings, class Target>
 class GenericSubsystem : public frc2::SubsystemBase, public SubsystemBase {
@@ -107,7 +112,8 @@ public:
 
   /**
    * InitByParent()
-   * Alternative initializer function to be called by a parent subsystem only. Will not register with WPILib.
+   * 
+   * Alternative initializer function to be called by a parent subsystem only.
    * Used for child subsystems, specifically superstructures and drivetrain swerve modules.
    */
   void InitByParent() {

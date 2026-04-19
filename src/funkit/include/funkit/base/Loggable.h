@@ -60,9 +60,8 @@ public:
     error_count_++;
   }
 
-  // Sets FMS connection
   static void SetFMSConnected(bool connected) { fms_connected_ = connected; }
-  // Checks if FMS is connected
+
   static bool IsFMSConnected() { return fms_connected_; }
 
   // Returns if graphing should happen depending on fms connection

@@ -7,7 +7,7 @@ namespace funkit::robot {
 /**
  * GenericControllerReadings
  * 
- * Snapshot of raw HID (Human Interface Device) buttons 1–8 from frc::GenericHID::GetRawButton()
+ * A struct representing values of buttons 1–8 on a Human Interface Device (HID). 
  * Default construction leaves members uninitialized unless value-initialized
  */
 struct GenericControllerReadings {

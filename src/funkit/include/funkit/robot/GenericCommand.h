@@ -46,7 +46,7 @@ public:
   /**
    * OnInit()
    * 
-   * A virtual method that gets called at the beginning of a command's lifecycle
+   * A method that gets called at the beginning of a command's lifecycle
    */
   virtual void OnInit() = 0;
 
@@ -54,14 +54,14 @@ public:
    * OnEnd()
    * 
    * @param interrupted: A boolean stating if the command was interrupted
-   * A virtual method that gets called at the end of a command's lifecycle
+   * A method that gets called at the end of a command's lifecycle
    */
   virtual void OnEnd(bool interrupted) = 0;
 
   /**
    * Periodic()
    * 
-   * A virtual method that gets called periodically during the command's lifecycle
+   * A method that gets called periodically during the command's lifecycle
    */
   virtual void Periodic() = 0;
 
@@ -142,7 +142,7 @@ private:
  * GenericCommandGroup
  * 
  * A templated class that creates a generalized command group. 
- * It inherits from both CommandHelper and Loggable, following the implementation of the native frc2::SequentialCommandGroup
+ * It inherits from both CommandHelper and Loggable, following the implementation of frc2::SequentialCommandGroup
  * 
  * The GenericCommandGroup still acts as a single schedulable command, but chains multiple commands together. 
  */

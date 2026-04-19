@@ -39,6 +39,11 @@ struct LoggingClient {
   std::chrono::milliseconds lastKeepAlive;
 };
 
+/**
+ * LoggingServer
+ * 
+ * A class which represents UDP logging server which sends logs to all clients
+ */
 class LoggingServer {
 private:
   /**

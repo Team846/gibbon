@@ -12,21 +12,20 @@
 
 namespace funkit::base {
   
-/*
-FunkyLogger
-
-Class that handles logging messages
-
+/**
+ * FunkyLogger
+ * 
+ * Class that formats and handles log messages. Meant to be used for Loggable objects
 */
 class FunkyLogger {
 private:
   std::string pname_;
 
-  /*
-  format_dp()
-
-  Compresses/formats a float into the specified number of decimal places
-  */
+  /**
+   * format_dp()
+   * 
+   * Compresses/formats a float into the specified number of decimal places
+   */
   float format_dp(float num, int num_places = 2) const {
     float value = (int)(num * std::pow(10, num_places) + 0.5);
     return ((float)value) / std::pow(10, num_places);

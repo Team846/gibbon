@@ -97,7 +97,7 @@ public:
   /**
    * setSureEstimate()
    * 
-   * Sets a highly confident estimated state
+   * Sets a highly confident estimated state. As a result, covariance matrix is reset to the identity matrix. 
    */
   void setSureEstimate(mat setState) {
     state = setState;

@@ -32,6 +32,11 @@ struct LogMessage {
   }
 };
 
+/**
+ * FunkyLogSystem
+ * 
+ * A class which acts as the central logging queue, file output, and remote streaming 
+ */
 class FunkyLogSystem {
 public:
   /**

@@ -27,7 +27,7 @@ enum class XboxPOV : int {
 /**
  * XboxReadings
  * 
- * A struct holding variables for all xBox inputs.
+ * A struct holding variables for all xBox readings.
  */
 struct XboxReadings {
   double left_stick_x;   // [-1, 1]
@@ -54,15 +54,16 @@ struct XboxReadings {
 
   // Default constructor
   XboxReadings() = default;
-  // Custom constructor that takes in sa snaopshot of controller state. Uses trigger_threshold to convert analog trigger axes into booleans.
+  // Custom constructor that takes in a snapshot of controller state. Uses trigger_threshold to convert analog trigger axes into booleans.
   XboxReadings(frc::XboxController& xbox, double trigger_threshold);
 };
 
 /**
  * XboxReadingsFromSimDS()
  * 
+ * Xbox readings from simulations. 
  * @param xbox_table - ntable that contains xbox information
- * @param trigger_threshold - threshold to convert analog trigger axes into booleans
+ * @param trigger_threshold - threshold if trigger reading is considered intentional
  * @param out - readings of xbox controller instance
  * @return True if data was successfully retrieved from NetworkTables
  */ 
