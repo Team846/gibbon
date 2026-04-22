@@ -70,9 +70,10 @@ struct ATCalculatorConstants {
 
 /**
  * AprilTagCalculator
- * 
- * A class that inherits from Calculator. 
- * Uses AprilTags to determine position and bearing of robot, and angle of turret.
+ *
+ * A class that inherits from Calculator.
+ * Uses AprilTags to determine position and bearing of robot, and angle of
+ * turret.
  */
 class AprilTagCalculator : public funkit::math::Calculator<ATCalculatorInput,
                                ATCalculatorOutput, ATCalculatorConstants> {
@@ -81,11 +82,13 @@ public:
 
   /**
    * calculate()
-   * 
-   * Uses AprilTags to create fused/estimated positions. 
-   * Using odometry history and variances compensates for latencies and account for uncertainty. 
-   * @param input - An ATCalculatorInput with current readings and calculations of the robot
-   * @return The calculated ATCalculatorOutput 
+   *
+   * Uses AprilTags to create fused/estimated positions.
+   * Using odometry history and variances compensates for latencies and account
+   * for uncertainty.
+   * @param input - An ATCalculatorInput with current readings and calculations
+   * of the robot
+   * @return The calculated ATCalculatorOutput
    */
   ATCalculatorOutput calculate(ATCalculatorInput input) override;
 
@@ -106,9 +109,10 @@ public:
   static constexpr size_t kMaxHistorySize = 500;
 
   /**
-   * AddToHistory() 
-   * 
-   * Adds a record of the most recent positions to odom_history. Pops the oldest records if maximum count is exceeded. 
+   * AddToHistory()
+   *
+   * Adds a record of the most recent positions to odom_history. Pops the oldest
+   * records if maximum count is exceeded.
    * @param time - the most recent time
    * @param position - the most recent position
    * @param bearing - the bearing of the robot
@@ -116,7 +120,6 @@ public:
    */
   void AddToHistory(pdcsu::units::second_t time, Vector2D position,
       pdcsu::units::degree_t bearing, pdcsu::units::degree_t turret_angle);
-
 
   // Finds the estimated position at a given time.
   Vector2D InterpolatePosition(pdcsu::units::second_t time) const;

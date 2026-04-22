@@ -21,7 +21,7 @@
 #include "util/math/uvec.h"
 
 namespace funkit::robot::swerve {
-  
+
 class SwerveModuleSubsystem;
 }
 
@@ -36,7 +36,6 @@ struct PigeonConnection {
 struct NavXConnection {
   NavXConnectionType connection_type;
 };
-
 
 using Vector2D = pdcsu::util::math::uVec<pdcsu::units::inch_t, 2>;
 
@@ -80,7 +79,7 @@ struct DrivetrainTarget {
 
 /**
  * DrivetrainSubsystem
- * 
+ *
  * A generic class to control a 4-module Kraken x60 swerve drive with CANCoders.
  */
 class DrivetrainSubsystem
@@ -105,16 +104,17 @@ public:
   void SetBearing(pdcsu::units::degree_t bearing);
   // Sets position of drivetrain odometry
   void SetPosition(Vector2D position);
-  // Sets drivetrain's odometry bearing 
+  // Sets drivetrain's odometry bearing
   void SetOdomBearing(pdcsu::units::degree_t odom_bearing);
   // Sets CANCoderOffsets for all SwerveModules
   void SetCANCoderOffsets();
 
   /**
    * ApplyBearingPID()
-   * 
-   * Computes values for drivetrain's angular velocity depending on PID preference values
-   * @param target_bearing - the desired bearing 
+   *
+   * Computes values for drivetrain's angular velocity depending on PID
+   * preference values
+   * @param target_bearing - the desired bearing
    * @param dAE - desired yaw-rate, defaults to 0
    * @return the computed yaw-rate
    */
@@ -155,8 +155,9 @@ public:
 
   /**
    * SetFieldTrajectory()
-   * 
-   * Sets the start and end points for visualizing trajectories. Does not drive the robot itself.
+   *
+   * Sets the start and end points for visualizing trajectories. Does not drive
+   * the robot itself.
    * @param A - Starting trajectory point
    * @param B - Ending trajectory point
    */
@@ -171,14 +172,15 @@ private:
 
   /**
    * compensateForSteerLag()
-   * 
-   * Compensates for translational velocity error caused by steering lag by adjusting the translational velocity.
-   * @param uncompensated - The uncompensated translational velocity to be applied
+   *
+   * Compensates for translational velocity error caused by steering lag by
+   * adjusting the translational velocity.
+   * @param uncompensated - The uncompensated translational velocity to be
+   * applied
    * @return the compensated translational velocity
    */
   pdcsu::util::math::uVec<pdcsu::units::fps_t, 2> compensateForSteerLag(
       pdcsu::util::math::uVec<pdcsu::units::fps_t, 2> uncompensated);
-
 
   // Helper method designated for clamping acceleration to a max value if needed
   pdcsu::util::math::uVec<pdcsu::units::fps_t, 2> accelClampHelper(
@@ -187,12 +189,14 @@ private:
 
   /**
    * WriteVelocitiesHelper()
-   * 
+   *
    * Helper method to write velocities to all SwerveModules
-   * @param velocity - uncompensated translational velocity used to calculate module targets
+   * @param velocity - uncompensated translational velocity used to calculate
+   * module targets
    * @param angular_velocity - the desired angular velocity
-   * @param cut_excess_steering - boolean to prioritize reducing rotation in case of exceeding max speed
-   * @param speed_limit - max allowed module drive speed 
+   * @param cut_excess_steering - boolean to prioritize reducing rotation in
+   * case of exceeding max speed
+   * @param speed_limit - max allowed module drive speed
    */
   void WriteVelocitiesHelper(
       pdcsu::util::math::uVec<pdcsu::units::fps_t, 2> velocity,

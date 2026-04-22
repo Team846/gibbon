@@ -11,19 +11,20 @@
 #include "funkit/base/FunkyLogSystem.h"
 
 namespace funkit::base {
-  
+
 /**
  * FunkyLogger
- * 
- * Class that formats and handles log messages. Meant to be used for Loggable objects
-*/
+ *
+ * Class that formats and handles log messages. Meant to be used for Loggable
+ * objects
+ */
 class FunkyLogger {
 private:
   std::string pname_;
 
   /**
    * format_dp()
-   * 
+   *
    * Compresses/formats a float into the specified number of decimal places
    */
   float format_dp(float num, int num_places = 2) const {
@@ -33,11 +34,11 @@ private:
 
   /**
    * HandleLogMessage()
-   * 
+   *
    * @param type: The type of message being handled
-   * @param fmt: A formatted string 
+   * @param fmt: A formatted string
    * @param args: Some number of arguments
-   * 
+   *
    * Formats/scrubs a LogMessage to be usable for FunkyLogSystem
    */
   template <typename... T>
@@ -67,12 +68,10 @@ private:
   }
 
 public:
-
   // Constructor for FunkyLogger that initializes its members
   FunkyLogger(std::string_view pname) : pname_{pname} {};
 
-
-  // Calls HandleLogMessage for messages of type 0 
+  // Calls HandleLogMessage for messages of type 0
   template <typename... T>
   void Log(fmt::format_string<T...> fmt, T&&... args) const {
     HandleLogMessage(0, fmt, std::forward<T>(args)...);

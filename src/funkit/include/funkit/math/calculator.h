@@ -4,7 +4,7 @@ namespace funkit::math {
 
 /**
  * Calculator
- * 
+ *
  * A templated class that allows for calculations
  * @tparam I - the inputs of the calculator
  * @tparam O - the outputs of the calculator
@@ -16,7 +16,7 @@ public:
 
   /**
    * calculate()
-   * 
+   *
    * Calculates values
    * @param input - calculator inputs
    */
@@ -28,7 +28,7 @@ protected:
 
 /**
  * IterativeCalculator
- * 
+ *
  * A templated class that allows for iterative calculations, mimicking recursion
  * @tparam I - the inputs of the calculator
  * @tparam O - the outputs of the calculator
@@ -38,8 +38,8 @@ template <typename I, typename O, typename C>
 class IterativeCalculator : public Calculator<I, O, C> {
 protected:
   /**
-   * calculateIteration() 
-   * 
+   * calculateIteration()
+   *
    * Calculates an output based on current inputs and previous outputs
    */
   virtual O calculateIteration(I input, O prev_output) = 0;
@@ -47,8 +47,8 @@ protected:
 public:
   /**
    * calculate()
-   * 
-   * Iteratively calculates in a recursive-like manner. 
+   *
+   * Iteratively calculates in a recursive-like manner.
    * @param input - the calculator input
    */
   O calculate(I input) override final {
@@ -61,7 +61,7 @@ public:
 
   /**
    * setMaxIterations()
-   * 
+   *
    * @param the max possible iterations of the calculator
    */
   void setMaxIterations(int max_iterations) {

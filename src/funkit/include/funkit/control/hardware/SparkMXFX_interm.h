@@ -15,7 +15,7 @@ namespace funkit::control::hardware {
 
 /**
  * SparkMXFX_interm
- * 
+ *
  * A class which interacts with the REV API to control and get information from
  * SparkMAX or SparkFLEX hardware.
  */

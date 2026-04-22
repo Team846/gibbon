@@ -6,9 +6,10 @@ namespace funkit::robot {
 
 /**
  * GenericRobotContainer
- * 
- * A class that inherits Loggable and provides functionality to orchestrate registered subsystems. 
- * By registering subsystem groups under A, B, and AB, this gives custom control over cycling behavior. 
+ *
+ * A class that inherits Loggable and provides functionality to orchestrate
+ * registered subsystems. By registering subsystem groups under A, B, and AB,
+ * this gives custom control over cycling behavior.
  */
 class GenericRobotContainer : public funkit::base::Loggable {
 public:
@@ -16,10 +17,11 @@ public:
 
   /**
    * RegisterSubsystemGroupA()
-   * 
-   * @param subsystems - an initializer list that takes in pairs of subsystem pointers and if it should be initialized.
-   * 
-   * Registers subsystems under group A and initializes them. 
+   *
+   * @param subsystems - an initializer list that takes in pairs of subsystem
+   * pointers and if it should be initialized.
+   *
+   * Registers subsystems under group A and initializes them.
    * These subsystems will run periodically every 20ms
    */
   void RegisterSubsystemGroupA(
@@ -36,11 +38,13 @@ public:
 
   /**
    * RegisterSubsystemGroupB()
-   * 
-   * @param subsystems - an initializer list that takes in pairs of subsystem pointers and if it should be initialized.
-   * 
-   * Registers subsystems under group B and initializes them. 
-   * These subsystems will run periodically every 20ms on the alternate periodic cycle from Group A.
+   *
+   * @param subsystems - an initializer list that takes in pairs of subsystem
+   * pointers and if it should be initialized.
+   *
+   * Registers subsystems under group B and initializes them.
+   * These subsystems will run periodically every 20ms on the alternate periodic
+   * cycle from Group A.
    */
   void RegisterSubsystemGroupB(
       std::initializer_list<std::pair<funkit::robot::SubsystemBase*, bool>>
@@ -56,9 +60,10 @@ public:
 
   /**
    * RegisterSubsystemGroupAB()
-   * 
-   * @param subsystems - an initializer list that takes in pairs of subsystem pointers and if it should be initialized.
-   * 
+   *
+   * @param subsystems - an initializer list that takes in pairs of subsystem
+   * pointers and if it should be initialized.
+   *
    * Registers subsystems under group AB and initializes them
    * These subsystems will run periodically every 10ms.
    */
@@ -77,9 +82,10 @@ public:
 
   /**
    * UpdateReadings()
-   * 
-   * Updates readings for all subsystems, depending on their cycle behavior. 
-   * GroupA and GroupB get updated every 20ms, whereas GroupAB gets updated every 10ms
+   *
+   * Updates readings for all subsystems, depending on their cycle behavior.
+   * GroupA and GroupB get updated every 20ms, whereas GroupAB gets updated
+   * every 10ms
    */
   void UpdateReadings() {
     if (read_counter % 2 == 0) {
@@ -98,9 +104,10 @@ public:
 
   /**
    * UpdateHardware()
-   * 
-   * Updates hardware for all subsystems, depending on their cycle behavior. 
-   * GroupA and GroupB get updated every 20ms, whereas GroupAB gets updated every 10ms
+   *
+   * Updates hardware for all subsystems, depending on their cycle behavior.
+   * GroupA and GroupB get updated every 20ms, whereas GroupAB gets updated
+   * every 10ms
    */
   void UpdateHardware() {
     if (write_counter % 2 == 0) {

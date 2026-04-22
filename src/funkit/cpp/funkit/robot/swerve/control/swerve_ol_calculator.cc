@@ -5,7 +5,7 @@
 
 namespace funkit::robot::swerve::control {
 /**
- * 
+ *
  */
 SwerveOpenLoopCalculatorOutput SwerveOpenLoopCalculator::calculate(
     SwerveOpenLoopCalculatorInputs inputs) {

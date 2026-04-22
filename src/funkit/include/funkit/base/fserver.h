@@ -29,7 +29,7 @@ namespace funkit::base {
 
 /**
  * LoggingClient
- * 
+ *
  * A record of each remote client
  * @var addr - the address of the client
  * @var lastKeepAlive - the last time client was seen
@@ -41,13 +41,13 @@ struct LoggingClient {
 
 /**
  * LoggingServer
- * 
+ *
  * A class which represents UDP logging server which sends logs to all clients
  */
 class LoggingServer {
-private: 
-
-   // Returns the time in milliseconds since the Unix epoch (the current clock-time)
+private:
+  // Returns the time in milliseconds since the Unix epoch
+  // (the current clock-time)
   std::chrono::milliseconds getTime() {
     return std::chrono::duration_cast<std::chrono::milliseconds>(
         std::chrono::system_clock::now().time_since_epoch());
@@ -58,15 +58,17 @@ public:
   ~LoggingServer();
 
   /**
-   * Starts a UDP logging server on the specified port. Make sure port is FRC legal
-   * in FMS. As of 2024, these include 5800...5810. Spawns threads for logging and watching clients.
+   * Starts a UDP logging server on the specified port. Make sure port is FRC
+   * legal in FMS. As of 2024, these include 5800...5810. Spawns threads for
+   * logging and watching clients.
    * @param port - port to start the server on
    */
   void Start(int port);
 
   /**
-   * Adds message to the sending queue. Messages will not be sent out unless server
-   * has been started. Blocking operation while server is reading message.
+   * Adds message to the sending queue. Messages will not be sent out unless
+   * server has been started. Blocking operation while server is reading
+   * message.
    */
   void AddMessage(const std::vector<uint8_t> &message) {
     std::lock_guard<std::mutex> lock(msg_mtx);

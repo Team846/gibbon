@@ -67,11 +67,11 @@ class SwerveModuleSubsystem
     : public funkit::robot::GenericSubsystem<SwerveModuleReadings,
           SwerveModuleTarget> {
 public:
-
-  /** 
+  /**
    * SwerveModuleSubsystem()
-   * 
-   * Constructs a SwerveModuleSubsystem object with the given parameters. For use by DrivetrainSubsystem.
+   *
+   * Constructs a SwerveModuleSubsystem object with the given parameters. For
+   * use by DrivetrainSubsystem.
    */
   SwerveModuleSubsystem(Loggable& parent,
       SwerveModuleUniqueConfig unique_config,
@@ -82,44 +82,44 @@ public:
   SwerveModuleTarget ZeroTarget() const override;
 
   bool VerifyHardware() override;
-  
+
   void SetCANCoderOffset();
   void SetCANCoderOffset(pdcsu::units::degree_t offset);
 
   void ZeroWithCANcoder();
 
-  /** 
+  /**
    * SetDriveGenome()
-   * 
+   *
    * Sets the drive motor genome. Must be called before Setup().
-  */
+   */
   void SetDriveGenome(funkit::control::config::MotorGenome genome);
 
   /**
    * SetSteerGenome()
-   * 
+   *
    * Sets the steer motor genome. Must be called before Setup().
-  */
+   */
   void SetSteerGenome(funkit::control::config::MotorGenome genome);
 
   /**
    * ModifyGenomes()
-   * 
-   * Modifies the genome for the steer and drive motor controllers. Should be 
+   *
+   * Modifies the genome for the steer and drive motor controllers. Should be
    * called after SwerveModuleSubsystem Setup, in DrivetrainSubsystem Setup.
-  */
+   */
   void ModifySwerveGenome(funkit::control::config::MotorGenome drive_genome,
       funkit::control::config::MotorGenome steer_genome);
 
 private:
   int last_rezero = 101;
 
-  /** 
+  /**
    * getMotorParams()
-   * 
-   * Static helper function modifies the drive and steer motor parameters provided
-   * in the common configuration using the unique configuration.
-  */
+   *
+   * Static helper function modifies the drive and steer motor parameters
+   * provided in the common configuration using the unique configuration.
+   */
   static std::pair<funkit::control::config::MotorConstructionParameters,
       funkit::control::config::MotorConstructionParameters>
   getMotorParams(SwerveModuleUniqueConfig unique_config,
@@ -131,10 +131,10 @@ private:
 
   /**
    * calculateSteerPosition()
-   * 
+   *
    * Calculates the direction for the steer motor, based on a normalized target.
    * Also returns a boolean that represents the inversion of the drive motor.
-  */
+   */
   std::pair<pdcsu::units::degree_t, bool> calculateSteerPosition(
       pdcsu::units::degree_t target_norm, pdcsu::units::degree_t current);
 

@@ -30,15 +30,16 @@ struct SwerveOpenLoopCalculatorOutput {
 
 /**
  * SwerveOpenLoopCalculator
- * 
- * Calculates the open-loop control targets for each swerve module, given target translational and rotational velocities.
-*/
+ *
+ * Calculates the open-loop control targets for each swerve module, given target
+ * translational and rotational velocities.
+ */
 class SwerveOpenLoopCalculator
     : public funkit::math::Calculator<SwerveOpenLoopCalculatorInputs,
           SwerveOpenLoopCalculatorOutput, SwerveOpenLoopCalculatorConstants> {
 public:
-
-  // Calculates the necessary outputs for swerve modules to achieve desired target velocities.
+  // Calculates the necessary outputs for swerve modules to achieve desired
+  // target velocities.
   SwerveOpenLoopCalculatorOutput calculate(
       SwerveOpenLoopCalculatorInputs inputs) override;
 };

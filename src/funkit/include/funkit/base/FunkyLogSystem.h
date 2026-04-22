@@ -22,8 +22,8 @@ struct LogMessage {
   int char_count;           // for both sender and content
 
   /**
-   * Returns a string representation of the LogMessage struct. Use for file writes,
-   * logging to DS. Does NOT include newline character.
+   * Returns a string representation of the LogMessage struct. Use for file
+   * writes, logging to DS. Does NOT include newline character.
    * @return: string representation of the LogMessage struct
    */
   std::string pack() const {
@@ -32,11 +32,6 @@ struct LogMessage {
   }
 };
 
-/**
- * FunkyLogSystem
- * 
- * A class which acts as the central logging queue, file output, and remote streaming 
- */
 class FunkyLogSystem {
 public:
   /**
@@ -54,8 +49,8 @@ public:
 
   /**
    * getPeriod()
-   * 
-   * Returns the current game state 
+   *
+   * Returns the current game state
    * @return an integer corresponding to its gamestate
    */
   static int getPeriod() { return gameState; };
@@ -75,7 +70,8 @@ private:
   static uintmax_t MIN_SPACE;
 
   /**
-   * Background thread that periodically drains queued messages and appends them to the file. 
+   * Background thread that periodically drains queued messages and appends them
+   * to the file.
    * @param rateLimit - the maximum number of characters processed per cycle
    * @param logFileName - the file name to write logs to
    */

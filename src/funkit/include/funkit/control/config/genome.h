@@ -11,13 +11,14 @@
  * Genome Overview
  *
  * A genome is the structured config container/helpers for motors
- * In this file, MotorGenome is a structure for configs and SubsystemGenomeHelper helps read/write preferences
+ * In this file, MotorGenome is a structure for configs and
+ * SubsystemGenomeHelper helps read/write preferences
  */
 namespace funkit::control::config {
 
 /**
  * MotorConstructionParameters.
- * 
+ *
  * Contains all parameters necessary to construct a motor controller.
  *
  * @param can_id: The CAN address of the motor controller.
@@ -34,9 +35,9 @@ struct MotorConstructionParameters {
 
 /**
  * Gains.
- * 
+ *
  * For PIDF control.
-*/
+ */
 struct Gains {
   double kP{0.0};
   double kI{0.0};
@@ -46,7 +47,7 @@ struct Gains {
 
 /**
  * FollowerConfig.
- * 
+ *
  * For configuring a motor controller as a follower.
  */
 struct FollowerConfig {
@@ -98,7 +99,7 @@ struct SubsystemGenomeHelper {
 
   /**
    * LoadGainsPreferences()
-   * 
+   *
    * @return the PID preferences for a subsystem's motor
    */
   static Gains LoadGainsPreferences(
@@ -119,8 +120,9 @@ struct SubsystemGenomeHelper {
 
   /**
    * CreateGenomePreferences()
-   * 
-   * Creates genome preferences for a subsystem motor. Set backup/initial gain values.
+   *
+   * Creates genome preferences for a subsystem motor. Set backup/initial gain
+   * values.
    * @param sub - the subsystem to create genome preferences for
    * @param genome_name - the key to access the genome preferences
    * @param backup - the backup configs to use
@@ -143,7 +145,7 @@ struct SubsystemGenomeHelper {
 
   /**
    * LoadGenomePreferences()
-   * 
+   *
    * Returns the genome preferences of a subsystem motor
    * @param sub - the subsystem to load genome preferences from
    * @param genome_name - a key to access the preferences/configs
@@ -169,9 +171,10 @@ struct SubsystemGenomeHelper {
 
 /**
  * StatusFrame
- * 
- * Enum with types representing the status frame categories for common motor controllers.
- * Status frames hold information from the motor that is sent over CAN
+ *
+ * Enum with types representing the status frame categories for common motor
+ * controllers. Status frames hold information from the motor that is sent over
+ * CAN
  */
 enum StatusFrame {
   kPositionFrame,

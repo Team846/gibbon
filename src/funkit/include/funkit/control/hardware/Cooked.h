@@ -7,12 +7,14 @@ namespace funkit::control::hardware {
 
 /**
  * CookedConfig
- * 
+ *
  * Specific cooked configurations given a motor type
- *    thermal_mass_ - the amount of energy required to increase temperature by one Kelvin
- *    growth_rate_ - the rate at which temperature can decay
- *    free_speed_ - the free speed of a given motor
- *    stall_current_ - the stall current of the given motor
+ *    thermal_mass_  - the amount of energy required to increase temperature by
+ *                     one Kelvin
+ *    growth_rate_   - the rate at which temperature can decay
+ *    free_speed_    - the free speed of a given motor
+ *    stall_current_ - the stall current of the
+ *                     given motorç
  */
 struct CookedConfig {
   double thermal_mass_ = 100;  // kg m^2 s^-2 K^-1 (J K^-1)
@@ -46,9 +48,9 @@ struct CookedConfig {
 
 /**
  * Cooked.
- * 
- * Utility class to keep the magic smoke within the motors (Prevent overheating of the motor).
- * Only works with Rev motors (Vortex, Neo, Neo550).
+ *
+ * Utility class to keep the magic smoke within the motors (Prevent overheating
+ * of the motor). Only works with Rev motors (Vortex, Neo, Neo550).
  */
 class Cooked {
 public:
@@ -56,12 +58,12 @@ public:
 
   /**
    * Record()
-   * 
+   *
    * @param current - the current current!
    * @param speed - the current speed
    * @param measured_temp - the current measured temperature
    * @return the new safe current limit to prevent the motor from overcooking
-   */ 
+   */
   [[nodiscard]] amp_t Record(
       amp_t current, radps_t speed, double measured_temp);
 

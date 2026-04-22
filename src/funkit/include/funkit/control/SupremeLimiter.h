@@ -19,8 +19,9 @@ struct PerDeviceInformation {
 
 /**
  * Supreme Limiter.
- * 
- * Manages power draw across all devices that run custom control loops on the Rio.
+ *
+ * Manages power draw across all devices that run custom control loops on the
+ * Rio.
  */
 class SupremeLimiter {
 public:

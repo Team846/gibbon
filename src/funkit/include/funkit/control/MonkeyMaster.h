@@ -20,25 +20,24 @@ namespace funkit::control {
 
 /**
  * MonkeyMaster
- * 
- * A class that provides higher level management and coordination of requests 
- * from HigherMotorController, which are then sent to motor controllers. 
- * 
+ *
+ * A class that provides higher level management and coordination of requests
+ * from HigherMotorController, which are then sent to motor controllers.
+ *
  * Manages CAN utilization as well as power.
  */
 class MonkeyMaster {
 public:
-
   /**
    * Setup()
-   * 
+   *
    * Sets up the preferences used by MonkeyMaster.
    */
   static void Setup();
 
   /**
    * Tick()
-   * 
+   *
    * Updates all motor controllers. Should be called each loop.
    */
   static void Tick(bool disabled);
@@ -52,24 +51,24 @@ public:
 
   /**
    * WriteMessages()
-   * 
-   * Writes all messages in the message queue to the motor controllers. 
+   *
+   * Writes all messages in the message queue to the motor controllers.
    * Also, drops redundant messages.
-   * 
+   *
    * If disabled is true, all written messages will be zeroed.
    */
   static void WriteMessages();
 
   /**
    * ConstructController()
-   * 
+   *
    * Constructs a motor controller and returns a slot ID for it. This slot ID is
    * used to refer to the motor controller in future calls.
    * @param type - the type of motor
    * @param params - the parameters to connect and access a motor controller
    * @param plant - the plant associated with the motor controller
    * @param genome - the configs for a motor controller
-   * @return the slot id 
+   * @return the slot id
    */
   static size_t ConstructController(funkit::control::base::MotorMonkeyType type,
       funkit::control::config::MotorConstructionParameters params,
@@ -77,7 +76,7 @@ public:
 
   /**
    * EnableStatusFrames()
-   * 
+   *
    * Enables specific status frames for a motor controller. Disables all others.
    */
   static void EnableStatusFrames(size_t slot_id,
@@ -87,63 +86,66 @@ public:
       pdcsu::units::ms_t encoder_position_ms = pdcsu::units::ms_t{20},
       pdcsu::units::ms_t analog_position_ms = pdcsu::units::ms_t{20});
 
-/**
- * OverrideStatusFramePeriod()
- * 
- * Overrides the period for the specific status frame. 
- * @param slot_id - the slot_id for the motor controller
- * @param frame - the frame to override others
- * @param period - the update interval for the status frame
- */
+  /**
+   * OverrideStatusFramePeriod()
+   *
+   * Overrides the period for the specific status frame.
+   * @param slot_id - the slot_id for the motor controller
+   * @param frame - the frame to override others
+   * @param period - the update interval for the status frame
+   */
   static void OverrideStatusFramePeriod(size_t slot_id,
       funkit::control::config::StatusFrame frame, pdcsu::units::ms_t period);
 
   /**
    * GetBatteryVoltage()
-   * 
+   *
    * @return the battery voltage.
    */
   static pdcsu::units::volt_t GetBatteryVoltage();
 
   /**
    * SetLoad()
-   * 
+   *
    * Sets the load on a motor controller. This is used for calculations.
    */
   static void SetLoad(size_t slot_id, pdcsu::units::nm_t load);
 
   /**
    * SetGenome()
-   * 
-   * Sets the motor controller to a specific genome. 
+   *
+   * Sets the motor controller to a specific genome.
    */
   static void SetGenome(
       size_t slot_id, config::MotorGenome genome, bool force_set = false);
 
   /**
-   * WriteDC() 
-   * 
-   * Writes a duty cycle to a motor controller by sending a request to an IntermediateController. 
+   * WriteDC()
+   *
+   * Writes a duty cycle to a motor controller by sending a request to an
+   * IntermediateController.
    */
   static void WriteDC(size_t slot_id, double duty_cycle);
 
   /**
    * WriteVelocity()
-   * 
-   * Writes a velocity setpoint to the motor controller by sending a request to an IntermediateController. 
-   * PID calculations performed onboard the motor controller.
+   *
+   * Writes a velocity setpoint to the motor controller by sending a request to
+   * an IntermediateController. PID calculations performed onboard the motor
+   * controller.
    */
   static void WriteVelocity(size_t slot_id, pdcsu::units::radps_t velocity);
 
   /**
    * WritePosition()
-   * 
-   * Writes a position setpoint to the motor controller by sending a request to an IntermediateController.
-   * PID calculations performed onboard the motor controller.
+   *
+   * Writes a position setpoint to the motor controller by sending a request to
+   * an IntermediateController. PID calculations performed onboard the motor
+   * controller.
    */
   static void WritePosition(size_t slot_id, pdcsu::units::radian_t position);
 
-  // Reads a value from a motor controller given a ReadType 
+  // Reads a value from a motor controller given a ReadType
   static hardware::ReadResponse Read(size_t slot_id, hardware::ReadType type);
 
   // Sets special configurations of a motor
@@ -157,15 +159,15 @@ public:
 
   /**
    * ZeroEncoder()
-   * 
+   *
    * "Zeros" by re-referencing the current position to be a given value.
-   * Does NOT always rereference the current position to be zero. 
+   * Does NOT always rereference the current position to be zero.
    */
   static void ZeroEncoder(size_t slot_id, pdcsu::units::radian_t position);
 
   /**
    * parseError()
-   * 
+   *
    * @param err - the type of ControllerErrorCodes
    * @return the error type in string format given a ControllerErrorCodes
    */

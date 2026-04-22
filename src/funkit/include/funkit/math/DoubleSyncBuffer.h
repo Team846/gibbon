@@ -8,21 +8,20 @@ namespace funkit::math {
 
 /**
  * DoubleSyncBuffer
- * 
+ *
  * A class that contains two rolling buffers of doubles and syncs them.
  */
 class DoubleSyncBuffer {
 public:
-
   // Constructs a DoubleSyncBuffer with the given size.
   DoubleSyncBuffer(size_t sz = 50U, int max_sync_diff = 15);
 
   /**
    * Add()
-   * 
-   * Adds a value to each contained buffer. The values may be unsynced. Sync() will be called automatically.
-   * The second signal may be time delayed.
-  */
+   *
+   * Adds a value to each contained buffer. The values may be unsynced. Sync()
+   * will be called automatically. The second signal may be time delayed.
+   */
   void Add(double val1, double val2);
 
   // Computes the sync difference between the two buffers

@@ -6,7 +6,7 @@
 namespace funkit::base {
 /**
  * Compression
- * 
+ *
  * A class that compresses log messages to save bandwidth for FunkyLogSystem
  * Uses custom 6-bit encoding and packing
  */
@@ -20,7 +20,7 @@ private:
   static std::pair<uint8_t, bool> char_conv(char x);
 
   /**
-   * Packs 6-bit values into bytes. 
+   * Packs 6-bit values into bytes.
    */
   static std::vector<uint8_t> pack_bytes(std::vector<uint8_t> conv);
 
@@ -30,7 +30,7 @@ public:
    * approximately 25%. Requires matching decrompression function.
    * @param data input string
    * @return compressed data, 6-bit binary packed into bytes.
-  */
+   */
   static std::vector<uint8_t> compress(const std::string_view& data);
 };
 }  // namespace funkit::base

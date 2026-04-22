@@ -17,10 +17,11 @@ namespace funkit::control {
 
 /**
  * HigherMotorController
- * 
- * A class that acts as an interface for MonkeyMaster to provide higher-level control of motors.
- * Primarily routes requests to MonkeyMaster, which then coordinate and send them to motor controllers.
- * Meant to be used by subsystems. 
+ *
+ * A class that acts as an interface for MonkeyMaster to provide higher-level
+ * control of motors. Primarily routes requests to MonkeyMaster, which then
+ * coordinate and send them to motor controllers. Meant to be used by
+ * subsystems.
  */
 class HigherMotorController {
 public:
@@ -29,7 +30,7 @@ public:
 
   /**
    * Setup()
-   * 
+   *
    * Sets up the motor. Gets a slot ID from MonkeyMaster.
    */
   void Setup(config::MotorGenome genome,
@@ -40,16 +41,16 @@ public:
 
   /**
    * WriteDC()
-   * 
-   * Writes a duty cycle directly to the motor controller. 
+   *
+   * Writes a duty cycle directly to the motor controller.
    * Value should be in the range [-1.0, 1.0].
    */
   void WriteDC(double duty_cycle);
 
   /**
    * WriteVelocity()
-   * 
-   * Writes a velocity setpoint to the motor controller. 
+   *
+   * Writes a velocity setpoint to the motor controller.
    * Control loop executed locally (determined by own calculations)
    */
   void WriteVelocity(mps_t velocity);
@@ -57,8 +58,8 @@ public:
 
   /**
    * WritePosition()
-   * 
-   * Writes a position setpoint to the motor controller. 
+   *
+   * Writes a position setpoint to the motor controller.
    * Control loop executed locally (determined by own calculations).
    */
   void WritePosition(meter_t position);
@@ -66,7 +67,7 @@ public:
 
   /**
    * WriteVelocityOnController()
-   * 
+   *
    * Writes a velocity setpoint to the motor controller. Control loop executed
    * onboard the motor controller.
    */
@@ -75,7 +76,7 @@ public:
 
   /**
    * WritePositionOnController()
-   * 
+   *
    * Writes a position setpoint to the motor controller. Control loop executed
    * onboard the motor controller.
    */
@@ -90,9 +91,9 @@ public:
 
   /**
    * SetPosition()
-   * 
-   * Zeroes the encoder to the specified value. Converts from real units to native
-   * units using the plant.
+   *
+   * Zeroes the encoder to the specified value. Converts from real units to
+   * native units using the plant.
    */
   void SetPosition(meter_t position);
   void SetPosition(radian_t position);
@@ -113,7 +114,7 @@ public:
       ms_t faults_ms = 20_ms_, ms_t velocity_ms = 20_ms_,
       ms_t encoder_position_ms = 20_ms_, ms_t analog_position_ms = 20_ms_);
 
-  // Override the period of a specific status frame. 
+  // Override the period of a specific status frame.
   void OverrideStatusFramePeriod(config::StatusFrame frame, ms_t period);
 
   // Sets special configurations of a motor

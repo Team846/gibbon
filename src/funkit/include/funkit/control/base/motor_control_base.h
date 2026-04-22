@@ -7,7 +7,7 @@ namespace funkit::control::base {
 
 /**
  * MotorMonkeyType (enum)
- * 
+ *
  * Contains all motor and speed controller combinations compatible with the
  * funkit architecture.
  */
@@ -25,10 +25,11 @@ enum LimitSwitchDefaultState {
   kNormallyOff,
 };
 
-/** 
+/**
  * MotorMonkeyTypeHelper
- * 
- * A class which provides static methods to help determine the type of motor controller.
+ *
+ * A class which provides static methods to help determine the type of motor
+ * controller.
  */
 class MotorMonkeyTypeHelper {
 public:
@@ -59,7 +60,7 @@ public:
 
 /**
  * ControlRequest
- * 
+ *
  * Variant type representing possible motor control requests.
  */
 using ControlRequest = std::variant<double,  // duty cycle

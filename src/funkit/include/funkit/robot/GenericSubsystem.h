@@ -9,9 +9,11 @@ namespace funkit::robot {
 
 /**
  * FUNKIT_VERIFY
- * 
- * A macro used as a means to verify something, if failed it will log a verification error. 
- * Expr must evaluate to true for the check to pass. If not, the bool ok (A flag on if the whole verification routine passes) is set to false and an error is logged.
+ *
+ * A macro used as a means to verify something, if failed it will log a
+ * verification error. Expr must evaluate to true for the check to pass. If not,
+ * the bool ok (A flag on if the whole verification routine passes) is set to
+ * false and an error is logged.
  * @param expr - Boolean on whether or not something is properly verified
  * @param ok - An Lvalue bool that is set to false on failure
  * @param fail_msg - The message attached to the Error log
@@ -24,11 +26,13 @@ namespace funkit::robot {
 
 /**
  * SubsystemBase
- * 
- * A non-templated class that inherits from Loggable for logging utilities beyond WPILib's SubsystemBase.
- * 
- * A funkit SubsystemBase represents the non-templated base class for a subsystem which has lifecycle functionality.
- * All subsystems inherit from funkit SubsystemBase to allow simple handling in GenericRobotContainer. 
+ *
+ * A non-templated class that inherits from Loggable for logging utilities
+ * beyond WPILib's SubsystemBase.
+ *
+ * A funkit SubsystemBase represents the non-templated base class for a
+ * subsystem which has lifecycle functionality. All subsystems inherit from
+ * funkit SubsystemBase to allow simple handling in GenericRobotContainer.
  */
 class SubsystemBase : public funkit::base::Loggable {
 public:
@@ -39,15 +43,17 @@ public:
 
   /**
    * Init()
-   * 
-   * Initialization of subsystem base by registering it in the container. Does not actually configure any related hardware.
+   *
+   * Initialization of subsystem base by registering it in the container. Does
+   * not actually configure any related hardware.
    */
   virtual void Init() = 0;
 
-   /**
+  /**
    * Setup()
-   * 
-   * Sets up the subsystem base by configuring hardware, and is called when GenericRobot::StartCompetition() is called
+   *
+   * Sets up the subsystem base by configuring hardware, and is called when
+   * GenericRobot::StartCompetition() is called
    */
   virtual void Setup() = 0;
 
@@ -60,20 +66,24 @@ public:
   // Verifies hardware of subsystem
   virtual bool VerifyHardware() = 0;
 
-  // Sets subsystem target to zero 
+  // Sets subsystem target to zero
   virtual void SetTargetZero() = 0;
 };
 
 /**
  * GenericSubsystem
- * 
- * A templated class for robot subsystems. 
- * Inherits from frc2::SubsystemBase (WPILib's implementation) and funkit::robot::SubsystemBase for logging and lifecycle utilities.
- * 
- * @tparam Readings - A struct holding information returned by ReadFromHardware(). 
- * @tparam Target - A struct holding commanded outputs that get passed to WriteToHardware(). 
- * 
- * A subsystem is meant to represent a specialized unit that talks with robot hardware. Behavior determined by its commands. 
+ *
+ * A templated class for robot subsystems.
+ * Inherits from frc2::SubsystemBase (WPILib's implementation) and
+ * funkit::robot::SubsystemBase for logging and lifecycle utilities.
+ *
+ * @tparam Readings - A struct holding information returned by
+ * ReadFromHardware().
+ * @tparam Target - A struct holding commanded outputs that get passed to
+ * WriteToHardware().
+ *
+ * A subsystem is meant to represent a specialized unit that talks with robot
+ * hardware. Behavior determined by its commands.
  */
 template <class Readings, class Target>
 class GenericSubsystem : public frc2::SubsystemBase, public SubsystemBase {
@@ -90,13 +100,15 @@ public:
 
   /**
    * Disables the copy constructor for GenericSubsystem
-   * Subsystems are unique objects, having functionality to copy can create issues. 
+   * Subsystems are unique objects, having functionality to copy can create
+   * issues.
    */
   GenericSubsystem(const GenericSubsystem&) = delete;
 
   /**
    * Disables the operator= for GenericSubsystem
-   * Subsystems are unique objects, having functionality for copy assignment can create issues. 
+   * Subsystems are unique objects, having functionality for copy assignment can
+   * create issues.
    */
   GenericSubsystem& operator=(const GenericSubsystem&) = delete;
 
@@ -112,9 +124,10 @@ public:
 
   /**
    * InitByParent()
-   * 
+   *
    * Alternative initializer function to be called by a parent subsystem only.
-   * Used for child subsystems, specifically superstructures and drivetrain swerve modules.
+   * Used for child subsystems, specifically superstructures and drivetrain
+   * swerve modules.
    */
   void InitByParent() {
     SetName(name());

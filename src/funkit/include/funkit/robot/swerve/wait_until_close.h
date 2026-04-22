@@ -10,12 +10,13 @@
 
 namespace funkit::robot::swerve {
 
-  /**
-   * WaitUntilClose
-   * 
-   * A class which inherits from CommandHelper and Loggable, acting as a command.
-   * Returns true when distance from current_estimated_pose is less than a certain distance. 
-   */
+/**
+ * WaitUntilClose
+ *
+ * A class which inherits from CommandHelper and Loggable, acting as a command.
+ * Returns true when distance from current_estimated_pose is less than a certain
+ * distance.
+ */
 class WaitUntilClose
     : public frc2::CommandHelper<frc2::Command, WaitUntilClose>,
       public funkit::base::Loggable {

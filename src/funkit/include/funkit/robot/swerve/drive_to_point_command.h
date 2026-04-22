@@ -12,8 +12,8 @@ namespace funkit::robot::swerve {
 
 /**
  * DriveToPointFlags
- * 
- * An enum acting as a bitmask, used to describe drivetrain behaviors 
+ *
+ * An enum acting as a bitmask, used to describe drivetrain behaviors
  */
 enum DriveToPointFlags {
   kNone = 0,
@@ -25,8 +25,9 @@ enum DriveToPointFlags {
 
 /**
  * Operator| overloading function
- * Merges bit values of DriveToPointFlags to create custom combinations of behavior
- * Casts to int for reliable bitwise OR calculations, then casts back to DriveToPointFlags for desired return type. 
+ * Merges bit values of DriveToPointFlags to create custom combinations of
+ * behavior Casts to int for reliable bitwise OR calculations, then casts back
+ * to DriveToPointFlags for desired return type.
  */
 inline DriveToPointFlags operator|(DriveToPointFlags a, DriveToPointFlags b) {
   return static_cast<DriveToPointFlags>(
@@ -35,15 +36,15 @@ inline DriveToPointFlags operator|(DriveToPointFlags a, DriveToPointFlags b) {
 
 /**
  * DriveToPointCommand
- * 
+ *
  * A class serving as a command to drive to a location
- * Inherits from CommandHelper for command lifecycle utilities, and Loggable for logging utilities
+ * Inherits from CommandHelper for command lifecycle utilities, and Loggable for
+ * logging utilities
  */
 class DriveToPointCommand
     : public frc2::CommandHelper<frc2::Command, DriveToPointCommand>,
       public funkit::base::Loggable {
 public:
-
   DriveToPointCommand(funkit::robot::swerve::DrivetrainSubsystem* drivetrain,
       funkit::math::FieldPoint target, pdcsu::units::fps_t max_speed,
       pdcsu::units::fps2_t max_acceleration,
@@ -62,8 +63,9 @@ protected:
 
   /**
    * GetTargetPoint()
-   * 
-   * @return The target point to go to, and if it's valid. Default implementation returns a zero FieldPoint and false. 
+   *
+   * @return The target point to go to, and if it's valid. Default
+   * implementation returns a zero FieldPoint and false.
    */
   virtual std::pair<funkit::math::FieldPoint, bool> GetTargetPoint() {
     return {{{pdcsu::units::inch_t{0}, pdcsu::units::inch_t{0}},
@@ -87,11 +89,13 @@ private:
 
   /**
    * EstimateCompletionTime()
-   * 
-   * Uses theoretical kinematic calculations to determine estimated completion time.
+   *
+   * Uses theoretical kinematic calculations to determine estimated completion
+   * time.
    * @param distance - distance to the target location
    * @param initial_velocity - initial velocity when function is called
-   * @param final_velocity - the estimated final velocity when target location is reached
+   * @param final_velocity - the estimated final velocity when target location
+   * is reached
    * @return the estimated completion time
    */
   pdcsu::units::second_t EstimateCompletionTime(pdcsu::units::inch_t distance,

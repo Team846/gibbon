@@ -13,8 +13,9 @@ namespace funkit::robot::swerve::odometry {
 
 /**
  * PoseEstimator
- * 
- * A class that applies linear algebraic math and kalman filters to estimate robot pose. 
+ *
+ * A class that applies linear algebraic math and kalman filters to estimate
+ * robot pose.
  */
 class PoseEstimator {
 public:
@@ -33,28 +34,30 @@ public:
   // Getter method for velocity determined by PoseEstimator
   std::array<double, 2> velocity() { return {state_[2], state_[3]}; }
 
-  // Updates/predicts the state of a dynamic system 
+  // Updates/predicts the state of a dynamic system
   void Update();
 
-  /** 
+  /**
    * AddVisionMeasurement()
-   * 
-   * Combines a state measured from a vision system into the state estimate 
+   *
+   * Combines a state measured from a vision system into the state estimate
    * @param pos - the position determined from a vision measurement
    * @param variance - the variance/uncertainty of the vision measurement
    */
   void AddVisionMeasurement(std::array<double, 2> pos, double variance);
 
-  /** 
+  /**
    * AddOdometryMeasurement()
-   * 
-   * Combines an odometry derived velocity measurement into the state estimate 
-   * @param difPos - the difference in position determined from the odometry measurement
+   *
+   * Combines an odometry derived velocity measurement into the state estimate
+   * @param difPos - the difference in position determined from the odometry
+   * measurement
    * @param variance - the variance/uncertainty of the odometry measurement
    */
   void AddOdometryMeasurement(std::array<double, 2> difPos, double variance);
 
-  // Sets a trusted estimate of the state with provided position. Velocity/latency stay the same.
+  // Sets a trusted estimate of the state with provided position.
+  // Velocity/latency stay the same.
   void SetPoint(std::array<double, 2> point);
 
   // Returns the average variance of position

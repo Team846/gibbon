@@ -25,14 +25,14 @@ enum WireGauge { twelve_gauge, fourteen_gauge, sixteen_gauge, eighteen_gauge };
 
 /**
  * CircuitResistanceCalculator
- * 
+ *
  * This class includes a static method to calculate the total resistance
  */
 class CircuitResistanceCalculator {
 public:
   /**
    * calculate()
-   * 
+   *
    * Calculates total resistance of a wire
    * @param wire_length: The length of the wire
    * @param guage: The type of wire gauge
