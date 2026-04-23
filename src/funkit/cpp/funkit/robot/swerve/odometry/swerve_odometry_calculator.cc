@@ -10,8 +10,10 @@ using Vec2D = funkit::robot::swerve::odometry::Vector2D;
 using inch_sq_t =
     pdcsu::units::UnitCompound<pdcsu::units::inch_t, pdcsu::units::inch_t>;
 
-#define w_h pdcsu::units::inch_t{constants_.horizontal_wheelbase_dim / 2.0}
-#define w_f pdcsu::units::inch_t{constants_.forward_wheelbase_dim / 2.0}
+#define w_h \
+  pdcsu::units::inch_t { constants_.horizontal_wheelbase_dim / 2.0 }
+#define w_f \
+  pdcsu::units::inch_t { constants_.forward_wheelbase_dim / 2.0 }
 
 namespace funkit::robot::swerve::odometry {
 
