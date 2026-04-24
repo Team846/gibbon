@@ -45,7 +45,7 @@ HoodSubsystem::~HoodSubsystem() = default;
 
 const degree_t hood_absolute_min = 40_deg_;
 const degree_t hood_absolute_max = 90_deg_;
-const degree_t hood_soft_min = 50_deg_;
+const degree_t hood_soft_min = 43_deg_;
 const degree_t hood_soft_max = 77_deg_;
 
 void HoodSubsystem::Setup() {

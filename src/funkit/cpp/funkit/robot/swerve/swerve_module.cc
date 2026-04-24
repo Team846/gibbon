@@ -34,7 +34,17 @@ SwerveModuleSubsystem::SwerveModuleSubsystem(Loggable& parent,
   cancoder_.OptimizeBusUtilization();
   cancoder_.GetAbsolutePosition().SetUpdateFrequency(100_Hz);
 
-  RegisterPreference("cancoder_offset_", degree_t{0.0});
+  degree_t backup{0.0};
+  if (unique_config.cancoder_id == 3) {
+    backup = degree_t{-114.0125};  // FR
+  } else if (unique_config.cancoder_id == 6) {
+    backup = degree_t{166.8828125};  // FL
+  } else if (unique_config.cancoder_id == 9) {
+    backup = degree_t{50.8125};  // BL
+  } else if (unique_config.cancoder_id == 12) {
+    backup = degree_t{-149.150390625};  // BR
+  }
+  RegisterPreference("cancoder_offset_", backup);
 
   auto motor_specs = funkit::control::base::MotorSpecificationPresets::get(
       common_config.motor_types);

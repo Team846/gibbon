@@ -2,6 +2,8 @@
 
 #include <frc/DriverStation.h>
 
+#include "funkit/math/quaternion.h"
+
 ShootingCalculatorOutputs ShootingCalculator::outputs_{
     0_deg_, 0_radps_, 60_deg_, 0_radps_, 0_fps_, false};
 std::optional<funkit::base::Loggable> ShootingCalculator::loggable_opt;
@@ -105,6 +107,10 @@ void ShootingCalculator::Calculate(
 
   if (odelta.magnitude() < 0.03_in_) { return; }
 
+  const funkit::math::Quaternion q_tilt = funkit::math::Quaternion::Multiply(
+      funkit::math::RotationAboutY(drivetrain_readings.estimated_pose.roll),
+      funkit::math::RotationAboutX(drivetrain_readings.estimated_pose.pitch));
+
   fps_t vel_in_dir = odelta.dot(vel_at_shooter) / odelta.magnitude();
   fps_t vel_perp =
       odelta.rotate(90_deg_, true).dot(vel_at_shooter) / odelta.magnitude();
@@ -155,13 +161,32 @@ void ShootingCalculator::Calculate(
           (shot_vel - shot_ptbvel);
 
   /* Calculate and apply turret targets */
-  outputs_.aim_angle =
+  const degree_t aim_angle =
       odelta.angle(true) +
       u_asin(std::clamp(
           loggable.GetPreferenceValue_double("swim/twistGain") *
               (vel_perp / (outputs_.shooter_vel * u_cos(outputs_.shot_angle)))
                   .value(),
           -0.99, 0.99));
+
+  if (u_abs(drivetrain_readings.estimated_pose.pitch) > 1_deg_ ||
+      u_abs(drivetrain_readings.estimated_pose.roll) > 1_deg_) {
+    const std::array<double, 3> shot_dir{
+        u_sin(aim_angle) * u_cos(outputs_.shot_angle),
+        u_cos(aim_angle) * u_cos(outputs_.shot_angle),
+        u_cos(aim_angle) * u_sin(outputs_.shot_angle)};
+
+    const auto shot_robot_dir = funkit::math::RotateVector(
+        funkit::math::Quaternion::Conjugate(q_tilt), shot_dir);
+
+    const degree_t aim_angle_robot =
+        degree_t{radian_t{std::atan2(shot_robot_dir[0], shot_robot_dir[1])}};
+
+    outputs_.shot_angle = funkit::math::ElevationAngle(shot_robot_dir);
+    outputs_.aim_angle = drivetrain_readings.pose.bearing + aim_angle_robot;
+  } else {
+    outputs_.aim_angle = drivetrain_readings.pose.bearing;
+  }
 
   auto cross_product =
       delta[0] * vel_at_shooter[1] - delta[1] * vel_at_shooter[0];

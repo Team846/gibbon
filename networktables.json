@@ -234,7 +234,7 @@
   {
     "name": "/Preferences/SwerveDrivetrain/max_speed (ft s^-1)",
     "type": "double",
-    "value": 5.0,
+    "value": 15.0,
     "properties": {
       "persistent": true
     }
@@ -1981,6 +1981,30 @@
     "name": "/Preferences/DyeRotor/ramp_rate",
     "type": "double",
     "value": 30.0,
+    "properties": {
+      "persistent": true
+    }
+  },
+  {
+    "name": "/Preferences/SwerveDrivetrain/april_tags/use_udp",
+    "type": "boolean",
+    "value": true,
+    "properties": {
+      "persistent": true
+    }
+  },
+  {
+    "name": "/Preferences/ShootingCalculator/swim/tiltYawGain",
+    "type": "double",
+    "value": -1.0,
+    "properties": {
+      "persistent": true
+    }
+  },
+  {
+    "name": "/Preferences/ShootingCalculator/swim/tiltPitchGain",
+    "type": "double",
+    "value": -1.0,
     "properties": {
       "persistent": true
     }

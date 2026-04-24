@@ -100,6 +100,7 @@ DrivetrainSubsystem::DrivetrainSubsystem(DrivetrainConfigs configs)
 
   RegisterPreference("ramp_rate_limit_step", 5.0);
 
+  RegisterPreference("april_tags/use_udp", true);
   RegisterPreference("april_tags/bearing_corr_gain", 0.1);
 
   odometry_.setConstants(
@@ -110,23 +111,39 @@ DrivetrainSubsystem::DrivetrainSubsystem(DrivetrainConfigs configs)
       .wheelbase_forward_dim = configs.wheelbase_forward_dim,
   });
 
+  bool use_udp = GetPreferenceValue_bool("april_tags/use_udp");
+
+  if (use_udp) {
+    april_udp_receiver_ = std::make_unique<funkit::base::ReceiverServer>();
+    april_udp_receiver_->Start(5805);
+    Log("AprilTag UDP receiver started on port 5805");
+  }
+
   std::vector<funkit::robot::calculators::AprilTagCamera> cameras = {};
   for (const auto& config : configs.april_camera_configs) {
-    cameras.push_back(
-        {config, nt::NetworkTableInstance::GetDefault().GetTable(
-                     "AprilTagsCam" + std::to_string(config.camera_id))});
+    std::shared_ptr<nt::NetworkTable> table = nullptr;
+    if (!use_udp) {
+      table = nt::NetworkTableInstance::GetDefault().GetTable(
+          "AprilTagsCam" + std::to_string(config.camera_id));
+    }
+    cameras.push_back({config, table});
   }
   std::optional<funkit::robot::calculators::TurretTagCamera> turret_tag_camera;
   if (configs.turret_camera_config.has_value()) {
     const auto& tc = configs.turret_camera_config.value();
-    turret_tag_camera.emplace(
-        funkit::robot::calculators::TurretTagCamera{.config = tc,
-            .table = nt::NetworkTableInstance::GetDefault().GetTable(
-                "AprilTagsCam" + std::to_string(tc.camera_id))});
+    std::shared_ptr<nt::NetworkTable> table = nullptr;
+    if (!use_udp) {
+      table = nt::NetworkTableInstance::GetDefault().GetTable(
+          "AprilTagsCam" + std::to_string(tc.camera_id));
+    }
+    turret_tag_camera.emplace(funkit::robot::calculators::TurretTagCamera{
+        .config = tc, .table = table});
   }
   tag_pos_calculator.setConstants({.tag_locations = configs.april_locations,
       .cameras = cameras,
-      .turret_camera = turret_tag_camera});
+      .turret_camera = turret_tag_camera,
+      .use_udp = use_udp,
+      .udp_receiver = april_udp_receiver_.get()});
 
 #ifndef _WIN32
   for (int i = 0; i < 20; i++) {
@@ -476,6 +493,28 @@ DrivetrainReadings DrivetrainSubsystem::ReadFromHardware() {
   Graph("april_tags/april_pos_x", tag_pos.pos[0]);
   Graph("april_tags/april_pos_y", tag_pos.pos[1]);
   Graph("april_tags/april_variance", tag_pos.variance);
+
+  if (april_udp_receiver_) {
+    auto now_g = funkit::wpilib::CurrentFPGATime();
+    for (const auto& config : configs_.april_camera_configs) {
+      auto f = april_udp_receiver_->GetLatestFrame(config.camera_id);
+      if (!f) continue;
+      auto cam = std::to_string(config.camera_id);
+      auto transport_ms =
+          (now_g - pdcsu::units::second_t{f->receive_time}).value() * 1000.0;
+      Graph("april_tags/transport_ms_cam" + cam,
+          pdcsu::units::ms_t{transport_ms});
+      Graph("april_tags/pipeline_ms_cam" + cam,
+          pdcsu::units::ms_t{f->latency * 1000.0});
+      if (f->has_fpga_capture_time) {
+        auto total_ms =
+            (now_g - pdcsu::units::second_t{f->fpga_capture_time}).value() *
+            1000.0;
+        Graph("april_tags/total_latency_ms_cam" + cam,
+            pdcsu::units::ms_t{total_ms});
+      }
+    }
+  }
   if (tag_pos.bearing_from_tags_valid && velocity.magnitude() < 2_fps_) {
     Graph("april_tags/bearing_from_tags", tag_pos.bearing_from_tags);
     degree_t new_bearing_correction_at_ =
@@ -509,6 +548,8 @@ DrivetrainReadings DrivetrainSubsystem::ReadFromHardware() {
       .bearing = bearing,
       .velocity = {pdcsu::units::fps_t{pose_vel[0]},
           pdcsu::units::fps_t{pose_vel[1]}},
+      .pitch = roll,
+      .roll = -pitch,
   };
 
   if (frc::RobotBase::IsSimulation()) {

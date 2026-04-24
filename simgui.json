@@ -28,6 +28,7 @@
       "/SmartDashboard/MainField": "Field2d",
       "/SmartDashboard/SendableChooser[0]": "String Chooser",
       "/SmartDashboard/brake_for_time": "Command",
+      "/SmartDashboard/clear_bearing_corr": "Command",
       "/SmartDashboard/get_prune_list": "Command",
       "/SmartDashboard/home_telescope_elevator_climber": "Command",
       "/SmartDashboard/prune_prefs": "Command",
@@ -38,6 +39,7 @@
       "/SmartDashboard/zero_bearing": "Command",
       "/SmartDashboard/zero_coral_wrist": "Command",
       "/SmartDashboard/zero_odometry": "Command",
+      "/SmartDashboard/zero_pivot_at_hardstop": "Command",
       "/SmartDashboard/zero_turret_encoders": "Command",
       "/SmartDashboard/zero_turret_with_CRT": "Command"
     },
@@ -233,9 +235,12 @@
             0.0,
             0.8500000238418579
           ],
-          "height": 252
+          "height": 0
         }
-      ]
+      ],
+      "window": {
+        "visible": false
+      }
     }
   }
 }

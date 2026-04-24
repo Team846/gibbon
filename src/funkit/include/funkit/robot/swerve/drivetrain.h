@@ -8,6 +8,7 @@
 #include <variant>
 
 #include "ctre/phoenix6/Pigeon2.hpp"
+#include "funkit/base/freciver.h"
 #include "funkit/robot/GenericSubsystem.h"
 #include "funkit/robot/calculators/AprilTagCalculator.h"
 #include "funkit/robot/swerve/control/swerve_ol_calculator.h"
@@ -185,6 +186,9 @@ private:
 
   // Path logger for recording odometry data
   PathLogger path_logger_;
+
+  // udp reciver
+  std::unique_ptr<funkit::base::ReceiverServer> april_udp_receiver_;
 
   bool first_loop = true;
 

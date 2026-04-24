@@ -99,6 +99,20 @@ pdcsu::units::degree_t AprilTagCalculator::InterpolateTurretAngle(
   return odom_history_.back().turret_angle;
 }
 
+bool AprilTagCalculator::IsDuplicateUdpFrame(
+    uint8_t camera_id, const funkit::base::CameraFrame& frame) {
+  auto it = prev_frames_.find(camera_id);
+  if (it == prev_frames_.end()) {
+    prev_frames_[camera_id] = {frame.frame_num, frame.receive_time};
+    return false;
+  }
+
+  bool is_duplicate = it->second.frame_num == frame.frame_num &&
+                      frame.receive_time <= it->second.receive_time + 1e-6;
+  if (!is_duplicate) { it->second = {frame.frame_num, frame.receive_time}; }
+  return is_duplicate;
+}
+
 ATCalculatorOutput AprilTagCalculator::calculate(ATCalculatorInput input) {
   ATCalculatorOutput output{};
   pdcsu::units::second_t now = funkit::wpilib::CurrentFPGATime();
@@ -139,38 +153,76 @@ ATCalculatorOutput AprilTagCalculator::calculate(ATCalculatorInput input) {
 
   for (size_t i = 0; i < temp_cameras.size(); i++) {
     const auto& camera = temp_cameras[i];
-    auto cam_table = camera.table;
     const auto& config = camera.config;
 
-    pdcsu::units::second_t delay =
-        now - pdcsu::units::second_t{
-                  cam_table->GetEntry("tl").GetLastChange() / 1000000.0};
-    pdcsu::units::second_t tl =
-        pdcsu::units::second_t(cam_table->GetNumber("tl", -1));
-
-    if (delay > 3_s_) { output.camera_disconnect = true; }
-
-    std::vector<double> tx_nums = cam_table->GetNumberArray("tx", {});
-    std::vector<double> distances_num =
-        cam_table->GetNumberArray("distances", {});
+    std::vector<double> tags;
     std::vector<pdcsu::units::degree_t> tx;
     std::vector<pdcsu::units::inch_t> distances;
-    for (double tx_num : tx_nums) {
-      tx.push_back(pdcsu::units::degree_t{tx_num});
-    };
-    for (double distance_num : distances_num) {
-      distances.push_back(pdcsu::units::inch_t{distance_num});
-    };
+    pdcsu::units::second_t capture_time{0};
 
-    pdcsu::units::second_t fudge{0};
-    if (input.fudge_latency.contains(config.camera_id)) {
-      fudge = input.fudge_latency.at(config.camera_id);
+    if (constants_.use_udp && constants_.udp_receiver != nullptr) {
+      auto frame_ptr =
+          constants_.udp_receiver->GetLatestFrame(config.camera_id);
+      if (!frame_ptr) {
+        output.camera_disconnect = true;
+        continue;
+      }
+      const auto& frame = *frame_ptr;
+
+      if (IsDuplicateUdpFrame(config.camera_id, frame)) {
+        if (now - pdcsu::units::second_t{frame.receive_time} > 3_s_)
+          output.camera_disconnect = true;
+        continue;
+      }
+
+      pdcsu::units::second_t delay =
+          now - pdcsu::units::second_t{frame.receive_time};
+      if (delay > 3_s_) { output.camera_disconnect = true; }
+
+      for (const auto& det : frame.detections) {
+        tags.push_back(static_cast<double>(det.tag_id));
+        tx.push_back(pdcsu::units::degree_t{det.theta});
+        distances.push_back(pdcsu::units::inch_t{det.r});
+      }
+
+      pdcsu::units::second_t fudge =
+          input.fudge_latency.contains(config.camera_id)
+              ? input.fudge_latency.at(config.camera_id)
+              : pdcsu::units::second_t{0};
+
+      if (frame.has_fpga_capture_time) {
+        capture_time = pdcsu::units::second_t{frame.fpga_capture_time} - fudge;
+        auto age = now - capture_time;
+        if (age > 200_ms_ || age < 0_s_) continue;
+      } else {
+        auto effective = pdcsu::units::second_t{frame.latency} + fudge + delay;
+        if (effective > 200_ms_) continue;
+        capture_time = now - effective;
+      }
+    } else {
+      auto cam_table = camera.table;
+      if (!cam_table) continue;
+
+      auto delay = now - pdcsu::units::second_t{
+                             cam_table->GetEntry("tl").GetLastChange() / 1e6};
+      auto tl = pdcsu::units::second_t{cam_table->GetNumber("tl", -1)};
+      if (delay > 3_s_) { output.camera_disconnect = true; }
+
+      for (double v : cam_table->GetNumberArray("tx", {}))
+        tx.push_back(pdcsu::units::degree_t{v});
+      for (double v : cam_table->GetNumberArray("distances", {}))
+        distances.push_back(pdcsu::units::inch_t{v});
+      tags = cam_table->GetNumberArray("tags", {});
+
+      pdcsu::units::second_t fudge =
+          input.fudge_latency.contains(config.camera_id)
+              ? input.fudge_latency.at(config.camera_id)
+              : pdcsu::units::second_t{0};
+      auto effective = tl + fudge + delay;
+      if (effective > 200_ms_) continue;
+      capture_time = now - effective;
     }
-    pdcsu::units::second_t effective_latency = tl + fudge + delay;
-    if (effective_latency > 200_ms_) { continue; }
-    pdcsu::units::second_t capture_time = now - effective_latency;
 
-    std::vector<double> tags = cam_table->GetNumberArray("tags", {});
     pdcsu::units::degree_t imuBearingAtCapture = InterpolateRobotBearing(
         capture_time);  // input.pose.bearing - input.angular_velocity *
                         // effective_latency;
