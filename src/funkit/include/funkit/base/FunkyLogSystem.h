@@ -70,8 +70,8 @@ private:
   static uintmax_t MIN_SPACE;
 
   /**
-   * Background thread that periodically drains queued messages and appends them
-   * to the file.
+   * Background thread that periodically flushes queued messages and appends
+   * them to the file.
    * @param rateLimit - the maximum number of characters processed per cycle
    * @param logFileName - the file name to write logs to
    */

@@ -14,7 +14,7 @@ namespace funkit::control::hardware {
  *    growth_rate_   - the rate at which temperature can decay
  *    free_speed_    - the free speed of a given motor
  *    stall_current_ - the stall current of the
- *                     given motorç
+ *                     given motor
  */
 struct CookedConfig {
   double thermal_mass_ = 100;  // kg m^2 s^-2 K^-1 (J K^-1)

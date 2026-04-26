@@ -33,9 +33,6 @@ public:
       pdcsu::units::ohm_t circuit_resistance,
       pdcsu::units::kgm2_t rotational_inertia, double friction);
 
-  /**
-   * Tick()
-   */
   void Tick() override;
 
   bool VerifyConnected() override { return true; }
@@ -78,7 +75,6 @@ public:
 
   void SetLoad(pdcsu::units::nm_t load);
 
-  // Setter method for battery voltage
   void SetBatteryVoltage(pdcsu::units::volt_t voltage);
 
 private:

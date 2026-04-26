@@ -93,8 +93,8 @@ public:
     }
   }
 
-  // A templated function to register a preference only if its of PDCSU unit
-  // type
+  /* A templated function to register a preference only if its of PDCSU unit
+   * type. */
   template <typename U>
   void RegisterPreference(std::string_view key, U fallback) {
     if constexpr (detail::is_pdcsu_unit_v<U>) {
@@ -117,8 +117,8 @@ public:
   // Creates a string preference.
   void RegisterPreference(std::string_view key, const std::string& fallback);
 
-  // A templated function that gets the preference value only if its of PDCSU
-  // unit type.
+  /* A templated function that gets the preference value only if its of PDCSU
+   * unit type. */
   template <typename U> U GetPreferenceValue_unit_type(std::string_view key) {
     if constexpr (detail::is_pdcsu_unit_v<U>) {
       U sample{};
@@ -141,8 +141,8 @@ public:
   // Returns the value of the preference for a string.
   std::string GetPreferenceValue_string(std::string_view key);
 
-  // A templated function that sets the preference value only if its of PDCSU
-  // unit type.
+  /* A templated function that sets the preference value only if its of PDCSU
+   * unit type. */
   template <typename U> void SetPreferenceValue(std::string_view key, U value) {
     if constexpr (detail::is_pdcsu_unit_v<U>) {
       std::string modkey = fmt::format("{} ({})", key, value.dims());

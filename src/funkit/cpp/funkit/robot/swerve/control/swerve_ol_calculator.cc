@@ -4,9 +4,7 @@
 #include "util/math/uvec.h"
 
 namespace funkit::robot::swerve::control {
-/**
- *
- */
+
 SwerveOpenLoopCalculatorOutput SwerveOpenLoopCalculator::calculate(
     SwerveOpenLoopCalculatorInputs inputs) {
   std::pair<double, double> kModuleLocationSigns[4] = {
