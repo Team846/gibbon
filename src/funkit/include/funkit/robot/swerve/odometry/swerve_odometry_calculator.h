@@ -33,11 +33,20 @@ class SwerveOdometryCalculator
 public:
   SwerveOdometryCalculator();
 
+  /**
+   * calculate()
+   *
+   * @param inputs - the current bearing, steer and drive position.
+   * @return the calculated predicted pose and odometry bearing.
+   */
   SwerveOdometryOutput calculate(SwerveOdometryInputs inputs) override;
 
+  // Sets a specific position offset
   void SetPosition(Vector2D position) {
     position_offset_ = position - last_position_;
   }
+
+  // Sets a specific odometry bearing
   void SetOdomBearing(pdcsu::units::degree_t bearing) {
     odom_bearing_ = bearing;
   }

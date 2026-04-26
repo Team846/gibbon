@@ -9,12 +9,12 @@
 
 namespace funkit::control::hardware {
 
-/*
-TalonFX_interm
-
-A class which interacts with the phoenix API to control and get information from
-TalonFX hardware.
-*/
+/**
+ * TalonFX_interm
+ *
+ * A class which interacts with the phoenix API to control and get information
+ * from TalonFX hardware.
+ */
 class TalonFX_interm : public IntermediateController {
 public:
   TalonFX_interm(int can_id, std::string_view bus = "",

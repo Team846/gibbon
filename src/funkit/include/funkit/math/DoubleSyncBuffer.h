@@ -6,37 +6,34 @@
 
 namespace funkit::math {
 
-/*
-DoubleSyncBuffer
-
-A class that contains two rolling buffers of doubles and syncs them.
-*/
+/**
+ * DoubleSyncBuffer
+ *
+ * A class that contains two rolling buffers of doubles and syncs them.
+ */
 class DoubleSyncBuffer {
 public:
-  /*
-  DoubleSyncBuffer()
-
-  Constructs a DoubleSyncBuffer with the given size.
-  */
+  // Constructs a DoubleSyncBuffer with the given size.
   DoubleSyncBuffer(size_t sz = 50U, int max_sync_diff = 15);
 
-  /*
-  Add()
-
-  Adds a value to each contained buffer. The values may be unsynced. Sync() will
-  be called automatically.
-  The second signal may be time delayed.
-  */
+  /**
+   * Add()
+   *
+   * Adds a value to each contained buffer. The values may be unsynced. Sync()
+   * will be called automatically. The second signal may be time delayed.
+   */
   void Add(double val1, double val2);
 
   // Computes the sync difference between the two buffers
   void Sync();
 
+  // return if buffers are equal in length
   bool IsValid();
 
   // Returns the computed sync difference between each container buffer
   int GetSyncDiff() { return sync_diff_; }
 
+  // returns the smallest value from each buffers as a pair
   std::pair<double, double> GetTrough();
 
 private:

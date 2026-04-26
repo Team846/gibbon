@@ -56,23 +56,23 @@ struct SwerveModuleCommonConfig {
   std::string_view bus = "";
 };
 
-/*
-SwerveModuleSubsystem
-
-A class representing a single swerve module. Controls a drive and steer motor
-and a CANcoder. Meant to be constructed as a child subsystem of
-DrivetrainSubsystem.
-*/
+/**
+ * SwerveModuleSubsystem
+ *
+ * A class representing a single swerve module. Controls a drive and steer motor
+ * and a CANcoder. Meant to be constructed as a child subsystem of
+ * DrivetrainSubsystem.
+ */
 class SwerveModuleSubsystem
     : public funkit::robot::GenericSubsystem<SwerveModuleReadings,
           SwerveModuleTarget> {
 public:
-  /*
-  SwerveModuleSubsystem()
-
-  Constructs a SwerveModuleSubsystem object with the given parameters. For use
-  by DrivetrainSubsystem.
-  */
+  /**
+   * SwerveModuleSubsystem()
+   *
+   * Constructs a SwerveModuleSubsystem object with the given parameters. For
+   * use by DrivetrainSubsystem.
+   */
   SwerveModuleSubsystem(Loggable& parent,
       SwerveModuleUniqueConfig unique_config,
       SwerveModuleCommonConfig common_config);
@@ -88,38 +88,38 @@ public:
 
   void ZeroWithCANcoder();
 
-  /*
-  SetDriveGenome()
-
-  Sets the drive motor genome. Must be called before Setup().
-  */
+  /**
+   * SetDriveGenome()
+   *
+   * Sets the drive motor genome. Must be called before Setup().
+   */
   void SetDriveGenome(funkit::control::config::MotorGenome genome);
 
-  /*
-  SetSteerGenome()
-
-  Sets the steer motor genome. Must be called before Setup().
-  */
+  /**
+   * SetSteerGenome()
+   *
+   * Sets the steer motor genome. Must be called before Setup().
+   */
   void SetSteerGenome(funkit::control::config::MotorGenome genome);
 
-  /*
-  ModifyGenomes()
-
-  Modifies the genome for the steer and drive motor controllers. Should be
-  called after SwerveModuleSubsystem Setup, in DrivetrainSubsystem Setup.
-  */
+  /**
+   * ModifyGenomes()
+   *
+   * Modifies the genome for the steer and drive motor controllers. Should be
+   * called after SwerveModuleSubsystem Setup, in DrivetrainSubsystem Setup.
+   */
   void ModifySwerveGenome(funkit::control::config::MotorGenome drive_genome,
       funkit::control::config::MotorGenome steer_genome);
 
 private:
   int last_rezero = 101;
 
-  /*
-  getMotorParams()
-
-  Static helper function modifies the drive and steer motor parameters provided
-  in the common configuration using the unique configuration.
-  */
+  /**
+   * getMotorParams()
+   *
+   * Static helper function modifies the drive and steer motor parameters
+   * provided in the common configuration using the unique configuration.
+   */
   static std::pair<funkit::control::config::MotorConstructionParameters,
       funkit::control::config::MotorConstructionParameters>
   getMotorParams(SwerveModuleUniqueConfig unique_config,
@@ -129,12 +129,12 @@ private:
 
   void WriteToHardware(SwerveModuleTarget target) override;
 
-  /*
-  calculateSteerPosition()
-
-  Calculates the direction for the steer motor, based on a normalized target.
-  Also returns a boolean that represents the inversion of the drive motor.
-  */
+  /**
+   * calculateSteerPosition()
+   *
+   * Calculates the direction for the steer motor, based on a normalized target.
+   * Also returns a boolean that represents the inversion of the drive motor.
+   */
   std::pair<pdcsu::units::degree_t, bool> calculateSteerPosition(
       pdcsu::units::degree_t target_norm, pdcsu::units::degree_t current);
 

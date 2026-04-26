@@ -17,15 +17,18 @@ struct PerDeviceInformation {
   bool is_limitable;
 };
 
-/*
-Supreme Limiter.
-
-Manages power draw across all devices that run custom control loops on the Rio.
-*/
+/**
+ * Supreme Limiter.
+ *
+ * Manages power draw across all devices that run custom control loops on the
+ * Rio.
+ */
 class SupremeLimiter {
 public:
-  /* Limits duty cycle to implement current limit across all devices. No
-   * prioritization is applied. */
+  /**
+   * Limits duty cycle to implement current limit across all devices. No
+   * prioritization is applied.
+   */
   [[nodiscard]] static std::map<size_t, double> Limit(
       std::vector<PerDeviceInformation> inputs, volt_t v_batt);
 

@@ -28,16 +28,18 @@ struct SwerveOpenLoopCalculatorOutput {
   std::array<pdcsu::units::degree_t, 4> steer_outputs;
 };
 
-/*
-SwerveOpenLoopCalculator
-
-Calculates the open-loop control targets for each swerve module, given target
-translational and rotational velocities.
-*/
+/**
+ * SwerveOpenLoopCalculator
+ *
+ * Calculates the open-loop control targets for each swerve module, given target
+ * translational and rotational velocities.
+ */
 class SwerveOpenLoopCalculator
     : public funkit::math::Calculator<SwerveOpenLoopCalculatorInputs,
           SwerveOpenLoopCalculatorOutput, SwerveOpenLoopCalculatorConstants> {
 public:
+  // Calculates the necessary outputs for swerve modules to achieve desired
+  // target velocities.
   SwerveOpenLoopCalculatorOutput calculate(
       SwerveOpenLoopCalculatorInputs inputs) override;
 };

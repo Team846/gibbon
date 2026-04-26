@@ -11,10 +11,27 @@
 
 namespace funkit::robot {
 
+/**
+ * GenericCommand
+ *
+ * A class that creates a generalized command. It inherits from both
+ * CommandHelper and Loggable, helping provide logging utilities beyond WPILibs
+ * Commands.
+ *
+ * A command represents a schedulable robot behavior. It gets
+ * called by the CommandScheduler periodically while active, and ended when
+ * finished or interrupted
+ */
 template <typename RobotContainer, typename Subclass>
 class GenericCommand : public frc2::CommandHelper<frc2::Command, Subclass>,
                        public funkit::base::Loggable {
 public:
+  /**
+   * Constructor for GenericCommand
+   *
+   * @param container: The robot container
+   * @param name: The name of the command
+   */
   GenericCommand(RobotContainer& container, std::string name)
       : Loggable{name}, container_{container} {
     frc2::Command::SetName(name);
@@ -25,10 +42,17 @@ public:
     Log("Destroying instance of command {}.", name());
   }
 
+  // A method that gets called at the beginning of a command's lifecycle
   virtual void OnInit() = 0;
+
+  // A method that gets called at the end of a command's lifecycle
   virtual void OnEnd(bool interrupted) = 0;
+
+  // A method that gets called periodically during the command's lifecycle
   virtual void Periodic() = 0;
 
+  // A native WPILib command lifecycle method. It logs initialization, start
+  // time, and calls the custom implementation of GenericCommand, OnInit()
   void Initialize() override final {
     Log("Command {} initialized.", name());
     OnInit();
@@ -36,6 +60,9 @@ public:
     command_start_time_ = funkit::wpilib::CurrentFPGATime();
   }
 
+  // A native WPILib command lifecycle method. It logs the total time of the
+  // command lifecycle, and calls the custom implementation of GenericCommand,
+  // OnEnd()
   void End(bool interrupted) override final {
     pdcsu::units::second_t total_time =
         funkit::wpilib::CurrentFPGATime() - command_start_time_;
@@ -49,6 +76,15 @@ public:
     OnEnd(interrupted);
   }
 
+  /**
+   * Execute()
+   *
+   * A native WPILib command lifecycle method.
+   * It logs the time to call a single periodic cycle and if the elapsed time
+   * took too long, and finds the average periodic time of the command.
+   *
+   * It also calls the custom implementation of GenericCommand, Periodic()
+   */
   void Execute() override final {
     const pdcsu::units::second_t start_time = funkit::wpilib::CurrentFPGATime();
     Periodic();
@@ -82,12 +118,33 @@ private:
   pdcsu::units::second_t command_start_time_ = pdcsu::units::second_t{0};
 };
 
+/**
+ * GenericCommandGroup
+ *
+ * A templated class that creates a generalized command group.
+ * It inherits from both CommandHelper and Loggable, following the
+ * implementation of frc2::SequentialCommandGroup
+ *
+ * The GenericCommandGroup still acts as a single schedulable command, but
+ * chains multiple commands together.
+ */
 template <typename RobotContainer, typename Subclass,
     wpi::DecayedDerivedFrom<frc2::Command>... Commands>
 class GenericCommandGroup
     : public frc2::CommandHelper<frc2::SequentialCommandGroup, Subclass>,
       public funkit::base::Loggable {
 public:
+  /**
+   * Constructor for GenericCommandGroup.
+   *
+   * @param container: The robot container
+   * @param name: The name of the command group
+   * @param commands: The sequential list of commands
+   *
+   * Inherits from Loggable and initializes its member, container.
+   * It sets the name of the command group and sequentially adds in commands
+   * that it takes in from its parameters.
+   */
   GenericCommandGroup(
       RobotContainer& container, std::string name, Commands&&... commands)
       : Loggable{name}, container_{container} {
@@ -109,7 +166,7 @@ private:
   frc2::InstantCommand end_command_addition{[&] {
     // Log("Command group ending. Took {} ms to complete.",
     // (funkit::wpilib::CurrentFPGATime() - command_start_time_)
-    //     .template to<double>()); TODO:Find out why we can't log
+    //     .template to<double>()); TODO: Find out why we can't log
   }};
 
   frc2::InstantCommand start_command_addition{[&] {

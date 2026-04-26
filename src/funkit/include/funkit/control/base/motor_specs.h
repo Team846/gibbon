@@ -5,16 +5,16 @@
 
 namespace funkit::control::base {
 
-/*
-MotorSpecs
-  - free_speed: rpm
-  - stall_current: amps
-  - free_current: amps
-  - stall_torque: Nm
-  - winding_resistance: ohms
-
-Values can be found on specification sheets for the respective motors.
-*/
+/**
+ * MotorSpecs
+ *   free_speed: rpm
+ *   stall_current: amps
+ *   free_current: amps
+ *   stall_torque: Nm
+ *   winding_resistance: ohms
+ *
+ * Values can be found on specification sheets for the respective motors.
+ */
 struct MotorSpecs {
   pdcsu::units::rpm_t free_speed;
   pdcsu::units::amp_t stall_current;
@@ -22,17 +22,19 @@ struct MotorSpecs {
   pdcsu::units::nm_t stall_torque;
 };
 
-/*
-MotorSpecificationPresets
-
-Includes MotorSpecs for:
-  - NEO 550 (https://www.revrobotics.com/rev-21-1651/)
-  - NEO (https://www.revrobotics.com/rev-21-1650/)
-  - NEO Vortex (https://www.revrobotics.com/rev-21-1652/)
-  - Kraken X60
-(https://docs.wcproducts.com/kraken-x60/kraken-x60-motor/overview-and-features/motor-performance)
-  - Kraken X44
-(https://docs.wcproducts.com/kraken-x44/kraken-x44-motor/overview-and-features/motor-performance)
+/**
+ * MotorSpecificationPresets
+ *
+ * Includes MotorSpecs for:
+ *   NEO 550 (https://www.revrobotics.com/rev-21-1651/)
+ *   NEO (https://www.revrobotics.com/rev-21-1650/)
+ *   NEO Vortex (https://www.revrobotics.com/rev-21-1652/)
+ *   Kraken X60
+ *
+ (https://docs.wcproducts.com/kraken-x60/kraken-x60-motor/overview-and-features/motor-performance)
+ *   Kraken X44
+ *
+ (https://docs.wcproducts.com/kraken-x44/kraken-x44-motor/overview-and-features/motor-performance)
 
 */
 struct MotorSpecificationPresets {

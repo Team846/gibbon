@@ -9,6 +9,12 @@ namespace funkit::math {
 
 using mat = Eigen::Matrix<double, Eigen::Dynamic, Eigen::Dynamic>;
 
+/**
+ * LinearKalmanFilter
+ *
+ * A templated class which reduces the noise in readings using linear algebra
+ * @tparam N - the number of variables in the system
+ */
 template <int N> class LinearKalmanFilter {
 public:
   LinearKalmanFilter(mat starterState, mat transformerMatrix) {
@@ -60,4 +66,4 @@ protected:
   // MatrixXd x;
 };
 
-};  // namespace funkit::math
+};  // namespace funkit::matht
