@@ -22,6 +22,7 @@ constexpr int kPingSz = 10;
 constexpr int kPongSz = 18;
 constexpr int kBindRetryAttempts = 20;
 constexpr int kBindRetryDelayMs = 100;
+constexpr double kFrameResetGapSeconds = 1.0;
 
 inline bool BindWithRetry(int sockfd, const sockaddr_in& bind_addr) {
   for (int attempt = 0; attempt < kBindRetryAttempts; ++attempt) {
@@ -48,6 +49,11 @@ template <typename T> inline void WriteBE(uint8_t* d, T v) {
   std::memcpy(b.data(), &v, sizeof(T));
   for (size_t i = 0; i < sizeof(T); ++i)
     d[i] = b[sizeof(T) - 1 - i];
+}
+
+inline bool IsFrameNewer(uint16_t incoming, uint16_t previous) {
+  const uint16_t diff = static_cast<uint16_t>(incoming - previous);
+  return diff != 0 && diff < 0x8000;
 }
 
 }  // namespace
@@ -114,6 +120,20 @@ std::shared_ptr<const CameraFrame> ReceiverServer::GetLatestFrame(
   std::lock_guard<std::mutex> lk(mtx_);
   auto it = frames_.find(camera_id);
   return it != frames_.end() ? it->second : nullptr;
+}
+
+std::optional<CameraFrameDebug> ReceiverServer::GetFrameDebug(uint8_t camera_id) {
+  std::lock_guard<std::mutex> lk(mtx_);
+  auto it = frames_.find(camera_id);
+  if (it == frames_.end()) { return std::nullopt; }
+
+  CameraFrameDebug debug{};
+  debug.frame_num = it->second->frame_num;
+  debug.receive_time = it->second->receive_time;
+  auto drop_it = stale_drop_counts_.find(camera_id);
+  debug.stale_drop_count =
+      drop_it == stale_drop_counts_.end() ? 0U : drop_it->second;
+  return debug;
 }
 
 void ReceiverServer::HandleTimeSync(
@@ -188,6 +208,17 @@ void ReceiverServer::HandleDetection(
   }
 
   std::lock_guard<std::mutex> lk(mtx_);
+  auto it = frames_.find(cam_id);
+  if (it != frames_.end()) {
+    const auto& prev = *(it->second);
+    const bool newer_frame = IsFrameNewer(frame, prev.frame_num);
+    const bool allow_reset = recv_time - prev.receive_time > kFrameResetGapSeconds;
+    if (!newer_frame && !allow_reset) {
+      stale_drop_counts_[cam_id]++;
+      return;
+    }
+  }
+
   frames_[cam_id] = std::make_shared<CameraFrame>(CameraFrame{cam_id, frame,
       latency, std::move(dets), recv_time, has_fpga_capture_time, fpga_cap});
 }

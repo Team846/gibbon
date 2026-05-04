@@ -496,6 +496,7 @@ DrivetrainReadings DrivetrainSubsystem::ReadFromHardware() {
 
   if (april_udp_receiver_) {
     auto now_g = funkit::wpilib::CurrentFPGATime();
+    static std::map<uint8_t, uint16_t> last_udp_frame_nums{};
     for (const auto& config : configs_.april_camera_configs) {
       auto f = april_udp_receiver_->GetLatestFrame(config.camera_id);
       if (!f) continue;
@@ -513,6 +514,25 @@ DrivetrainReadings DrivetrainSubsystem::ReadFromHardware() {
         Graph("april_tags/total_latency_ms_cam" + cam,
             pdcsu::units::ms_t{total_ms});
       }
+
+      auto debug = april_udp_receiver_->GetFrameDebug(config.camera_id);
+      if (!debug.has_value()) continue;
+
+      Graph("april_tags/frame_num_cam" + cam,
+          static_cast<double>(debug->frame_num));
+      Graph("april_tags/stale_drop_count_cam" + cam,
+          static_cast<double>(debug->stale_drop_count));
+
+      auto prev_it = last_udp_frame_nums.find(config.camera_id);
+      if (prev_it != last_udp_frame_nums.end()) {
+        const uint16_t wrapped_delta =
+            static_cast<uint16_t>(debug->frame_num - prev_it->second);
+        const double signed_delta = wrapped_delta < 0x8000
+                                        ? static_cast<double>(wrapped_delta)
+                                        : -static_cast<double>(0x10000 - wrapped_delta);
+        Graph("april_tags/frame_delta_cam" + cam, signed_delta);
+      }
+      last_udp_frame_nums[config.camera_id] = debug->frame_num;
     }
   }
   if (tag_pos.bearing_from_tags_valid && velocity.magnitude() < 2_fps_) {

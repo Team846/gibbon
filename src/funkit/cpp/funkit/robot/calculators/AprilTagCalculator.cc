@@ -11,6 +11,15 @@
 
 namespace funkit::robot::calculators {
 
+namespace {
+constexpr double kUdpFrameResetGapSeconds = 1.0;
+
+bool IsUdpFrameNewer(uint16_t incoming, uint16_t previous) {
+  const uint16_t diff = static_cast<uint16_t>(incoming - previous);
+  return diff != 0 && diff < 0x8000;
+}
+}  // namespace
+
 pdcsu::units::degree_t AprilTagCalculator::turret_angle = 0.0_deg_;
 pdcsu::units::degps_t AprilTagCalculator::turret_vel = 0.0_degps_;
 inch_t AprilTagCalculator::view_turret_off_x = 0.0_in_;
@@ -99,7 +108,7 @@ pdcsu::units::degree_t AprilTagCalculator::InterpolateTurretAngle(
   return odom_history_.back().turret_angle;
 }
 
-bool AprilTagCalculator::IsDuplicateUdpFrame(
+bool AprilTagCalculator::IsStaleUdpFrame(
     uint8_t camera_id, const funkit::base::CameraFrame& frame) {
   auto it = prev_frames_.find(camera_id);
   if (it == prev_frames_.end()) {
@@ -107,10 +116,12 @@ bool AprilTagCalculator::IsDuplicateUdpFrame(
     return false;
   }
 
-  bool is_duplicate = it->second.frame_num == frame.frame_num &&
-                      frame.receive_time <= it->second.receive_time + 1e-6;
-  if (!is_duplicate) { it->second = {frame.frame_num, frame.receive_time}; }
-  return is_duplicate;
+  const bool newer_frame = IsUdpFrameNewer(frame.frame_num, it->second.frame_num);
+  const bool allow_reset =
+      frame.receive_time - it->second.receive_time > kUdpFrameResetGapSeconds;
+  const bool is_stale = !newer_frame && !allow_reset;
+  if (!is_stale) { it->second = {frame.frame_num, frame.receive_time}; }
+  return is_stale;
 }
 
 ATCalculatorOutput AprilTagCalculator::calculate(ATCalculatorInput input) {
@@ -169,7 +180,7 @@ ATCalculatorOutput AprilTagCalculator::calculate(ATCalculatorInput input) {
       }
       const auto& frame = *frame_ptr;
 
-      if (IsDuplicateUdpFrame(config.camera_id, frame)) {
+      if (IsStaleUdpFrame(config.camera_id, frame)) {
         if (now - pdcsu::units::second_t{frame.receive_time} > 3_s_)
           output.camera_disconnect = true;
         continue;

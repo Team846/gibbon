@@ -102,7 +102,7 @@ public:
       pdcsu::units::second_t time) const;
   pdcsu::units::degree_t InterpolateTurretAngle(
       pdcsu::units::second_t time) const;
-  bool IsDuplicateUdpFrame(
+  bool IsStaleUdpFrame(
       uint8_t camera_id, const funkit::base::CameraFrame& frame);
 
   Vector2D correction;

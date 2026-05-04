@@ -43,6 +43,12 @@ struct CameraFrame {
   double fpga_capture_time = 0.0;
 };
 
+struct CameraFrameDebug {
+  uint16_t frame_num = 0;
+  double receive_time = 0.0;
+  uint32_t stale_drop_count = 0;
+};
+
 /*
 UDP Reciver for apriltags
 */
@@ -54,6 +60,7 @@ public:
   void Start(int port);
   void Stop();
   std::shared_ptr<const CameraFrame> GetLatestFrame(uint8_t camera_id);
+  std::optional<CameraFrameDebug> GetFrameDebug(uint8_t camera_id);
 
 private:
   void ReceiverLoop();
@@ -62,6 +69,7 @@ private:
   void HandleDetection(const uint8_t* buf, int n, double recv_time);
 
   std::map<uint8_t, std::shared_ptr<const CameraFrame>> frames_;
+  std::map<uint8_t, uint32_t> stale_drop_counts_;
   std::mutex mtx_;
   int sockfd_ = -1;
   std::atomic<bool> running_{false};
