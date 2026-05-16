@@ -25,7 +25,17 @@ bool Loggable::fms_connected_ = false;
 
 void Loggable::Graph(std::string_view key, double value, bool persist) const {
   if (!persist && !ShouldGraph()) return;
-  frc::SmartDashboard::PutNumber(fmt::format("{}/{}", name_, key), value);
+  auto it = graph_doubles_.find(key);
+  if (it == graph_doubles_.end()) {
+    it = graph_doubles_
+             .try_emplace(std::string{key},
+                 nt::NetworkTableInstance::GetDefault()
+                     .GetTable("SmartDashboard")
+                     ->GetDoubleTopic(fmt::format("{}/{}", name_, key))
+                     .Publish())
+             .first;
+  }
+  it->second.Set(value);
 }
 
 void Loggable::Graph(std::string_view key, int value, bool persist) const {
@@ -91,8 +101,18 @@ bool Loggable::CheckPreferenceKeyExists(std::string_view key) {
 }
 
 double Loggable::GetPreferenceValue_double(std::string_view key) {
-  if (!CheckPreferenceKeyExists(key)) { return 0; }
-  return frc::Preferences::GetDouble(fmt::format("{}/{}", name_, key));
+  auto it = pref_doubles_.find(key);
+  if (it == pref_doubles_.end()) {
+    if (!CheckPreferenceKeyExists(key)) { return 0; }
+    it = pref_doubles_
+             .try_emplace(std::string{key},
+                 nt::NetworkTableInstance::GetDefault()
+                     .GetTable("Preferences")
+                     ->GetDoubleTopic(fmt::format("{}/{}", name_, key))
+                     .GetEntry(0.0))
+             .first;
+  }
+  return it->second.Get();
 }
 
 bool Loggable::GetPreferenceValue_bool(std::string_view key) {

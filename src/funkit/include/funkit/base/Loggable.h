@@ -4,10 +4,12 @@
 #include <frc/Preferences.h>
 #include <frc/RobotBase.h>
 #include <frc/smartdashboard/SmartDashboard.h>
+#include <networktables/DoubleTopic.h>
 #include <networktables/NetworkTableInstance.h>
 
 #include <string_view>
 #include <type_traits>
+#include <unordered_map>
 #include <unordered_set>
 
 #include "funkit/base/FunkyLogger.h"
@@ -15,6 +17,19 @@
 
 namespace funkit::base {
 namespace detail {
+struct SVHash {
+  using is_transparent = void;
+  size_t operator()(std::string_view s) const noexcept {
+    return std::hash<std::string_view>{}(s);
+  }
+};
+struct SVEq {
+  using is_transparent = void;
+  bool operator()(std::string_view a, std::string_view b) const noexcept {
+    return a == b;
+  }
+};
+
 template <typename T> struct is_pdcsu_unit : std::false_type {};
 template <typename Fac, typename L, typename M, typename T, typename I,
     typename R, typename LTag, typename MTag, typename TTag, typename ITag,
@@ -38,6 +53,11 @@ public:
         logger(fmt::format("{}/{}", parent_.name(), name)) {}
 
   Loggable(std::string name) : name_{name}, logger(name_) {}
+
+  Loggable(const Loggable&) = delete;
+  Loggable& operator=(const Loggable&) = delete;
+
+  Loggable(Loggable&&) = default;
 
   const std::string& name() const { return name_; }
 
@@ -163,6 +183,12 @@ private:
   bool CheckPreferenceKeyExists(std::string_view key);
 
   const std::string name_;
+
+  mutable std::unordered_map<std::string, nt::DoublePublisher, detail::SVHash,
+      detail::SVEq>
+      graph_doubles_;
+  std::unordered_map<std::string, nt::DoubleEntry, detail::SVHash, detail::SVEq>
+      pref_doubles_;
 
   static std::unordered_set<std::string_view> used_preferences_;
 

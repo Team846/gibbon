@@ -17,7 +17,8 @@ namespace funkit::robot {
 class SubsystemBase : public funkit::base::Loggable {
 public:
   SubsystemBase(std::string name) : Loggable{name} {}
-  SubsystemBase(Loggable parent, std::string name) : Loggable{parent, name} {}
+  SubsystemBase(const Loggable& parent, std::string name)
+      : Loggable{parent, name} {}
 
   virtual ~SubsystemBase() = default;
 
