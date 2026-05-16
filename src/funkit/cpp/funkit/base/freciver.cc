@@ -122,7 +122,8 @@ std::shared_ptr<const CameraFrame> ReceiverServer::GetLatestFrame(
   return it != frames_.end() ? it->second : nullptr;
 }
 
-std::optional<CameraFrameDebug> ReceiverServer::GetFrameDebug(uint8_t camera_id) {
+std::optional<CameraFrameDebug> ReceiverServer::GetFrameDebug(
+    uint8_t camera_id) {
   std::lock_guard<std::mutex> lk(mtx_);
   auto it = frames_.find(camera_id);
   if (it == frames_.end()) { return std::nullopt; }
@@ -159,7 +160,6 @@ void ReceiverServer::HandleDetection(
   uint16_t frame = 0;
   double fpga_cap = 0.0;
   float latency = 0.0f;
-  uint8_t num = 0;
   bool has_fpga_capture_time = false;
 
   std::vector<TagDetection> dets{};
@@ -170,7 +170,7 @@ void ReceiverServer::HandleDetection(
     frame = ReadBE<uint16_t>(buf + 3);
     fpga_cap = ReadBE<double>(buf + 5);
     latency = ReadBE<float>(buf + 13);
-    num = buf[17];
+    const uint8_t num = buf[17];
     if (n < kDetHdr + num * kTagSz) return;
     has_fpga_capture_time = fpga_cap > 1e-9;
 
@@ -186,7 +186,7 @@ void ReceiverServer::HandleDetection(
     frame = ReadBE<uint16_t>(buf + 3);
     const uint32_t fpga_ms = ReadBE<uint32_t>(buf + 5);
     const uint16_t latency_tenth_ms = ReadBE<uint16_t>(buf + 9);
-    num = buf[11];
+    const uint8_t num = buf[11];
     if (n < kDetHdrV2 + num * kTagSzV2) return;
 
     fpga_cap = static_cast<double>(fpga_ms) / 1000.0;
@@ -212,7 +212,8 @@ void ReceiverServer::HandleDetection(
   if (it != frames_.end()) {
     const auto& prev = *(it->second);
     const bool newer_frame = IsFrameNewer(frame, prev.frame_num);
-    const bool allow_reset = recv_time - prev.receive_time > kFrameResetGapSeconds;
+    const bool allow_reset =
+        recv_time - prev.receive_time > kFrameResetGapSeconds;
     if (!newer_frame && !allow_reset) {
       stale_drop_counts_[cam_id]++;
       return;

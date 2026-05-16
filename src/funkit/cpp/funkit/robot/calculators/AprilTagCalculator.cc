@@ -116,7 +116,8 @@ bool AprilTagCalculator::IsStaleUdpFrame(
     return false;
   }
 
-  const bool newer_frame = IsUdpFrameNewer(frame.frame_num, it->second.frame_num);
+  const bool newer_frame =
+      IsUdpFrameNewer(frame.frame_num, it->second.frame_num);
   const bool allow_reset =
       frame.receive_time - it->second.receive_time > kUdpFrameResetGapSeconds;
   const bool is_stale = !newer_frame && !allow_reset;

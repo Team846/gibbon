@@ -527,9 +527,10 @@ DrivetrainReadings DrivetrainSubsystem::ReadFromHardware() {
       if (prev_it != last_udp_frame_nums.end()) {
         const uint16_t wrapped_delta =
             static_cast<uint16_t>(debug->frame_num - prev_it->second);
-        const double signed_delta = wrapped_delta < 0x8000
-                                        ? static_cast<double>(wrapped_delta)
-                                        : -static_cast<double>(0x10000 - wrapped_delta);
+        const double signed_delta =
+            wrapped_delta < 0x8000
+                ? static_cast<double>(wrapped_delta)
+                : -static_cast<double>(0x10000 - wrapped_delta);
         Graph("april_tags/frame_delta_cam" + cam, signed_delta);
       }
       last_udp_frame_nums[config.camera_id] = debug->frame_num;
