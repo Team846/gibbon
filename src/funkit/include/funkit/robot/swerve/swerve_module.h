@@ -158,6 +158,9 @@ private:
 
   pdcsu::units::fps_t max_speed_;
 
+  pdcsu::units::ohm_t winding_res_;
+  double res_corr_denom_;
+
   pdcsu::units::nm_t steer_load_factor_;
 };
 

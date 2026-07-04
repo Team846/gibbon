@@ -14,7 +14,7 @@
     "**/.factorypath": true,
     "**/*~": true
   },
-  "C_Cpp.default.compileCommands": "${workspaceFolder}/build/compile_commands.json",
+  "C_Cpp.default.configurationProvider": "vscode-wpilib",
   "files.associations": {
     "any": "cpp",
     "array": "cpp",

@@ -103,8 +103,8 @@ protected:
   std::vector<funkit::robot::SubsystemBase*> group_a_subsystems_{};
   std::vector<funkit::robot::SubsystemBase*> group_b_subsystems_{};
 
-  unsigned int read_counter;
-  unsigned int write_counter;
+  unsigned int read_counter{0};
+  unsigned int write_counter{0};
 };
 
 }  // namespace funkit::robot

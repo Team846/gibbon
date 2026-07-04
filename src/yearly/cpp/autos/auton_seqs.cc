@@ -124,6 +124,7 @@ using FPT = funkit::math::FieldPoint;
 #define P3C1_INTAKE_PT MKPT(153.75_in_, 315.2_in_, 70_deg_, 0_fps_)
 #define P4C1_INTAKE_PT MKPT(153.75_in_, 290.2_in_, 70_deg_, 0_fps_)
 #define P3C1_INTAKE_PT_OP MKPT(143.75_in_, 315.2_in_, 70_deg_, 0_fps_)
+#define P1C1_BACKINTAKE_PT MKPT(98_in_, 260.35_in_, 45_deg_, 11_fps_)
 
 #define P1C2_INTAKE_PT MKPT(112.1_in_, 290.5_in_, 0_deg_, 10_fps_)
 #define P2C2_INTAKE_PT MKPT(130.35_in_, 305.42_in_, 0_deg_, 9_fps_)
@@ -179,7 +180,7 @@ SEQUENCE {
       INTAKE(HoptakeState::kIntake), DRIVE_PT_TANK(CS2, P1C1_INTAKE_PT, NORM),
       TRACK(), DRIVE_PT_TANK(CS2, P2C1_INTAKE_PT, NORM),
       DRIVE_PT_TANK(CS2, P3C1_INTAKE_PT, NORM), TRACK(),
-      DRIVE_PT(CS2, P1C1_INTAKE_PT, NORM), INTAKE(HoptakeState::kBump),
+      DRIVE_PT(CS2, P1C1_BACKINTAKE_PT, NORM), INTAKE(HoptakeState::kBump),
       DRIVE_PT(CS2, END_BUMPC1_PT, NORM), TRACK(),
       DRIVE_PT(CS2, START_BUMPC1_PT, BUMP),
       PARALLEL_DEADLINE(WAIT{3_s}, SHOOT()), TRACK(),

@@ -16,7 +16,7 @@ unsigned int Loggable::GetWarnCount() { return warn_count_; }
 
 unsigned int Loggable::GetErrorCount() { return error_count_; }
 
-std::unordered_set<std::string_view> Loggable::used_preferences_{};
+std::unordered_set<std::string> Loggable::used_preferences_{};
 
 unsigned int Loggable::warn_count_ = 0;
 unsigned int Loggable::error_count_ = 0;
@@ -89,6 +89,17 @@ void Loggable::RegisterPreference(
     Log("Preference [{}] does not match fallback", fullkey);
   }
   used_preferences_.insert(fullkey);
+}
+
+const std::string& Loggable::ResolveUnitKey(
+    std::string_view key, std::string_view dims) const {
+  auto it = unit_key_cache_.find(key);
+  if (it == unit_key_cache_.end()) {
+    it = unit_key_cache_
+             .try_emplace(std::string{key}, fmt::format("{} ({})", key, dims))
+             .first;
+  }
+  return it->second;
 }
 
 bool Loggable::CheckPreferenceKeyExists(std::string_view key) {

@@ -98,8 +98,7 @@ public:
   void Graph(std::string_view key, U value, bool persist = false) const {
     if constexpr (detail::is_pdcsu_unit_v<U>) {
       if (!persist && !ShouldGraph()) return;
-      std::string modkey = fmt::format("{} ({})", key, value.dims());
-      Graph(modkey, value.value(), persist);
+      Graph(ResolveUnitKey(key, value.dims()), value.value(), persist);
     } else {
       static_assert(detail::is_pdcsu_unit_v<U>, "must be a PDCSU unit type");
     }
@@ -108,8 +107,8 @@ public:
   template <typename U>
   void RegisterPreference(std::string_view key, U fallback) {
     if constexpr (detail::is_pdcsu_unit_v<U>) {
-      std::string modkey = fmt::format("{} ({})", key, fallback.dims());
-      RegisterPreference(modkey, fallback.value());
+      RegisterPreference(
+          ResolveUnitKey(key, fallback.dims()), fallback.value());
     } else {
       static_assert(detail::is_pdcsu_unit_v<U>, "must be a PDCSU unit type");
     }
@@ -130,8 +129,7 @@ public:
   template <typename U> U GetPreferenceValue_unit_type(std::string_view key) {
     if constexpr (detail::is_pdcsu_unit_v<U>) {
       U sample{};
-      std::string modkey = fmt::format("{} ({})", key, sample.dims());
-      return U{GetPreferenceValue_double(modkey)};
+      return U{GetPreferenceValue_double(ResolveUnitKey(key, sample.dims()))};
     } else {
       static_assert(detail::is_pdcsu_unit_v<U>, "must be a PDCSU unit type");
     }
@@ -151,8 +149,7 @@ public:
 
   template <typename U> void SetPreferenceValue(std::string_view key, U value) {
     if constexpr (detail::is_pdcsu_unit_v<U>) {
-      std::string modkey = fmt::format("{} ({})", key, value.dims());
-      SetPreferenceValue(modkey, value.value());
+      SetPreferenceValue(ResolveUnitKey(key, value.dims()), value.value());
     } else {
       static_assert(detail::is_pdcsu_unit_v<U>, "must be a PDCSU unit type");
     }
@@ -182,6 +179,9 @@ public:
 private:
   bool CheckPreferenceKeyExists(std::string_view key);
 
+  const std::string& ResolveUnitKey(
+      std::string_view key, std::string_view dims) const;
+
   const std::string name_;
 
   mutable std::unordered_map<std::string, nt::DoublePublisher, detail::SVHash,
@@ -189,8 +189,11 @@ private:
       graph_doubles_;
   std::unordered_map<std::string, nt::DoubleEntry, detail::SVHash, detail::SVEq>
       pref_doubles_;
+  mutable std::unordered_map<std::string, std::string, detail::SVHash,
+      detail::SVEq>
+      unit_key_cache_;
 
-  static std::unordered_set<std::string_view> used_preferences_;
+  static std::unordered_set<std::string> used_preferences_;
 
   static unsigned int warn_count_;
   static unsigned int error_count_;
