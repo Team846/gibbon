@@ -3,12 +3,13 @@
 #include <frc/smartdashboard/Field2d.h>
 
 #include <array>
+#include <map>
 #include <memory>
 #include <optional>
+#include <string>
 #include <variant>
 
 #include "ctre/phoenix6/Pigeon2.hpp"
-#include "funkit/base/freciver.h"
 #include "funkit/robot/GenericSubsystem.h"
 #include "funkit/robot/calculators/AprilTagCalculator.h"
 #include "funkit/robot/swerve/control/swerve_ol_calculator.h"
@@ -150,6 +151,13 @@ public:
 private:
   bool previous_camera_disconnect = false;
 
+  struct AprilTagCameraGraphKeys {
+    std::string pos_x;
+    std::string pos_y;
+    std::string variance;
+    std::string tag_count;
+  };
+
   DrivetrainReadings ReadFromHardware() override;
 
   pdcsu::util::math::uVec<pdcsu::units::fps_t, 2> compensateForSteerLag(
@@ -187,9 +195,6 @@ private:
   // Path logger for recording odometry data
   PathLogger path_logger_;
 
-  // udp reciver
-  std::unique_ptr<funkit::base::ReceiverServer> april_udp_receiver_;
-
   bool first_loop = true;
 
   pdcsu::units::degree_t bearing_offset_ = pdcsu::units::degree_t{0};
@@ -206,6 +211,7 @@ private:
   double cached_april_variance_coeff_ = 0.0;
   double cached_triangular_variance_coeff_ = 0.0;
   std::map<size_t, pdcsu::units::second_t> cached_fudge_latencies_{};
+  std::map<size_t, AprilTagCameraGraphKeys> april_camera_graph_keys_{};
 
   frc::Field2d MainField_;
 

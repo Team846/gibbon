@@ -1298,7 +1298,7 @@
   {
     "name": "/Preferences/scorer_ss/point_blank/shooter_vel (ft s^-1)",
     "type": "double",
-    "value": 35.0,
+    "value": 22.0,
     "properties": {
       "persistent": true
     }

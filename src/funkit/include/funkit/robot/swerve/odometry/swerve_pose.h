@@ -11,8 +11,6 @@ struct SwervePose {
   Vector2D position;
   pdcsu::units::degree_t bearing;
   pdcsu::util::math::uVec<pdcsu::units::fps_t, 2> velocity;
-  pdcsu::units::degree_t pitch;
-  pdcsu::units::degree_t roll;
 
   SwervePose rotate(pdcsu::units::degree_t angle) const;
   SwervePose translate(Vector2D translation) const;

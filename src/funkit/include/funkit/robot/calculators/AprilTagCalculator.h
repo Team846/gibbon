@@ -5,9 +5,7 @@
 #include <deque>
 #include <map>
 #include <memory>
-#include <optional>
 
-#include "funkit/base/freciver.h"
 #include "funkit/math/calculator.h"
 #include "funkit/robot/swerve/odometry/swerve_pose.h"
 #include "pdcsu_units.h"
@@ -26,12 +24,19 @@ struct ATCalculatorInput {
   std::map<size_t, pdcsu::units::second_t> fudge_latency;
 };
 
+struct AprilTagCameraResult {
+  Vector2D pos;
+  double variance = -1.0;
+  int tag_count = 0;
+};
+
 struct ATCalculatorOutput {
   Vector2D pos;
   double variance;
   pdcsu::units::degree_t bearing_from_tags;
   bool bearing_from_tags_valid;
   bool camera_disconnect = false;
+  std::map<size_t, AprilTagCameraResult> camera_results{};
 };
 
 struct AprilTagData {
@@ -68,8 +73,6 @@ struct ATCalculatorConstants {
   std::map<size_t, AprilTagData> tag_locations;
   std::vector<AprilTagCamera> cameras;
   std::optional<TurretTagCamera> turret_camera;
-  bool use_udp = false;
-  funkit::base::ReceiverServer* udp_receiver = nullptr;
 };
 
 class AprilTagCalculator : public funkit::math::Calculator<ATCalculatorInput,
@@ -102,15 +105,7 @@ public:
       pdcsu::units::second_t time) const;
   pdcsu::units::degree_t InterpolateTurretAngle(
       pdcsu::units::second_t time) const;
-  bool IsStaleUdpFrame(
-      uint8_t camera_id, const funkit::base::CameraFrame& frame);
 
   Vector2D correction;
-
-  struct FrameStamp {
-    uint16_t frame_num;
-    double receive_time;
-  };
-  std::map<uint8_t, FrameStamp> prev_frames_;
 };
 }
