@@ -64,6 +64,10 @@ void FunkyRobot::OnInitialize() {
       new funkit::wpilib::NTAction(
           [this] { container_.scorer_ss_.turret.ZeroWithCRT(); }));
 
+  frc::SmartDashboard::PutData("zero_hood_encoders",
+      new funkit::wpilib::NTAction(
+          [this] { container_.scorer_ss_.hood.ManualZero(); }));
+
   frc::SmartDashboard::PutData("zero_pivot_at_hardstop",
       new funkit::wpilib::NTAction(
           [this] { container_.hoptake_ss_.pivot.ZeroSubsystem(true); }));

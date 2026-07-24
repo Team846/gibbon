@@ -11,8 +11,8 @@ degree_t ShootingCalculator::swim_accum_angle_reduc = 0_deg_;
 
 const inch_t kDeltaHeight = 57.9_in_ - 24.9_in_;
 
-const degree_t kShotAngleMax = 70_deg_;
-const degree_t kShotAngleMin = 50_deg_;
+const degree_t kShotAngleMax = 75_deg_;
+const degree_t kShotAngleMin = 45_deg_;
 const foot_t kShotMaxDist = 24_ft_;
 const foot_t kPointblankDistance = 41.925_in_;
 

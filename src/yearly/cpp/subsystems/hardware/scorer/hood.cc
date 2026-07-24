@@ -146,6 +146,11 @@ void HoodSubsystem::ZeroEncoders() {
   Log("Zeroed hood encoders");
 }
 
+void HoodSubsystem::ManualZero() {
+  esc_.SetPosition(81_deg_);
+  Log("Manually zeroed hood position to 81 deg");
+}
+
 bool HoodSubsystem::VerifyHardware() {
   bool ok = true;
   FUNKIT_VERIFY(esc_.VerifyConnected(), ok, "Could not verify Hood esc");

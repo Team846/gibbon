@@ -922,7 +922,7 @@
   {
     "name": "/Preferences/ShootingCalculator/2ptvel/kAdditive",
     "type": "double",
-    "value": 4.05,
+    "value": 4.3,
     "properties": {
       "persistent": true
     }

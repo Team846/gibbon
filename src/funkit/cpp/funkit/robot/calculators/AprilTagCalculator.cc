@@ -348,7 +348,7 @@ ATCalculatorOutput AprilTagCalculator::calculate(ATCalculatorInput input) {
   if (output.pos[0] < 0_in_ || output.pos[1] < 0_in_ ||
       output.pos[0] > funkit::math::FieldPoint::field_size_x ||
       output.pos[1] > funkit::math::FieldPoint::field_size_y) {
-    output.variance *= 5000.0;
+    output.variance *= 5.0;
   }
 
   correction = output.pos - input.pose.position;
