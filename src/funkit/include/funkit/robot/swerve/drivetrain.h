@@ -102,6 +102,7 @@ public:
 
   void ZeroBearing();
   void ZeroWithCANCoders();
+  void FlipBearing();
 
   void SetBearing(pdcsu::units::degree_t bearing);
   void SetPosition(Vector2D position);

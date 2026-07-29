@@ -1,5 +1,6 @@
 #include "funkit/robot/swerve/drivetrain.h"
 
+#include <iostream>
 #include <thread>
 
 #include "frc/DriverStation.h"
@@ -199,13 +200,18 @@ void DrivetrainSubsystem::ZeroBearing() {
 
   if (!frc::DriverStation::IsAutonomous()) {
     if (frc::DriverStation::GetAlliance() ==
-        frc::DriverStation::Alliance::kBlue)
+        frc::DriverStation::Alliance::kBlue) {
       bearing_offset_ = pdcsu::units::degree_t{180};
-    else
+      std::cout << "fms reports blue" << std::endl;
+    } else {
       bearing_offset_ = pdcsu::units::degree_t{0};
+      std::cout << "fms reports red" << std::endl;
+    }
   }
   for (int attempts = 1; attempts <= kMaxAttempts; ++attempts) {
     Log("Gyro zero attempt {}/{}", attempts, kMaxAttempts);
+    std::cout << "Gyro zero attempt " << attempts << "/" << kMaxAttempts
+              << std::endl;
     if (pigeon_.has_value()) {
       bool connected =
           pigeon_->IsConnected() && pigeon_->GetYaw().GetStatus().IsOK();
@@ -214,6 +220,7 @@ void DrivetrainSubsystem::ZeroBearing() {
         zero_pitch = degree_t{pigeon_->GetPitch().GetValueAsDouble()};
         zero_roll = degree_t{pigeon_->GetRoll().GetValueAsDouble()};
         Log("Zeroed bearing (Pigeon)");
+        std::cout << "Zeroed bearing (Pigeon)" << std::endl;
         return;
       }
     } else if (navX_.has_value()) {
@@ -230,6 +237,8 @@ void DrivetrainSubsystem::ZeroBearing() {
     std::this_thread::sleep_for(std::chrono::milliseconds(kSleepTimeMs));
   }
   Error("Unable to zero after {} attempts, forcing zero", kMaxAttempts);
+  std::cout << "Unable to zero after" << kMaxAttempts
+            << "attempts, forcing zero" << std::endl;
 
   if (pigeon_.has_value()) {
     pigeon_->SetYaw(0_deg);
@@ -251,6 +260,10 @@ void DrivetrainSubsystem::ZeroWithCANCoders() {
   for (auto& module : modules_) {
     module->ZeroWithCANcoder();
   }
+}
+
+void DrivetrainSubsystem::FlipBearing() {
+  bearing_offset_ += pdcsu::units::degree_t{180};
 }
 
 void DrivetrainSubsystem::SetBearing(pdcsu::units::degree_t bearing) {
