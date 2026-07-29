@@ -24,12 +24,19 @@ struct ATCalculatorInput {
   std::map<size_t, pdcsu::units::second_t> fudge_latency;
 };
 
+struct AprilTagCameraResult {
+  Vector2D pos;
+  double variance = -1.0;
+  int tag_count = 0;
+};
+
 struct ATCalculatorOutput {
   Vector2D pos;
   double variance;
   pdcsu::units::degree_t bearing_from_tags;
   bool bearing_from_tags_valid;
   bool camera_disconnect = false;
+  std::map<size_t, AprilTagCameraResult> camera_results{};
 };
 
 struct AprilTagData {

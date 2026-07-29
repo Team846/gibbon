@@ -136,6 +136,9 @@ ATCalculatorOutput AprilTagCalculator::calculate(ATCalculatorInput input) {
   std::vector<Vector2D> cam_vectors{};
   std::vector<Vector2D> field_positions{};
   std::vector<double> bearing_weights{};
+  std::map<size_t, Vector2D> camera_position_sums{};
+  std::map<size_t, double> camera_weight_sums{};
+  std::map<size_t, int> camera_tag_counts{};
 
   for (size_t i = 0; i < temp_cameras.size(); i++) {
     const auto& camera = temp_cameras[i];
@@ -241,6 +244,14 @@ ATCalculatorOutput AprilTagCalculator::calculate(ATCalculatorInput input) {
 
           pure_variances.push_back(var_i);
 
+          double position_weight = 1.0 / std::max(var_i, 1e-9);
+          camera_position_sums[config.camera_id][0] +=
+              position_weight * position_compensated[0];
+          camera_position_sums[config.camera_id][1] +=
+              position_weight * position_compensated[1];
+          camera_weight_sums[config.camera_id] += position_weight;
+          camera_tag_counts[config.camera_id]++;
+
           Vector2D cam_to_tag_cam_frame{distances.at(j),
               tx.at(j) + (camera.equiv_turret
                                  ? InterpolateTurretAngle(capture_time)
@@ -254,6 +265,15 @@ ATCalculatorOutput AprilTagCalculator::calculate(ATCalculatorInput input) {
         }
       }
     }
+  }
+
+  for (const auto& [camera_id, sum_w] : camera_weight_sums) {
+    if (sum_w <= 0.0) { continue; }
+    output.camera_results[camera_id] = {
+        .pos = camera_position_sums[camera_id] / sum_w,
+        .variance = 1.0 / sum_w,
+        .tag_count = camera_tag_counts[camera_id],
+    };
   }
 
   if (m_positions.size() == 0) {

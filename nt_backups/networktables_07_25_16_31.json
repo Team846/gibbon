@@ -42,7 +42,7 @@
   {
     "name": "/Preferences/SwerveDrivetrain/FR/cancoder_offset_ (deg)",
     "type": "double",
-    "value": -113.203125,
+    "value": -115.576171875,
     "properties": {
       "persistent": true
     }
@@ -50,7 +50,7 @@
   {
     "name": "/Preferences/SwerveDrivetrain/FL/cancoder_offset_ (deg)",
     "type": "double",
-    "value": 166.201171875,
+    "value": 165.849609375,
     "properties": {
       "persistent": true
     }
@@ -58,7 +58,7 @@
   {
     "name": "/Preferences/SwerveDrivetrain/BL/cancoder_offset_ (deg)",
     "type": "double",
-    "value": 8.4375,
+    "value": 6.15234375,
     "properties": {
       "persistent": true
     }
@@ -322,7 +322,7 @@
   {
     "name": "/Preferences/SwerveDrivetrain/april_tags/april_variance_coeff",
     "type": "double",
-    "value": 0.15,
+    "value": 0.2,
     "properties": {
       "persistent": true
     }

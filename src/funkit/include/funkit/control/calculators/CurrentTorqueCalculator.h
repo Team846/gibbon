@@ -37,6 +37,26 @@ public:
       pdcsu::units::rpm_t rpm, pdcsu::units::volt_t v_supply,
       pdcsu::units::ohm_t circuit_resistance, pdcsu::units::rpm_t free_speed,
       pdcsu::units::amp_t stall_current);
+  static pdcsu::units::amp_t predict_current_draw_signed(double duty_cycle,
+      pdcsu::units::rpm_t rpm, pdcsu::units::volt_t v_supply,
+      pdcsu::units::ohm_t circuit_resistance, pdcsu::units::rpm_t free_speed,
+      pdcsu::units::amp_t stall_current);
+  static pdcsu::units::amp_t predict_current_supply_signed(double duty_cycle,
+      pdcsu::units::rpm_t rpm, pdcsu::units::volt_t v_supply,
+      pdcsu::units::ohm_t circuit_resistance, pdcsu::units::rpm_t free_speed,
+      pdcsu::units::amp_t stall_current);
+  /*
+  supply_current_control()
+
+  Returns a duty cycle (-1 to 1) such that the motor draws the target supply
+  current. There can be two valid quadratic roots that satisfy the supply
+  target; in that case the root nearest to original_duty_cycle is preferred so
+  the commanded torque direction is preserved.
+  */
+  static double supply_current_control(double original_duty_cycle,
+      pdcsu::units::amp_t target_current, pdcsu::units::rpm_t rpm,
+      pdcsu::units::volt_t v_supply, pdcsu::units::ohm_t circuit_resistance,
+      pdcsu::units::rpm_t free_speed, pdcsu::units::amp_t stall_current);
 
   static double scale_current_supply(double scale_factor, double duty_cycle,
       pdcsu::units::rpm_t rpm, pdcsu::units::volt_t v_supply,

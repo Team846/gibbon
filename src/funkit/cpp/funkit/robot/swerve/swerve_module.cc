@@ -34,16 +34,28 @@ SwerveModuleSubsystem::SwerveModuleSubsystem(Loggable& parent,
   cancoder_.OptimizeBusUtilization();
   cancoder_.GetAbsolutePosition().SetUpdateFrequency(100_Hz);
 
-  RegisterPreference("cancoder_offset_", degree_t{0.0});
+  degree_t backup{0.0};
+  if (unique_config.cancoder_id == 3) {
+    backup = degree_t{-114.0125};  // FR
+  } else if (unique_config.cancoder_id == 6) {
+    backup = degree_t{166.8828125};  // FL
+  } else if (unique_config.cancoder_id == 9) {
+    backup = degree_t{50.8125};  // BL
+  } else if (unique_config.cancoder_id == 12) {
+    backup = degree_t{-149.150390625};  // BR
+  }
+  RegisterPreference("cancoder_offset_", backup);
 
-  auto motor_specs = funkit::control::base::MotorSpecificationPresets::get(
-      common_config.motor_types);
-  auto free_speed_rpm = motor_specs.free_speed;
-  auto drive_reduction_pdcsu = common_config.drive_reduction;
-  auto free_speed_rpm_value = free_speed_rpm.value();
-  auto drive_reduction_ft_per_rot = drive_reduction_pdcsu.value();
-  auto max_speed_ft_per_min = free_speed_rpm_value * drive_reduction_ft_per_rot;
-  max_speed_ = fps_t{max_speed_ft_per_min / 60.0};
+  const auto& motor_specs =
+      funkit::control::base::MotorSpecificationPresets::get(
+          common_config.motor_types);
+
+  winding_res_ = volt_t{12.0} / motor_specs.stall_current;
+  res_corr_denom_ = ((avg_resistance_ + winding_res_) / winding_res_).value();
+
+  auto free_speed_rpm_value = motor_specs.free_speed.value();
+  auto drive_reduction_ft_per_rot = common_config.drive_reduction.value();
+  max_speed_ = fps_t{free_speed_rpm_value * drive_reduction_ft_per_rot / 60.0};
 }
 
 std::pair<funkit::control::config::MotorConstructionParameters,
@@ -200,16 +212,12 @@ void SwerveModuleSubsystem::WriteToHardware(SwerveModuleTarget target) {
   Graph("steer_error", steer_diff);
   double cosine_comp = std::cos(radian_t{steer_diff}.value());
 
-  const auto& motor_specs =
-      funkit::control::base::MotorSpecificationPresets::get(motor_types_);
-  const amp_t stall_current{motor_specs.stall_current};
-  const ohm_t winding_res = volt_t{12.0} / stall_current;
-
   double res_corr_factor =
-      ((circuit_resistance_ + winding_res) / winding_res).value();
-  const double avg_corr_factor =
-      ((avg_resistance_ + winding_res) / winding_res).value();
-  res_corr_factor /= avg_corr_factor;
+      ((circuit_resistance_ + winding_res_) / winding_res_).value() /
+      res_corr_denom_;
+
+  double avg_corr_factor =
+      ((avg_resistance_ + winding_res_) / winding_res_).value();
 
   auto target_drive_val = target.drive.value();
   auto current_vel_val = GetReadings().vel.value();

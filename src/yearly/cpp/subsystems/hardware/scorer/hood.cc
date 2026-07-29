@@ -45,7 +45,7 @@ HoodSubsystem::~HoodSubsystem() = default;
 
 const degree_t hood_absolute_min = 40_deg_;
 const degree_t hood_absolute_max = 90_deg_;
-const degree_t hood_soft_min = 50_deg_;
+const degree_t hood_soft_min = 43_deg_;
 const degree_t hood_soft_max = 77_deg_;
 
 void HoodSubsystem::Setup() {
@@ -144,6 +144,11 @@ void HoodSubsystem::ZeroEncoders() {
   abs = abs - 81_deg_;
   SetPreferenceValue("encoder/offset", abs);
   Log("Zeroed hood encoders");
+}
+
+void HoodSubsystem::ManualZero() {
+  esc_.SetPosition(81_deg_);
+  Log("Manually zeroed hood position to 81 deg");
 }
 
 bool HoodSubsystem::VerifyHardware() {

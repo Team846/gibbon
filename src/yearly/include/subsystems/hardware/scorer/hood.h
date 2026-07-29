@@ -34,6 +34,7 @@ public:
 
   void ZeroEncoders();
   void ZeroWithAbsoluteEncoder(bool retry = true);
+  void ManualZero();
 
 private:
   HoodReadings ReadFromHardware() override;

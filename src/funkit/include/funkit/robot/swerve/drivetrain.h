@@ -3,8 +3,10 @@
 #include <frc/smartdashboard/Field2d.h>
 
 #include <array>
+#include <map>
 #include <memory>
 #include <optional>
+#include <string>
 #include <variant>
 
 #include "ctre/phoenix6/Pigeon2.hpp"
@@ -100,6 +102,7 @@ public:
 
   void ZeroBearing();
   void ZeroWithCANCoders();
+  void FlipBearing();
 
   void SetBearing(pdcsu::units::degree_t bearing);
   void SetPosition(Vector2D position);
@@ -148,6 +151,13 @@ public:
 
 private:
   bool previous_camera_disconnect = false;
+
+  struct AprilTagCameraGraphKeys {
+    std::string pos_x;
+    std::string pos_y;
+    std::string variance;
+    std::string tag_count;
+  };
 
   DrivetrainReadings ReadFromHardware() override;
 
@@ -202,6 +212,7 @@ private:
   double cached_april_variance_coeff_ = 0.0;
   double cached_triangular_variance_coeff_ = 0.0;
   std::map<size_t, pdcsu::units::second_t> cached_fudge_latencies_{};
+  std::map<size_t, AprilTagCameraGraphKeys> april_camera_graph_keys_{};
 
   frc::Field2d MainField_;
 

@@ -4,10 +4,12 @@
 #include <frc/Preferences.h>
 #include <frc/RobotBase.h>
 #include <frc/smartdashboard/SmartDashboard.h>
+#include <networktables/DoubleTopic.h>
 #include <networktables/NetworkTableInstance.h>
 
 #include <string_view>
 #include <type_traits>
+#include <unordered_map>
 #include <unordered_set>
 
 #include "funkit/base/FunkyLogger.h"
@@ -15,6 +17,19 @@
 
 namespace funkit::base {
 namespace detail {
+struct SVHash {
+  using is_transparent = void;
+  size_t operator()(std::string_view s) const noexcept {
+    return std::hash<std::string_view>{}(s);
+  }
+};
+struct SVEq {
+  using is_transparent = void;
+  bool operator()(std::string_view a, std::string_view b) const noexcept {
+    return a == b;
+  }
+};
+
 template <typename T> struct is_pdcsu_unit : std::false_type {};
 template <typename Fac, typename L, typename M, typename T, typename I,
     typename R, typename LTag, typename MTag, typename TTag, typename ITag,
@@ -38,6 +53,11 @@ public:
         logger(fmt::format("{}/{}", parent_.name(), name)) {}
 
   Loggable(std::string name) : name_{name}, logger(name_) {}
+
+  Loggable(const Loggable&) = delete;
+  Loggable& operator=(const Loggable&) = delete;
+
+  Loggable(Loggable&&) = default;
 
   const std::string& name() const { return name_; }
 
@@ -78,8 +98,7 @@ public:
   void Graph(std::string_view key, U value, bool persist = false) const {
     if constexpr (detail::is_pdcsu_unit_v<U>) {
       if (!persist && !ShouldGraph()) return;
-      std::string modkey = fmt::format("{} ({})", key, value.dims());
-      Graph(modkey, value.value(), persist);
+      Graph(ResolveUnitKey(key, value.dims()), value.value(), persist);
     } else {
       static_assert(detail::is_pdcsu_unit_v<U>, "must be a PDCSU unit type");
     }
@@ -88,8 +107,8 @@ public:
   template <typename U>
   void RegisterPreference(std::string_view key, U fallback) {
     if constexpr (detail::is_pdcsu_unit_v<U>) {
-      std::string modkey = fmt::format("{} ({})", key, fallback.dims());
-      RegisterPreference(modkey, fallback.value());
+      RegisterPreference(
+          ResolveUnitKey(key, fallback.dims()), fallback.value());
     } else {
       static_assert(detail::is_pdcsu_unit_v<U>, "must be a PDCSU unit type");
     }
@@ -110,8 +129,7 @@ public:
   template <typename U> U GetPreferenceValue_unit_type(std::string_view key) {
     if constexpr (detail::is_pdcsu_unit_v<U>) {
       U sample{};
-      std::string modkey = fmt::format("{} ({})", key, sample.dims());
-      return U{GetPreferenceValue_double(modkey)};
+      return U{GetPreferenceValue_double(ResolveUnitKey(key, sample.dims()))};
     } else {
       static_assert(detail::is_pdcsu_unit_v<U>, "must be a PDCSU unit type");
     }
@@ -131,8 +149,7 @@ public:
 
   template <typename U> void SetPreferenceValue(std::string_view key, U value) {
     if constexpr (detail::is_pdcsu_unit_v<U>) {
-      std::string modkey = fmt::format("{} ({})", key, value.dims());
-      SetPreferenceValue(modkey, value.value());
+      SetPreferenceValue(ResolveUnitKey(key, value.dims()), value.value());
     } else {
       static_assert(detail::is_pdcsu_unit_v<U>, "must be a PDCSU unit type");
     }
@@ -162,9 +179,21 @@ public:
 private:
   bool CheckPreferenceKeyExists(std::string_view key);
 
+  const std::string& ResolveUnitKey(
+      std::string_view key, std::string_view dims) const;
+
   const std::string name_;
 
-  static std::unordered_set<std::string_view> used_preferences_;
+  mutable std::unordered_map<std::string, nt::DoublePublisher, detail::SVHash,
+      detail::SVEq>
+      graph_doubles_;
+  std::unordered_map<std::string, nt::DoubleEntry, detail::SVHash, detail::SVEq>
+      pref_doubles_;
+  mutable std::unordered_map<std::string, std::string, detail::SVHash,
+      detail::SVEq>
+      unit_key_cache_;
+
+  static std::unordered_set<std::string> used_preferences_;
 
   static unsigned int warn_count_;
   static unsigned int error_count_;

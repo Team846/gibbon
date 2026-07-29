@@ -13,6 +13,7 @@
 #include <vector>
 
 #include "funkit/control/SupremeLimiter.h"
+#include "funkit/control/calculators/CircuitResistanceCalculator.h"
 #include "funkit/control/hardware/SparkMXFX_interm.h"
 #include "funkit/control/hardware/TalonFX_interm.h"
 #include "funkit/control/hardware/simulation/SIMLEVEL.h"
@@ -22,6 +23,12 @@
 #include "pdcsu_units.h"
 
 namespace funkit::control {
+namespace {
+constexpr pdcsu::units::ohm_t kDefaultCircuitResistance =
+    calculators::KnownResistances::kBatteryResistance +
+    calculators::KnownResistances::kPDPResistance +
+    (2.0 * calculators::KnownResistances::kConnectorResistance);
+}
 
 #define CHECK_SLOT_ID()                                                       \
   if (controller_registry[slot_id] == nullptr)                                \
@@ -187,8 +194,8 @@ void MonkeyMaster::WriteMessages() {
       if (msg.type == MotorMessage::Type::DC)
         DC = std::clamp(std::get<double>(msg.value), -1.0, 1.0);
       if (plant_registry[slot_id].has_value()) {
-        per_device_information.push_back(
-            {slot_id, *plant_registry[slot_id], radps_t{0}, DC, is_limitable});
+        per_device_information.push_back({slot_id, *plant_registry[slot_id],
+            kDefaultCircuitResistance, radps_t{0}, DC, is_limitable});
       }
       continue;
     }
@@ -228,9 +235,10 @@ void MonkeyMaster::WriteMessages() {
       }
     }
     if (plant_registry[slot_id].has_value()) {
-      per_device_information.push_back({slot_id, *plant_registry[slot_id],
-          radps_t{controller->Read(hardware::ReadType::kReadVelocity)}, DC,
-          is_limitable});
+      per_device_information.push_back(
+          {slot_id, *plant_registry[slot_id], kDefaultCircuitResistance,
+              radps_t{controller->Read(hardware::ReadType::kReadVelocity)}, DC,
+              is_limitable});
     }
     {
       hardware::ControllerErrorCodes err = controller->GetLastErrorCode();

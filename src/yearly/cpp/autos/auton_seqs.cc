@@ -124,6 +124,7 @@ using FPT = funkit::math::FieldPoint;
 #define P3C1_INTAKE_PT MKPT(153.75_in_, 315.2_in_, 70_deg_, 0_fps_)
 #define P4C1_INTAKE_PT MKPT(153.75_in_, 290.2_in_, 70_deg_, 0_fps_)
 #define P3C1_INTAKE_PT_OP MKPT(143.75_in_, 315.2_in_, 70_deg_, 0_fps_)
+#define P1C1_BACKINTAKE_PT MKPT(98_in_, 260.35_in_, 45_deg_, 11_fps_)
 
 #define P1C2_INTAKE_PT MKPT(112.1_in_, 290.5_in_, 0_deg_, 10_fps_)
 #define P2C2_INTAKE_PT MKPT(130.35_in_, 305.42_in_, 0_deg_, 9_fps_)
@@ -143,7 +144,7 @@ using FPT = funkit::math::FieldPoint;
   MKPT(funkit::math::FieldPoint::field_size_x / 2.0 - 78.38_in_, 20_in_, \
       180_deg_, 0_fps_)
 
-#define PDEPOT                                                            \
+#define PDEPOT                                                           \
   MKPT(funkit::math::FieldPoint::field_size_x / 2.0 - 78.38_in_, 20_in_, \
       135_deg_, 0_fps_)
 #define DEPOT94                                                          \
@@ -179,7 +180,7 @@ SEQUENCE {
       INTAKE(HoptakeState::kIntake), DRIVE_PT_TANK(CS2, P1C1_INTAKE_PT, NORM),
       TRACK(), DRIVE_PT_TANK(CS2, P2C1_INTAKE_PT, NORM),
       DRIVE_PT_TANK(CS2, P3C1_INTAKE_PT, NORM), TRACK(),
-      DRIVE_PT(CS2, P1C1_INTAKE_PT, NORM), INTAKE(HoptakeState::kBump),
+      DRIVE_PT(CS2, P1C1_BACKINTAKE_PT, NORM), INTAKE(HoptakeState::kBump),
       DRIVE_PT(CS2, END_BUMPC1_PT, NORM), TRACK(),
       DRIVE_PT(CS2, START_BUMPC1_PT, BUMP),
       PARALLEL_DEADLINE(WAIT{3_s}, SHOOT()), TRACK(),
@@ -292,11 +293,12 @@ SEQUENCE {
 
 __AUTO__(Center8Depot, "C8D")
 SEQUENCE {
-  START2(157.8_in_, 144.54_in_, 180_deg_), TRACK(), DRIVE_PT(CS2, CENTER8_SHOT, NORM),  INTAKE(HoptakeState::kIntake),
+  START2(157.8_in_, 144.54_in_, 180_deg_), TRACK(),
+      DRIVE_PT(CS2, CENTER8_SHOT, NORM), INTAKE(HoptakeState::kIntake),
       DRIVE_PT_BEARING(CS2, PDEPOT, NORM), WAIT{1.0_s},
       PARALLEL_DEADLINE(WAIT{2.5_s}, SHOOT()), TRACK(),
-                  DRIVE_PT_BEARING(CS2, DEPOT, SWIM), DRIVE_PT_BEARING(CS2, PDEPOT, NORM),
-          frc2::ParallelDeadlineGroup(WAIT{10_s}, SHOOT())
+      DRIVE_PT_BEARING(CS2, DEPOT, SWIM), DRIVE_PT_BEARING(CS2, PDEPOT, NORM),
+      frc2::ParallelDeadlineGroup(WAIT{10_s}, SHOOT())
 }
 }
 {}

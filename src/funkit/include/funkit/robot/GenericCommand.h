@@ -21,6 +21,8 @@ public:
     Log("Constructing instance of command {}.", name);
   }
 
+  GenericCommand(GenericCommand&&) = default;
+
   virtual ~GenericCommand() {
     Log("Destroying instance of command {}.", name());
   }

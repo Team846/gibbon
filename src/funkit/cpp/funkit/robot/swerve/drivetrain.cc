@@ -1,5 +1,6 @@
 #include "funkit/robot/swerve/drivetrain.h"
 
+#include <iostream>
 #include <thread>
 
 #include "frc/DriverStation.h"
@@ -23,8 +24,8 @@ DrivetrainSubsystem::DrivetrainSubsystem(DrivetrainConfigs configs)
     pigeon_.emplace(pigeon_conn.canID, configs.module_common_config.bus);
     pigeon_->OptimizeBusUtilization();
     pigeon_->GetYaw().SetUpdateFrequency(100_Hz);
-    pigeon_->GetPitch().SetUpdateFrequency(100_Hz);
-    pigeon_->GetRoll().SetUpdateFrequency(100_Hz);
+    pigeon_->GetPitch().SetUpdateFrequency(50_Hz);
+    pigeon_->GetRoll().SetUpdateFrequency(50_Hz);
     pigeon_->GetAngularVelocityZWorld().SetUpdateFrequency(100_Hz);
     pigeon_->GetAccelerationX().SetUpdateFrequency(100_Hz);
     pigeon_->GetAccelerationY().SetUpdateFrequency(100_Hz);
@@ -128,6 +129,27 @@ DrivetrainSubsystem::DrivetrainSubsystem(DrivetrainConfigs configs)
       .cameras = cameras,
       .turret_camera = turret_tag_camera});
 
+  for (const auto& config : configs.april_camera_configs) {
+    std::string base =
+        "april_tags/camera" + std::to_string(config.camera_id) + "/";
+    april_camera_graph_keys_[config.camera_id] = {
+        .pos_x = base + "pos_x",
+        .pos_y = base + "pos_y",
+        .variance = base + "variance",
+        .tag_count = base + "tag_count",
+    };
+  }
+  if (configs.turret_camera_config.has_value()) {
+    size_t camera_id = configs.turret_camera_config.value().camera_id;
+    std::string base = "april_tags/camera" + std::to_string(camera_id) + "/";
+    april_camera_graph_keys_[camera_id] = {
+        .pos_x = base + "pos_x",
+        .pos_y = base + "pos_y",
+        .variance = base + "variance",
+        .tag_count = base + "tag_count",
+    };
+  }
+
 #ifndef _WIN32
   for (int i = 0; i < 20; i++) {
     MainField_.GetObject(std::to_string(i));
@@ -178,13 +200,18 @@ void DrivetrainSubsystem::ZeroBearing() {
 
   if (!frc::DriverStation::IsAutonomous()) {
     if (frc::DriverStation::GetAlliance() ==
-        frc::DriverStation::Alliance::kBlue)
+        frc::DriverStation::Alliance::kBlue) {
       bearing_offset_ = pdcsu::units::degree_t{180};
-    else
+      std::cout << "fms reports blue" << std::endl;
+    } else {
       bearing_offset_ = pdcsu::units::degree_t{0};
+      std::cout << "fms reports red" << std::endl;
+    }
   }
   for (int attempts = 1; attempts <= kMaxAttempts; ++attempts) {
     Log("Gyro zero attempt {}/{}", attempts, kMaxAttempts);
+    std::cout << "Gyro zero attempt " << attempts << "/" << kMaxAttempts
+              << std::endl;
     if (pigeon_.has_value()) {
       bool connected =
           pigeon_->IsConnected() && pigeon_->GetYaw().GetStatus().IsOK();
@@ -193,6 +220,7 @@ void DrivetrainSubsystem::ZeroBearing() {
         zero_pitch = degree_t{pigeon_->GetPitch().GetValueAsDouble()};
         zero_roll = degree_t{pigeon_->GetRoll().GetValueAsDouble()};
         Log("Zeroed bearing (Pigeon)");
+        std::cout << "Zeroed bearing (Pigeon)" << std::endl;
         return;
       }
     } else if (navX_.has_value()) {
@@ -209,6 +237,8 @@ void DrivetrainSubsystem::ZeroBearing() {
     std::this_thread::sleep_for(std::chrono::milliseconds(kSleepTimeMs));
   }
   Error("Unable to zero after {} attempts, forcing zero", kMaxAttempts);
+  std::cout << "Unable to zero after" << kMaxAttempts
+            << "attempts, forcing zero" << std::endl;
 
   if (pigeon_.has_value()) {
     pigeon_->SetYaw(0_deg);
@@ -230,6 +260,10 @@ void DrivetrainSubsystem::ZeroWithCANCoders() {
   for (auto& module : modules_) {
     module->ZeroWithCANcoder();
   }
+}
+
+void DrivetrainSubsystem::FlipBearing() {
+  bearing_offset_ += pdcsu::units::degree_t{180};
 }
 
 void DrivetrainSubsystem::SetBearing(pdcsu::units::degree_t bearing) {
@@ -476,6 +510,14 @@ DrivetrainReadings DrivetrainSubsystem::ReadFromHardware() {
   Graph("april_tags/april_pos_x", tag_pos.pos[0]);
   Graph("april_tags/april_pos_y", tag_pos.pos[1]);
   Graph("april_tags/april_variance", tag_pos.variance);
+  for (const auto& [camera_id, camera_result] : tag_pos.camera_results) {
+    auto keys = april_camera_graph_keys_.find(camera_id);
+    if (keys == april_camera_graph_keys_.end()) { continue; }
+    Graph(keys->second.pos_x, camera_result.pos[0]);
+    Graph(keys->second.pos_y, camera_result.pos[1]);
+    Graph(keys->second.variance, camera_result.variance);
+    Graph(keys->second.tag_count, camera_result.tag_count);
+  }
   if (tag_pos.bearing_from_tags_valid && velocity.magnitude() < 2_fps_) {
     Graph("april_tags/bearing_from_tags", tag_pos.bearing_from_tags);
     degree_t new_bearing_correction_at_ =

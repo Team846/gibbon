@@ -52,6 +52,10 @@ void FunkyRobot::OnInitialize() {
                           [this] { container_.drivetrain_.ZeroBearing(); }));
 
   frc::SmartDashboard::PutData(
+      "flip_bearing", new funkit::wpilib::NTAction(
+                          [this] { container_.drivetrain_.FlipBearing(); }));
+
+  frc::SmartDashboard::PutData(
       "zero_odometry", new funkit::wpilib::NTAction([this] {
         container_.drivetrain_.SetPosition({inch_t{0}, inch_t{0}});
       }));
@@ -63,6 +67,10 @@ void FunkyRobot::OnInitialize() {
   frc::SmartDashboard::PutData("zero_turret_with_CRT",
       new funkit::wpilib::NTAction(
           [this] { container_.scorer_ss_.turret.ZeroWithCRT(); }));
+
+  frc::SmartDashboard::PutData("zero_hood_encoders",
+      new funkit::wpilib::NTAction(
+          [this] { container_.scorer_ss_.hood.ManualZero(); }));
 
   frc::SmartDashboard::PutData("zero_pivot_at_hardstop",
       new funkit::wpilib::NTAction(
@@ -232,7 +240,7 @@ void FunkyRobot::OnPeriodic() {
     LEDsLogic::SetLEDsState(&container_, kLEDsUnready);
   else if (isDisabled)
     LEDsLogic::SetLEDsState(&container_, kLEDsDisabled);
-  else if (container_.control_input_.GetReadings().pass_mode) 
+  else if (container_.control_input_.GetReadings().pass_mode)
     LEDsLogic::SetLEDsState(&container_, kLEDsPassing);
   else if (shift_data.our_hub_active && shift_data.phase_countdown < 4.0)
     LEDsLogic::SetLEDsState(&container_, kLEDsNearOurShift);

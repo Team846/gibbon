@@ -138,6 +138,8 @@ $RECYCLE.BIN/
 # Windows shortcuts
 *.lnk
 
+MonkeySee/
+
 ### Gradle ###
 .gradle
 /build/

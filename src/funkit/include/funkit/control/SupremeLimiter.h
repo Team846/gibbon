@@ -12,6 +12,7 @@ namespace funkit::control {
 struct PerDeviceInformation {
   size_t device_id;
   pdcsu::util::BasePlant plant;
+  ohm_t circuit_resistance;
   radps_t speed;
   double DC;
   bool is_limitable;

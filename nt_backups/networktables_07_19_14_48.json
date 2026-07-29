@@ -42,7 +42,7 @@
   {
     "name": "/Preferences/SwerveDrivetrain/FR/cancoder_offset_ (deg)",
     "type": "double",
-    "value": -113.203125,
+    "value": -115.22460937500001,
     "properties": {
       "persistent": true
     }
@@ -50,7 +50,7 @@
   {
     "name": "/Preferences/SwerveDrivetrain/FL/cancoder_offset_ (deg)",
     "type": "double",
-    "value": 166.201171875,
+    "value": 166.025390625,
     "properties": {
       "persistent": true
     }
@@ -58,7 +58,7 @@
   {
     "name": "/Preferences/SwerveDrivetrain/BL/cancoder_offset_ (deg)",
     "type": "double",
-    "value": 8.4375,
+    "value": 50.9765625,
     "properties": {
       "persistent": true
     }
@@ -66,7 +66,7 @@
   {
     "name": "/Preferences/SwerveDrivetrain/BR/cancoder_offset_ (deg)",
     "type": "double",
-    "value": -148.18359375,
+    "value": -149.0625,
     "properties": {
       "persistent": true
     }
@@ -322,7 +322,7 @@
   {
     "name": "/Preferences/SwerveDrivetrain/april_tags/april_variance_coeff",
     "type": "double",
-    "value": 0.15,
+    "value": 0.05,
     "properties": {
       "persistent": true
     }
@@ -922,7 +922,7 @@
   {
     "name": "/Preferences/ShootingCalculator/2ptvel/kAdditive",
     "type": "double",
-    "value": 4.0,
+    "value": 4.05,
     "properties": {
       "persistent": true
     }
@@ -1122,7 +1122,7 @@
   {
     "name": "/Preferences/turret/encoder/offset1 (rot)",
     "type": "double",
-    "value": 0.270751953125,
+    "value": -0.05517578124999999,
     "properties": {
       "persistent": true
     }
@@ -1130,7 +1130,7 @@
   {
     "name": "/Preferences/turret/encoder/offset2 (rot)",
     "type": "double",
-    "value": 0.41186523437500006,
+    "value": 0.288330078125,
     "properties": {
       "persistent": true
     }

@@ -4,12 +4,11 @@
 #include <memory>
 
 #include "funkit/control/HigherMotorController.h"
+#include "funkit/math/RampRateLimiter.h"
 #include "funkit/robot/GenericRobot.h"
 #include "funkit/robot/GenericSubsystem.h"
 #include "funkit/wpilib/time.h"
 #include "pdcsu_control.h"
-
-#include "funkit/math/RampRateLimiter.h"
 
 enum class DyeRotorState {
   kRotor84bps,
