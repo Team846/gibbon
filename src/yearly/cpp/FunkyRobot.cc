@@ -51,9 +51,9 @@ void FunkyRobot::OnInitialize() {
       "zero_bearing", new funkit::wpilib::NTAction(
                           [this] { container_.drivetrain_.ZeroBearing(); }));
 
-  frc::SmartDashboard::PutData("flip_bearing",
-      new funkit::wpilib::NTAction(
-          [this] { container_.drivetrain_.FlipBearing(); }));
+  frc::SmartDashboard::PutData(
+      "flip_bearing", new funkit::wpilib::NTAction(
+                          [this] { container_.drivetrain_.FlipBearing(); }));
 
   frc::SmartDashboard::PutData(
       "zero_odometry", new funkit::wpilib::NTAction([this] {
