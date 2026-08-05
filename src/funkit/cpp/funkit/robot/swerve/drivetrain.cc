@@ -10,6 +10,7 @@
 #include "funkit/control/config/genome.h"
 #include "funkit/math/constants.h"
 #include "funkit/math/fieldpoints.h"
+#include "funkit/robot/GenericRobot.h"
 #include "funkit/robot/swerve/control/swerve_ol_calculator.h"
 #include "funkit/robot/swerve/swerve_module.h"
 #include "funkit/wpilib/time.h"
@@ -102,6 +103,10 @@ DrivetrainSubsystem::DrivetrainSubsystem(DrivetrainConfigs configs)
   RegisterPreference("ramp_rate_limit_step", 5.0);
 
   RegisterPreference("april_tags/bearing_corr_gain", 0.1);
+
+  RegisterPreference("skid/threshold_fps2", pdcsu::units::fps2_t{20.0});
+  RegisterPreference("skid/filter_alpha", 0.85);
+  RegisterPreference("skid/variance_multiplier", 50.0);
 
   odometry_.setConstants(
       {.forward_wheelbase_dim = configs.wheelbase_forward_dim,
@@ -465,10 +470,31 @@ DrivetrainReadings DrivetrainSubsystem::ReadFromHardware() {
 
   if (compensated_delta.magnitude().value() < 10.0) {
     cached_odom_variance_ = GetPreferenceValue_double("odom_variance");
-    if (u_abs(pitch) > GetPreferenceValue_unit_type<pdcsu::units::degree_t>(
-                           "pitch_roll_thresh") ||
-        u_abs(roll) > GetPreferenceValue_unit_type<pdcsu::units::degree_t>(
-                          "pitch_roll_thresh")) {
+
+    const auto dt = funkit::robot::GenericRobot::kPeriod;
+    auto dv = velocity - prev_wheel_velocity_;
+    pdcsu::util::math::uVec<pdcsu::units::fps2_t, 2> wheel_accel{
+        dv[0] / dt, dv[1] / dt};
+    prev_wheel_velocity_ = velocity;
+    auto imu_accel = GetAcceleration().rotate(bearing_offset_);
+
+    auto accel_disagreement = (wheel_accel - imu_accel).magnitude();
+    Graph("skid/accel_disagreement", accel_disagreement);
+
+    double is_skidding =
+        accel_disagreement > GetPreferenceValue_unit_type<pdcsu::units::fps2_t>(
+                                 "skid/threshold_fps2")
+            ? 1.0
+            : 0.0;
+    double alpha = GetPreferenceValue_double("skid/filter_alpha");
+    skid_ratio_ = alpha * skid_ratio_ + (1.0 - alpha) * is_skidding;
+    Graph("skid/ratio", skid_ratio_);
+
+    cached_odom_variance_ *=
+        (1.0 + skid_ratio_ *
+                   GetPreferenceValue_double("skid/variance_multiplier"));
+
+    if ((u_abs(pitch) + u_abs(roll)) > GetPreferenceValue_unit_type<pdcsu::units::degree_t>("pitch_roll_thresh")) {
       cached_odom_variance_ = 1000000.0;
     }
     pose_estimator.AddOdometryMeasurement(

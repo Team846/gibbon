@@ -222,6 +222,10 @@ private:
   pdcsu::units::degree_t prev_odom_bearing_{0};
   second_t prev_odom_bearing_time_{-1};
 
+  pdcsu::util::math::uVec<pdcsu::units::fps_t, 2> prev_wheel_velocity_{
+      pdcsu::units::fps_t{0}, pdcsu::units::fps_t{0}};
+  double skid_ratio_{0.0};
+
 public:
   degree_t bearing_correction_at_ = 0_deg_;
 };

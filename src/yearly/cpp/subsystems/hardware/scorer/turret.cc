@@ -107,8 +107,7 @@ void TurretSubsystem::Setup() {
 
   icnor_controller_->setDesaturationThresh(25_rad_);
 
-  std::string learner_path =
-      frc::filesystem::GetDeployDirectory() + "/ictest.iclearn";
+  std::string learner_path = "/home/lvuser/icturret.iclearn";
   icnor_controller_->attachLearner(learner_path);
   if (!frc::RobotBase::IsSimulation()) { ZeroWithCRT(); }
 
@@ -137,15 +136,19 @@ void TurretSubsystem::ZeroWithCRT(bool retry) {
       GetPreferenceValue_unit_type<rotation_t>("encoder/max_rots"),
       GetPreferenceValue_unit_type<rotation_t>("encoder/max_tolerance")};
 
+  bool zeroed = false;
   for (int i = 0; i < (retry ? 5 : 1); i++) {
     auto sol = TurretPositionCalculator::GetPosition(inputs);
     if (sol.isValid) {
       esc_.SetPosition(sol.turretRotations);
+      zeroed = true;
       break;
     }
     std::this_thread::sleep_for(std::chrono::milliseconds(200));
   }
-  if (retry) { Error("Unable to zero turret with CRT after 5 attempts"); }
+  if (retry && !zeroed) {
+    Error("Unable to zero turret with CRT after 5 attempts");
+  }
 }
 
 void TurretSubsystem::ZeroEncoders() {
@@ -185,22 +188,28 @@ TurretReadings TurretSubsystem::ReadFromHardware() {
   readings.in_position_ =
       u_abs(error) < GetPreferenceValue_unit_type<degree_t>("tolerance");
 
-  auto abs1 = rotation_t{cancoder_1_.GetAbsolutePosition().GetValueAsDouble()};
-  auto abs2 = rotation_t{cancoder_2_.GetAbsolutePosition().GetValueAsDouble()};
+  if (++crt_diag_ctr_ >= 50) {
+    crt_diag_ctr_ = 0;
 
-  abs1 = abs1 - GetPreferenceValue_unit_type<rotation_t>("encoder/offset1");
-  abs2 = abs2 - GetPreferenceValue_unit_type<rotation_t>("encoder/offset2");
+    auto abs1 =
+        rotation_t{cancoder_1_.GetAbsolutePosition().GetValueAsDouble()};
+    auto abs2 =
+        rotation_t{cancoder_2_.GetAbsolutePosition().GetValueAsDouble()};
 
-  TurretPositionCalculator::CrtInputs inputs{abs1, abs2, teethA, teethB,
-      mainTeeth, GetPreferenceValue_unit_type<rotation_t>("encoder/min_rots"),
-      GetPreferenceValue_unit_type<rotation_t>("encoder/max_rots"),
-      GetPreferenceValue_unit_type<rotation_t>("encoder/max_tolerance")};
+    abs1 = abs1 - GetPreferenceValue_unit_type<rotation_t>("encoder/offset1");
+    abs2 = abs2 - GetPreferenceValue_unit_type<rotation_t>("encoder/offset2");
 
-  auto sol = TurretPositionCalculator::GetPosition(inputs);
+    TurretPositionCalculator::CrtInputs inputs{abs1, abs2, teethA, teethB,
+        mainTeeth, GetPreferenceValue_unit_type<rotation_t>("encoder/min_rots"),
+        GetPreferenceValue_unit_type<rotation_t>("encoder/max_rots"),
+        GetPreferenceValue_unit_type<rotation_t>("encoder/max_tolerance")};
 
-  Graph("sol/pos", sol.turretRotations);
-  Graph("sol/error", sol.error);
-  Graph("sol/valid", sol.isValid);
+    auto sol = TurretPositionCalculator::GetPosition(inputs);
+
+    Graph("sol/pos", sol.turretRotations);
+    Graph("sol/error", sol.error);
+    Graph("sol/valid", sol.isValid);
+  }
 
   radian_t pos_project_wrap =
       pos_real +
@@ -272,8 +281,9 @@ void TurretSubsystem::WriteToHardware(TurretTarget target) {
   radps2_t accel_inst = 0.0_radps2_;
 
   if (last_time_ > 0.0_ms_) {
-    auto dt = u_max(9.0_ms_, (funkit::wpilib::CurrentFPGATime() - last_time_));
-    accel_inst = (target_vel_native - last_vel_) / dt *
+    last_dt_ = second_t{
+        u_max(9.0_ms_, (funkit::wpilib::CurrentFPGATime() - last_time_))};
+    accel_inst = (target_vel_native - last_vel_) / last_dt_ *
                  GetPreferenceValue_double("accel_factor");
   }
   last_vel_ = target_vel_native;
@@ -291,7 +301,7 @@ void TurretSubsystem::WriteToHardware(TurretTarget target) {
 
   radian_t native_error = target_pos_native - current_pos_native;
   radps_t avg_vel =
-      (current_vel_native + target_vel_native + native_error / 0.04_s_) / 2.0;
+      (current_vel_native + target_vel_native + native_error / last_dt_) / 2.0;
   if (u_abs(avg_vel) > 2_radps_) {
     second_t comp_time = u_clamp(native_error / avg_vel, -0.05_s_, 0.05_s_);
 

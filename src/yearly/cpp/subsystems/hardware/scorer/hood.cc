@@ -84,8 +84,7 @@ void HoodSubsystem::Setup() {
 
   icnor_controller_->setDesaturationThresh(15_rad_);
 
-  std::string learner_path =
-      frc::filesystem::GetDeployDirectory() + "/ictest.iclearn";
+  std::string learner_path = "/home/lvuser/ichood.iclearn";
   icnor_controller_->attachLearner(learner_path);
 
   if (!frc::RobotBase::IsSimulation()) { ZeroWithAbsoluteEncoder(); }
