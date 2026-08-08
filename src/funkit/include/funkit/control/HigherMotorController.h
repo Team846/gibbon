@@ -15,64 +15,71 @@
 
 namespace funkit::control {
 
-/*
-HigherMotorController
-
-A class that interfaces with MonkeyMaster to provide higher-level control of
-motors.
-*/
+/**
+ * HigherMotorController
+ *
+ * A class that acts as an interface for MonkeyMaster to provide higher-level
+ * control of motors. Primarily routes requests to MonkeyMaster, which then
+ * coordinate and send them to motor controllers. Meant to be used by
+ * subsystems.
+ */
 class HigherMotorController {
 public:
   HigherMotorController(
       base::MotorMonkeyType mmtype, config::MotorConstructionParameters params);
 
-  // Sets up the motor. Gets a slot ID from MonkeyMaster.
+  /**
+   * Setup()
+   *
+   * Sets up the motor. Gets a slot ID from MonkeyMaster.
+   */
   void Setup(config::MotorGenome genome,
       std::variant<pdcsu::util::DefLinearSys, pdcsu::util::DefArmSys> plant);
 
+  // Setter method for a motor genome
   void ModifyGenome(config::MotorGenome genome);
 
-  /*
-  WriteDC()
-
-  Writes a duty cycle directly to the motor controller. Value should be in the
-  range [-1.0, 1.0].
-  */
+  /**
+   * WriteDC()
+   *
+   * Writes a duty cycle directly to the motor controller.
+   * Value should be in the range [-1.0, 1.0].
+   */
   void WriteDC(double duty_cycle);
 
-  /*
-  WriteVelocity()
-
-  Writes a velocity setpoint to the motor controller. Control loop executed
-  locally.
-  */
+  /**
+   * WriteVelocity()
+   *
+   * Writes a velocity setpoint to the motor controller.
+   * Control loop executed locally (determined by own calculations)
+   */
   void WriteVelocity(mps_t velocity);
   void WriteVelocity(radps_t velocity);
 
-  /*
-  WritePosition()
-
-  Writes a position setpoint to the motor controller. Control loop executed
-  locally.
-  */
+  /**
+   * WritePosition()
+   *
+   * Writes a position setpoint to the motor controller.
+   * Control loop executed locally (determined by own calculations).
+   */
   void WritePosition(meter_t position);
   void WritePosition(radian_t position);
 
-  /*
-  WriteVelocityOnController()
-
-  Writes a velocity setpoint to the motor controller. Control loop executed
-  onboard the motor controller.
-  */
+  /**
+   * WriteVelocityOnController()
+   *
+   * Writes a velocity setpoint to the motor controller. Control loop executed
+   * onboard the motor controller.
+   */
   void WriteVelocityOnController(mps_t velocity);
   void WriteVelocityOnController(radps_t velocity);
 
-  /*
-  WritePositionOnController()
-
-  Writes a position setpoint to the motor controller. Control loop executed
-  onboard the motor controller.
-  */
+  /**
+   * WritePositionOnController()
+   *
+   * Writes a position setpoint to the motor controller. Control loop executed
+   * onboard the motor controller.
+   */
   void WritePositionOnController(meter_t position);
   void WritePositionOnController(radian_t position);
 
@@ -82,17 +89,18 @@ public:
 
   amp_t GetCurrent();
 
-  /*
-  SetPosition()
-
-  Zeroes the encoder to the specified value. Converts from real units to native
-  units using the plant.
-  */
+  /**
+   * SetPosition()
+   *
+   * Zeroes the encoder to the specified value. Converts from real units to
+   * native units using the plant.
+   */
   void SetPosition(meter_t position);
   void SetPosition(radian_t position);
 
   void SetLoad(nm_t load);
 
+  // Verify a motor controller is connected
   bool VerifyConnected();
 
   // Soft limits maintained by the motor controller
@@ -101,15 +109,18 @@ public:
   // Custom soft limits maintained by HigherMotorController
   void SetSoftLimits(config::SoftLimits soft_limits);
 
+  // Enables specific status frames for motor controller. Disables all others.
   void EnableStatusFrames(std::vector<config::StatusFrame> frames,
       ms_t faults_ms = 20_ms_, ms_t velocity_ms = 20_ms_,
       ms_t encoder_position_ms = 20_ms_, ms_t analog_position_ms = 20_ms_);
 
+  // Override the period of a specific status frame.
   void OverrideStatusFramePeriod(config::StatusFrame frame, ms_t period);
 
+  // Sets special configurations of a motor
   void SpecialConfiguration(control::hardware::SpecialConfigureType type);
 
-  /* Only limit switches and absolute encoder positions have been implemented */
+  // Only limit switches and absolute encoder positions have been implemented
   hardware::ReadResponse SpecialRead(hardware::ReadType type);
 
 private:

@@ -12,10 +12,15 @@ constexpr pdcsu::units::inch_t Circumference(pdcsu::units::meter_t radius) {
   return pdcsu::units::inch_t{
       2.0 * 3.14159265358979323846 * radius.value() * 39.3701};
 }
-
+// HorizontalDeadband represents an interval of "dead activity" where behavior
+// should not be applied. It returns an output that is scaled accordingly to the
+// remaining length of the interval
 double HorizontalDeadband(double input, double x_intercept, double max,
     double exponent = 1, double sensitivity = 1);
 
+// VerticalDeadband represents an interval of "dead activity" where behavior
+// should not be applied. It returns an output that is scaled accordingly to the
+// deadband
 double VerticalDeadband(double input, double y_intercept, double max,
     double exponent = 1, double sensitivity = 1);
 

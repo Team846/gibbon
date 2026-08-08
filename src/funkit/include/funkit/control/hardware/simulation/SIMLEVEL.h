@@ -2,6 +2,7 @@
 
 namespace funkit::control::simulation {
 
+// Macros that define the extent to which motors are being simulated.
 #define MOTOR_SIM_LEVEL_SIM_HARDWARE 1
 #define MOTOR_SIM_LEVEL_SIM_PHYSICS 2
 

@@ -4,6 +4,13 @@
 
 namespace funkit::robot {
 
+/**
+ * GenericControllerReadings
+ *
+ * A struct representing values of buttons 1–8 on a Human Interface Device
+ * (HID). Default construction leaves members uninitialized unless
+ * value-initialized
+ */
 struct GenericControllerReadings {
   bool one_button;
   bool two_button;

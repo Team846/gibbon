@@ -7,6 +7,12 @@ class NetworkTable;
 }
 
 namespace funkit::robot {
+/**
+ * XboxPOV
+ *
+ * An enum that classifies the controller's hat switch into 8 directions plus
+ * kNone, depending on its direction.
+ */
 enum class XboxPOV : int {
   kNone = -1,
   kUp = 0,
@@ -19,6 +25,11 @@ enum class XboxPOV : int {
   kUpLeft = 315
 };
 
+/**
+ * XboxReadings
+ *
+ * A struct holding variables for all xBox readings.
+ */
 struct XboxReadings {
   double left_stick_x;   // [-1, 1]
   double left_stick_y;   // [-1, 1]
@@ -42,9 +53,23 @@ struct XboxReadings {
 
   funkit::robot::XboxPOV pov;
 
+  // Default constructor
   XboxReadings() = default;
+  // Custom constructor that takes in a snapshot of controller state. Uses
+  // trigger_threshold to convert analog trigger axes into booleans.
   XboxReadings(frc::XboxController& xbox, double trigger_threshold);
 };
+
+/**
+ * XboxReadingsFromSimDS()
+ *
+ * Xbox readings from simulations.
+ * @param xbox_table - ntable that contains xbox information
+ * @param trigger_threshold - threshold if trigger reading is considered
+ * intentional
+ * @param out - readings of xbox controller instance
+ * @return True if data was successfully retrieved from NetworkTables
+ */
 
 bool XboxReadingsFromSimDS(
     nt::NetworkTable* xbox_table, double trigger_threshold, XboxReadings* out);
