@@ -72,6 +72,8 @@ struct DrivetrainReadings {
   pdcsu::units::degps_t yaw_rate;
   pdcsu::units::fps2_t acceleration;
   int see_tag_counter;
+  pdcsu::units::degree_t pitch;
+  pdcsu::units::degree_t roll;
 };
 
 struct DrivetrainTarget {
@@ -190,7 +192,7 @@ private:
   funkit::robot::swerve::control::SwerveOpenLoopCalculator ol_calculator_;
   funkit::robot::calculators::AprilTagCalculator tag_pos_calculator;
   funkit::robot::swerve::odometry::PoseEstimator pose_estimator{
-      {pdcsu::units::foot_t{0}, pdcsu::units::foot_t{0}},
+      {pdcsu::units::inch_t{0}, pdcsu::units::inch_t{0}},
       {pdcsu::units::fps_t{0}, pdcsu::units::fps_t{0}}};
 
   // Path logger for recording odometry data
@@ -210,14 +212,13 @@ private:
   double cached_odom_variance_ = 0.0;
   bool cached_pose_override_ = false;
   double cached_april_variance_coeff_ = 0.0;
-  double cached_triangular_variance_coeff_ = 0.0;
   std::map<size_t, pdcsu::units::second_t> cached_fudge_latencies_{};
   std::map<size_t, AprilTagCameraGraphKeys> april_camera_graph_keys_{};
 
   frc::Field2d MainField_;
 
-  degree_t zero_pitch;
-  degree_t zero_roll;
+  pdcsu::units::degree_t zero_pitch{0.0_deg_};
+  pdcsu::units::degree_t zero_roll{0.0_deg_};
 
   pdcsu::units::degree_t prev_odom_bearing_{0};
   second_t prev_odom_bearing_time_{-1};

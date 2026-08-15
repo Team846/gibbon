@@ -20,7 +20,6 @@ struct ATCalculatorInput {
   pdcsu::units::degps_t angular_velocity;
 
   double aprilVarianceCoeff;
-  double triangularVarianceCoeff;
   std::map<size_t, pdcsu::units::second_t> fudge_latency;
 };
 
@@ -36,6 +35,7 @@ struct ATCalculatorOutput {
   pdcsu::units::degree_t bearing_from_tags;
   bool bearing_from_tags_valid;
   bool camera_disconnect = false;
+  int new_frames = 0;
   std::map<size_t, AprilTagCameraResult> camera_results{};
 };
 
@@ -107,5 +107,8 @@ public:
       pdcsu::units::second_t time) const;
 
   Vector2D correction;
+
+private:
+  std::map<size_t, double> last_frame_nums_{};
 };
 }

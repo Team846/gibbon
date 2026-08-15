@@ -922,7 +922,7 @@
   {
     "name": "/Preferences/ShootingCalculator/2ptvel/kAdditive",
     "type": "double",
-    "value": 4.05,
+    "value": 3.95,
     "properties": {
       "persistent": true
     }
@@ -954,7 +954,7 @@
   {
     "name": "/Preferences/SwerveDrivetrain/april_tags/fudge_latency4 (ms)",
     "type": "double",
-    "value": 0.0,
+    "value": 60.0,
     "properties": {
       "persistent": true
     }
@@ -1554,7 +1554,7 @@
   {
     "name": "/Preferences/shooter/genome/gains/kP",
     "type": "double",
-    "value": 0.7,
+    "value": 0.75,
     "properties": {
       "persistent": true
     }
@@ -2065,38 +2065,6 @@
     "name": "/Preferences/SwerveDrivetrain/skid/variance_multiplier",
     "type": "double",
     "value": 50.0,
-    "properties": {
-      "persistent": true
-    }
-  },
-  {
-    "name": "/Preferences/SwerveDrivetrain/pose_estimator/pose_process_var",
-    "type": "double",
-    "value": 0.0001,
-    "properties": {
-      "persistent": true
-    }
-  },
-  {
-    "name": "/Preferences/SwerveDrivetrain/pose_estimator/velocity_process_var",
-    "type": "double",
-    "value": 0.03,
-    "properties": {
-      "persistent": true
-    }
-  },
-  {
-    "name": "/Preferences/SwerveDrivetrain/imu/invert_pitch",
-    "type": "boolean",
-    "value": true,
-    "properties": {
-      "persistent": true
-    }
-  },
-  {
-    "name": "/Preferences/SwerveDrivetrain/imu/invert_roll",
-    "type": "boolean",
-    "value": true,
     "properties": {
       "persistent": true
     }

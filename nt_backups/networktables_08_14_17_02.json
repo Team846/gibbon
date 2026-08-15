@@ -2084,21 +2084,5 @@
     "properties": {
       "persistent": true
     }
-  },
-  {
-    "name": "/Preferences/SwerveDrivetrain/imu/invert_pitch",
-    "type": "boolean",
-    "value": true,
-    "properties": {
-      "persistent": true
-    }
-  },
-  {
-    "name": "/Preferences/SwerveDrivetrain/imu/invert_roll",
-    "type": "boolean",
-    "value": true,
-    "properties": {
-      "persistent": true
-    }
   }
 ]

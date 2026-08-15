@@ -1,6 +1,6 @@
 # AGENTS.md - Repository Architecture Guide
 
-This document provides a comprehensive overview of the FRC Team 846 codebase architecture, patterns, and structure to help AI agents and developers understand and work with this repository effectively.
+This document provides a comprehensive overview of the FRC Team 846 codebase architecture, patterns, and structure to help AI agents and developers understand and work with this repository effectively. If graphify-out/ exists, use it.
 
 ## Table of Contents
 

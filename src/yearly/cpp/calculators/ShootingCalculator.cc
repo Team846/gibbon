@@ -2,6 +2,8 @@
 
 #include <frc/DriverStation.h>
 
+#include "funkit/math/quaternion.h"
+
 ShootingCalculatorOutputs ShootingCalculator::outputs_{
     0_deg_, 0_radps_, 60_deg_, 0_radps_, 0_fps_, false};
 std::optional<funkit::base::Loggable> ShootingCalculator::loggable_opt;
@@ -33,6 +35,7 @@ void ShootingCalculator::Setup() {
   loggable_opt->RegisterPreference("swim/yawRateFactor", 1.01);
   loggable_opt->RegisterPreference("swim/drawTwdDriver", 0.25);
   loggable_opt->RegisterPreference("pass/passGain", 1.07);
+  loggable_opt->RegisterPreference("bump/tilt_tol", 2.0_deg_);
 }
 
 double ShootingCalculator::GetYawRateFactor() {
@@ -169,10 +172,48 @@ void ShootingCalculator::Calculate(
 
   outputs_.vel_aim_compensation = u_clamp(
       1_rad_ * (cross_product / distance_squared), -300_degps_, 300_degps_);
+  
+  // diff axis reported by IMU, mounted 90deg off
+  degree_t pitch = drivetrain_readings.roll;
+  degree_t roll = drivetrain_readings.pitch;
+  const degree_t tilt_tol =
+      loggable.GetPreferenceValue_unit_type<degree_t>("bump/tilt_tol");
+
+  bool tilt_shot_reachable = true;
+  if (u_abs(pitch) > tilt_tol || u_abs(roll) > tilt_tol) {
+    degree_t aim_rel =
+        outputs_.aim_angle - drivetrain_readings.estimated_pose.bearing;
+
+    std::array<double, 3> shot_dir{u_sin(aim_rel) * u_cos(outputs_.shot_angle),
+        u_cos(aim_rel) * u_cos(outputs_.shot_angle),
+        u_sin(outputs_.shot_angle)};
+
+    std::array<double, 3> shot_robot_dir =
+        funkit::math::Quaternion::FromPitchRoll(pitch, roll)
+            .Conjugate()
+            .Rotate(shot_dir);
+
+    degree_t corr_shot_angle =
+        u_asin(std::clamp(shot_robot_dir[2], -1.0, 1.0));
+
+    if (corr_shot_angle < kShotAngleMin ||
+        corr_shot_angle > kShotAngleMax) {
+      tilt_shot_reachable = false;
+    } else {
+      outputs_.shot_angle = corr_shot_angle;
+      outputs_.aim_angle =
+          drivetrain_readings.estimated_pose.bearing +
+          radian_t{std::atan2(shot_robot_dir[0], shot_robot_dir[1])};
+    }
+  }
+
+  loggable.Graph("tilt/shot_angle_corrected", outputs_.shot_angle);
+  loggable.Graph("tilt/aim_angle_corrected", outputs_.aim_angle);
+  loggable.Graph("tilt/reachable", tilt_shot_reachable);
 
   /* Determine shot validity and whether to apply full effort */
-  outputs_.is_valid =
-      delta_mag >= kPointblankDistance && delta_mag <= fullEffortDistance;
+  outputs_.is_valid = tilt_shot_reachable && delta_mag >= kPointblankDistance &&
+                      delta_mag <= fullEffortDistance;
 
   if (delta_mag > fullEffortDistance) {
     if (effort_when_invald) {

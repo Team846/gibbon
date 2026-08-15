@@ -184,3 +184,6 @@ ctre_sim/
 
 # PDCSU
 src/pdcsu*/
+
+# Generated files
+graphify-out/
