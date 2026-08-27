@@ -203,7 +203,13 @@ To undo the going back:
 
 ## CppCheck Warnings
 ```
-src/funkit/cpp/funkit/math/collection.cc:27:0: warning: The function 'VerticalDeadband' is never used. [unusedFunction]
-src/funkit/cpp/funkit/math/collection.cc:55:0: warning: The function 'CoterminalSum' is never used. [unusedFunction]
-src/funkit/cpp/funkit/math/collection.cc:69:0: warning: The function 'modulo' is never used. [unusedFunction]
+src/funkit/cpp/funkit/robot/swerve/drive_to_point_command.cc:53:43: warning: Variable 'new_target_point' is assigned a value that is never used. [unreadVariable]
+src/funkit/cpp/funkit/robot/swerve/drive_to_point_command.cc:53:43: warning: Variable 'is_valid' is assigned a value that is never used. [unreadVariable]
+src/yearly/cpp/subsystems/hardware/DrivetrainConstructor.cc:22:16: warning: Member variable 'WireConfig::num_connectors' has no initializer. [uninitMemberVarNoCtor]
+src/yearly/cpp/subsystems/hardware/DrivetrainConstructor.cc:34:10: warning: Member variable 'UserSettableValues::drive_gear_ratio' has no initializer. [uninitMemberVarNoCtor]
+src/yearly/cpp/subsystems/hardware/DrivetrainConstructor.cc:37:10: warning: Member variable 'UserSettableValues::steer_inertia_coeff' has no initializer. [uninitMemberVarNoCtor]
+src/yearly/cpp/subsystems/hardware/DrivetrainConstructor.cc:38:10: warning: Member variable 'UserSettableValues::drive_friction' has no initializer. [uninitMemberVarNoCtor]
+src/yearly/cpp/subsystems/hardware/DrivetrainConstructor.cc:39:10: warning: Member variable 'UserSettableValues::steer_friction' has no initializer. [uninitMemberVarNoCtor]
+src/yearly/cpp/subsystems/hardware/DrivetrainConstructor.cc:45:5: warning: Member variable 'UserSettableValues::wire_configs' has no initializer. [uninitMemberVarNoCtor]
+src/yearly/cpp/subsystems/hardware/DrivetrainConstructor.cc:51:5: warning: Member variable 'UserSettableValues::module_ports' has no initializer. [uninitMemberVarNoCtor]
 ```

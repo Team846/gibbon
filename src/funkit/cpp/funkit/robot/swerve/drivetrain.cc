@@ -496,12 +496,24 @@ DrivetrainReadings DrivetrainSubsystem::ReadFromHardware() {
 
     const auto dt = funkit::robot::GenericRobot::kPeriod;
     auto dv = velocity - prev_wheel_velocity_;
-    pdcsu::util::math::uVec<pdcsu::units::fps2_t, 2> wheel_accel{
-        dv[0] / dt, dv[1] / dt};
-    prev_wheel_velocity_ = velocity;
-    auto imu_accel = GetAcceleration().rotate(bearing_offset_);
+    pdcsu::util::math::uVec<pdcsu::units::fps2_t, 2> wheel_accel{dv[0] / dt,
+        dv[1] / dt};  // field coordinates? 
 
-    auto accel_disagreement = (wheel_accel - imu_accel).magnitude();
+    prev_wheel_velocity_ = velocity;
+
+    // auto imu_accel = GetAcceleration().rotate(bearing_offset_)
+    // why rotate by bearing offset?
+    auto raw_imu_accel = GetAcceleration();  // chassis acceleration
+
+    constexpr double g_fps2 = 32.174;
+    pdcsu::units::fps2_t gravity_x{g_fps2 * pdcsu::units::u_sin(pitch)};
+    pdcsu::units::fps2_t gravity_y{-g_fps2 * pdcsu::units::u_sin(roll)};
+
+    pdcsu::util::math::uVec<pdcsu::units::fps2_t, 2> corrected_imu_accel{
+        raw_imu_accel[0] - gravity_x, raw_imu_accel[1] - gravity_y};
+    auto field_imu_accel = corrected_imu_accel.rotate(bearing);
+
+    auto accel_disagreement = (wheel_accel - field_imu_accel).magnitude();
     Graph("skid/accel_disagreement", accel_disagreement);
 
     double is_skidding =
@@ -633,7 +645,8 @@ DrivetrainReadings DrivetrainSubsystem::ReadFromHardware() {
   Graph("readings/accel_x", accl[0]);
   Graph("readings/accel_y", accl[1]);
 
-  accl = accl.rotate(bearing_offset_);
+  // accl = accl.rotate(bearing_offset_); //why rotate by bearing_offset_
+  accl = accl.rotate(bearing);
   pdcsu::units::fps2_t accel_mag{std::sqrt(
       accl[0].value() * accl[0].value() + accl[1].value() * accl[1].value())};
   // Graph("readings/accel_mag", accel_mag);
