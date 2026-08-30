@@ -118,6 +118,9 @@ DrivetrainSubsystem::DrivetrainSubsystem(DrivetrainConfigs configs)
   RegisterPreference("skid/filter_alpha", 0.85);
   RegisterPreference("skid/variance_multiplier", 50.0);
 
+  RegisterPreference("bump/enter_threshold_deg", pdcsu::units::degree_t{6});
+  RegisterPreference("bump/exit_threshold_deg", pdcsu::units::degree_t{2.5});
+
   odometry_.setConstants(
       {.forward_wheelbase_dim = configs.wheelbase_forward_dim,
           .horizontal_wheelbase_dim = configs.wheelbase_horizontal_dim});
@@ -478,10 +481,23 @@ DrivetrainReadings DrivetrainSubsystem::ReadFromHardware() {
                           roll * pdcsu::units::u_sin(bearing);
   degree_t tilt_field_y = pitch * pdcsu::units::u_sin(bearing) +
                           roll * pdcsu::units::u_cos(bearing);
+  pdcsu::util::math::uVec<pdcsu::units::degree_t, 2> temp{pitch, roll};
+  degree_t tilt_field = temp.magnitude();
+
   Graph("readings/pitch", pitch);
   Graph("readings/roll", roll);
   Graph("tilt_x", tilt_field_x);
   Graph("tilt_y", tilt_field_y);
+  Graph("tilt", tilt_field);
+
+  auto enter_thresh = GetPreferenceValue_unit_type<degree_t>(
+      "bump/enter_threshold_deg");  // e.g. 6.0 deg
+  auto exit_thresh = GetPreferenceValue_unit_type<degree_t>(
+      "bump/exit_threshold_deg");  // e.g. 2.5 deg
+  int enter_debounce_loops = 3;    // must stay tilted for >= 30ms
+  int exit_debounce_loops =
+      5;  // must stay flat for >= 50ms to confirm true exit
+
   Vector2D compensated_delta{delta_pos[0] * pdcsu::units::u_cos(tilt_field_x),
       delta_pos[1] * pdcsu::units::u_cos(tilt_field_y)};
 
@@ -491,13 +507,93 @@ DrivetrainReadings DrivetrainSubsystem::ReadFromHardware() {
       .velocity = velocity,
   };
 
+  switch (bump_state_) {
+  case BumpState::kIdle:
+    if (tilt_field > enter_thresh) {
+      enter_filter_ctr_++;
+      if (enter_filter_ctr_ >= enter_debounce_loops) {
+        bump_state_ = BumpState::kClimbing;
+        p_entry_ = new_pose.position;
+        peak_tilt_recorded_ = tilt_field;
+        p_at_peak_ = new_pose.position;
+
+        exit_filter_ctr_ = 0;
+
+        Log("Bump Entry detected at X: {:.2f} in, Y: {:.2f} in",
+            p_entry_[0].value(), p_entry_[1].value());
+        bump_starting_time_ = funkit::wpilib::CurrentFPGATime();
+      }
+
+    } else {
+      enter_filter_ctr_ = 0;
+    }
+    break;
+
+  case BumpState::kClimbing:
+    if (tilt_field > peak_tilt_recorded_) {
+      peak_tilt_recorded_ = tilt_field;
+      p_at_peak_ = new_pose.position;
+    }
+    if (tilt_field < exit_thresh) {
+      exit_filter_ctr_++;
+
+      if (exit_filter_ctr_ >= exit_debounce_loops) {
+        bump_state_ = BumpState::kApex;
+        enter_filter_ctr_ = 0;
+      }
+    } else {
+      exit_filter_ctr_ = 0;
+    }
+    break;
+  case BumpState::kApex:
+    if (tilt_field > enter_thresh) {
+      enter_filter_ctr_++;
+      if (enter_filter_ctr_ >= enter_debounce_loops) {
+        bump_state_ = BumpState::kDescent;
+        exit_filter_ctr_ = 0;
+      }
+
+    } else {
+      enter_filter_ctr_ = 0;
+    }
+    break;
+  case BumpState::kDescent:
+    if (cooldown_ctr_ > 0) {
+      cooldown_ctr_--;
+    } else if (tilt_field < exit_thresh) {
+      exit_filter_ctr_++;
+      if (exit_filter_ctr_ >= exit_debounce_loops) {
+        p_exit_ = new_pose.position;
+
+        auto p_center = (p_entry_ + p_exit_) * 0.5;
+        auto distance_traversed = (p_exit_ - p_entry_).magnitude();
+        bump_state_ = BumpState::kIdle;
+
+        enter_filter_ctr_ = 0;
+
+        Log("=== BUMP LOGGED ===");
+        Log("Center: X: {:.2f} in, Y: {:.2f} in", p_center[0].value(),
+            p_center[1].value());
+        Log("Peak Tilt: {:.1f} deg | Duration: {:.2f} s | Span: {:.1f} in",
+            peak_tilt_recorded_.value(),
+            (funkit::wpilib::CurrentFPGATime() - bump_starting_time_).value(),
+            distance_traversed.value());
+      }
+    }
+
+    else {
+      exit_filter_ctr_ = 0;
+    }
+    break;
+  }
+
   if (compensated_delta.magnitude().value() < 10.0) {
     cached_odom_variance_ = GetPreferenceValue_double("odom_variance");
 
     const auto dt = funkit::robot::GenericRobot::kPeriod;
     auto dv = velocity - prev_wheel_velocity_;
-    pdcsu::util::math::uVec<pdcsu::units::fps2_t, 2> wheel_accel{dv[0] / dt,
-        dv[1] / dt};  // field coordinates? 
+    pdcsu::util::math::uVec<pdcsu::units::fps2_t, 2> wheel_accel{
+        dv[0] / dt, dv[1] / dt};  // field coordinates?
 
     prev_wheel_velocity_ = velocity;
 

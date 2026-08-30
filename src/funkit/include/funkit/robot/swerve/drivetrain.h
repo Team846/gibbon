@@ -30,6 +30,8 @@ namespace funkit::robot::swerve {
 
 enum class NavXConnectionType { kMXP, kUSB };
 
+enum class BumpState { kIdle, kClimbing, kApex, kDescent };
+
 struct PigeonConnection {
   int canID;
 };
@@ -226,6 +228,16 @@ private:
   pdcsu::util::math::uVec<pdcsu::units::fps_t, 2> prev_wheel_velocity_{
       pdcsu::units::fps_t{0}, pdcsu::units::fps_t{0}};
   double skid_ratio_{0.0};
+
+  BumpState bump_state_ = BumpState::kIdle;
+  int enter_filter_ctr_ = 0;
+  int exit_filter_ctr_ = 0;
+  int cooldown_ctr_ = 0;
+  pdcsu::util::math::uVec<pdcsu::units::inch_t, 2> p_entry_{0_in_, 0_in_};
+  pdcsu::util::math::uVec<pdcsu::units::inch_t, 2> p_at_peak_{0_in_, 0_in_};
+  pdcsu::util::math::uVec<pdcsu::units::inch_t, 2> p_exit_{0_in_, 0_in_};
+  pdcsu::units::degree_t peak_tilt_recorded_{0_deg_};
+  pdcsu::units::second_t bump_starting_time_{0_s_};
 
 public:
   degree_t bearing_correction_at_ = 0_deg_;

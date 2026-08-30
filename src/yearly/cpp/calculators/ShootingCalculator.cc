@@ -172,7 +172,7 @@ void ShootingCalculator::Calculate(
 
   outputs_.vel_aim_compensation = u_clamp(
       1_rad_ * (cross_product / distance_squared), -300_degps_, 300_degps_);
-  
+
   // diff axis reported by IMU, mounted 90deg off
   degree_t pitch = drivetrain_readings.roll;
   degree_t roll = drivetrain_readings.pitch;
@@ -193,11 +193,9 @@ void ShootingCalculator::Calculate(
             .Conjugate()
             .Rotate(shot_dir);
 
-    degree_t corr_shot_angle =
-        u_asin(std::clamp(shot_robot_dir[2], -1.0, 1.0));
+    degree_t corr_shot_angle = u_asin(std::clamp(shot_robot_dir[2], -1.0, 1.0));
 
-    if (corr_shot_angle < kShotAngleMin ||
-        corr_shot_angle > kShotAngleMax) {
+    if (corr_shot_angle < kShotAngleMin || corr_shot_angle > kShotAngleMax) {
       tilt_shot_reachable = false;
     } else {
       outputs_.shot_angle = corr_shot_angle;
