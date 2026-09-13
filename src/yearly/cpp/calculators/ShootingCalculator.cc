@@ -194,16 +194,27 @@ void ShootingCalculator::Calculate(
             .Conjugate()
             .Rotate(shot_dir);
 
-    degree_t corr_shot_angle = u_asin(std::clamp(shot_robot_dir[2], -1.0, 1.0));
+    degree_t corr_shot_angle =
+        u_asin(std::clamp(shot_robot_dir[2], -1.0, 1.0));
 
-    if (corr_shot_angle < kShotAngleMin || corr_shot_angle > kShotAngleMax) {
+    if (corr_shot_angle < kShotAngleMin ||
+        corr_shot_angle > kShotAngleMax) {
       tilt_shot_reachable = false;
+    } else {
+      outputs_.shot_angle = corr_shot_angle;
+      outputs_.aim_angle =
+          drivetrain_readings.estimated_pose.bearing +
+          radian_t{std::atan2(shot_robot_dir[0], shot_robot_dir[1])};
     }
   }
 
+  loggable.Graph("tilt/shot_angle_corrected", outputs_.shot_angle);
+  loggable.Graph("tilt/aim_angle_corrected", outputs_.aim_angle);
+  loggable.Graph("tilt/reachable", tilt_shot_reachable);
+
   /* Determine shot validity and whether to apply full effort */
-  outputs_.is_valid = delta_mag >= kPointblankDistance &&
-                      delta_mag <= fullEffortDistance && tilt_shot_reachable;
+  outputs_.is_valid = tilt_shot_reachable && delta_mag >= kPointblankDistance &&
+                      delta_mag <= fullEffortDistance;
 
   if (delta_mag > fullEffortDistance) {
     if (effort_when_invald) {
