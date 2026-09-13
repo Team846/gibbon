@@ -922,7 +922,7 @@
   {
     "name": "/Preferences/ShootingCalculator/2ptvel/kAdditive",
     "type": "double",
-    "value": 4.05,
+    "value": 5.8,
     "properties": {
       "persistent": true
     }
@@ -1122,7 +1122,7 @@
   {
     "name": "/Preferences/turret/encoder/offset1 (rot)",
     "type": "double",
-    "value": 0.281005859375,
+    "value": 0.270751953125,
     "properties": {
       "persistent": true
     }
@@ -1130,7 +1130,7 @@
   {
     "name": "/Preferences/turret/encoder/offset2 (rot)",
     "type": "double",
-    "value": 0.41357421875,
+    "value": 0.41186523437500006,
     "properties": {
       "persistent": true
     }
@@ -1298,7 +1298,7 @@
   {
     "name": "/Preferences/scorer_ss/point_blank/shooter_vel (ft s^-1)",
     "type": "double",
-    "value": 27.0,
+    "value": 33.0,
     "properties": {
       "persistent": true
     }
@@ -2105,22 +2105,6 @@
     "name": "/Preferences/ShootingCalculator/bump/tilt_tol (deg)",
     "type": "double",
     "value": 2.0,
-    "properties": {
-      "persistent": true
-    }
-  },
-  {
-    "name": "/Preferences/ShootingCalculator/2ptvel/kAdditiveFar",
-    "type": "double",
-    "value": 8.0,
-    "properties": {
-      "persistent": true
-    }
-  },
-  {
-    "name": "/Preferences/ShootingCalculator/2ptvel/kFarBreakDist (in)",
-    "type": "double",
-    "value": 170.0,
     "properties": {
       "persistent": true
     }

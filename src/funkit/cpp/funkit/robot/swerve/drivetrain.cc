@@ -82,14 +82,24 @@ DrivetrainSubsystem::DrivetrainSubsystem(DrivetrainConfigs configs)
   RegisterPreference("bearing_latency", pdcsu::units::second_t{0.0});
 
   RegisterPreference("pose_estimator/override", false);
+  RegisterPreference("pose_estimator/pose_process_var", 1e-4);
+  RegisterPreference("pose_estimator/velocity_process_var", 0.03);
 
   RegisterPreference("pitch_roll_thresh", pdcsu::units::degree_t{10});
 
+  RegisterPreference("imu/invert_pitch", false);
+  RegisterPreference("imu/invert_roll", false);
+
   RegisterPreference("april_tags/april_variance_coeff", 0.2);
-  RegisterPreference("april_tags/triangular_variance_coeff", 1.0);
   for (const auto& config : configs.april_camera_configs) {
     RegisterPreference(
         "april_tags/fudge_latency" + std::to_string(config.camera_id),
+        pdcsu::units::ms_t{50.0});
+  }
+  if (configs.turret_camera_config.has_value()) {
+    RegisterPreference(
+        "april_tags/fudge_latency" +
+            std::to_string(configs.turret_camera_config.value().camera_id),
         pdcsu::units::ms_t{50.0});
   }
 
@@ -339,20 +349,28 @@ pdcsu::units::degree_t DrivetrainSubsystem::GetBearing() {
 }
 
 pdcsu::units::degree_t DrivetrainSubsystem::GetPitch() {
+  double invert = GetPreferenceValue_bool("imu/invert_pitch") ? -1.0 : 1.0;
   if (pigeon_.has_value()) {
-    return pdcsu::units::degree_t{pigeon_->GetPitch().GetValueAsDouble()} -
-           zero_pitch;
+    return invert *
+           (pdcsu::units::degree_t{pigeon_->GetPitch().GetValueAsDouble()} -
+               zero_pitch);
   }
-  if (navX_.has_value()) { return pdcsu::units::degree_t{navX_->GetPitch()}; }
+  if (navX_.has_value()) {
+    return invert * pdcsu::units::degree_t{navX_->GetPitch()};
+  }
   return pdcsu::units::degree_t{0};
 }
 
 pdcsu::units::degree_t DrivetrainSubsystem::GetRoll() {
+  double invert = GetPreferenceValue_bool("imu/invert_roll") ? -1.0 : 1.0;
   if (pigeon_.has_value()) {
-    return pdcsu::units::degree_t{pigeon_->GetRoll().GetValueAsDouble()} -
-           zero_roll;
+    return invert *
+           (pdcsu::units::degree_t{pigeon_->GetRoll().GetValueAsDouble()} -
+               zero_roll);
   }
-  if (navX_.has_value()) { return pdcsu::units::degree_t{navX_->GetRoll()}; }
+  if (navX_.has_value()) {
+    return invert * pdcsu::units::degree_t{navX_->GetRoll()};
+  }
   return pdcsu::units::degree_t{0};
 }
 
@@ -384,6 +402,9 @@ DrivetrainSubsystem::GetAcceleration() {
 }
 
 DrivetrainReadings DrivetrainSubsystem::ReadFromHardware() {
+  pose_estimator.SetProcessNoise(
+      GetPreferenceValue_double("pose_estimator/pose_process_var"),
+      GetPreferenceValue_double("pose_estimator/velocity_process_var"));
   pose_estimator.Update();
 
   pdcsu::units::degree_t bearing = GetBearing();
@@ -457,6 +478,8 @@ DrivetrainReadings DrivetrainSubsystem::ReadFromHardware() {
                           roll * pdcsu::units::u_sin(bearing);
   degree_t tilt_field_y = pitch * pdcsu::units::u_sin(bearing) +
                           roll * pdcsu::units::u_cos(bearing);
+  Graph("readings/pitch", pitch);
+  Graph("readings/roll", roll);
   Graph("tilt_x", tilt_field_x);
   Graph("tilt_y", tilt_field_y);
   Vector2D compensated_delta{delta_pos[0] * pdcsu::units::u_cos(tilt_field_x),
@@ -494,7 +517,9 @@ DrivetrainReadings DrivetrainSubsystem::ReadFromHardware() {
         (1.0 + skid_ratio_ *
                    GetPreferenceValue_double("skid/variance_multiplier"));
 
-    if ((u_abs(pitch) + u_abs(roll)) > GetPreferenceValue_unit_type<pdcsu::units::degree_t>("pitch_roll_thresh")) {
+    if ((u_abs(pitch) + u_abs(roll)) >
+        GetPreferenceValue_unit_type<pdcsu::units::degree_t>(
+            "pitch_roll_thresh")) {
       cached_odom_variance_ = 1000000.0;
     }
     pose_estimator.AddOdometryMeasurement(
@@ -504,24 +529,29 @@ DrivetrainReadings DrivetrainSubsystem::ReadFromHardware() {
 
   cached_april_variance_coeff_ =
       GetPreferenceValue_double("april_tags/april_variance_coeff");
-  cached_triangular_variance_coeff_ =
-      GetPreferenceValue_double("april_tags/triangular_variance_coeff");
 
   for (const auto& config : configs_.april_camera_configs) {
     cached_fudge_latencies_[config.camera_id] =
         GetPreferenceValue_unit_type<pdcsu::units::ms_t>(
             "april_tags/fudge_latency" + std::to_string(config.camera_id));
   }
+  if (configs_.turret_camera_config.has_value()) {
+    size_t camera_id = configs_.turret_camera_config.value().camera_id;
+    cached_fudge_latencies_[camera_id] =
+        GetPreferenceValue_unit_type<pdcsu::units::ms_t>(
+            "april_tags/fudge_latency" + std::to_string(camera_id));
+  }
 
   funkit::robot::calculators::ATCalculatorOutput tag_pos =
-      tag_pos_calculator.calculate(
-          {new_pose, yaw_rate, cached_april_variance_coeff_,
-              cached_triangular_variance_coeff_, cached_fudge_latencies_});
+      tag_pos_calculator.calculate({new_pose, yaw_rate,
+          cached_april_variance_coeff_, cached_fudge_latencies_});
 
   if (tag_pos.camera_disconnect && !previous_camera_disconnect) {
     Error("Camera disconnect");
   }
   previous_camera_disconnect = tag_pos.camera_disconnect;
+
+  Graph("april_tags/new_frames", tag_pos.new_frames);
 
   if (tag_pos.variance >= 0) {
     pose_estimator.AddVisionMeasurement(
@@ -562,21 +592,19 @@ DrivetrainReadings DrivetrainSubsystem::ReadFromHardware() {
     Graph("april_tags/bearing_correction", bearing_correction_at_);
   }
 
-  Graph("pose_estimator/latency_est", pose_estimator.getLatency());
-
   if (first_loop) {
     pose_estimator.SetPoint(
         std::array<double, 2>{tag_pos.pos[0].value(), tag_pos.pos[1].value()});
     first_loop = false;
   }
 
-  auto pose_vel = pose_estimator.velocity();
+  auto pose_vel_ips = pose_estimator.velocity_ips();
   funkit::robot::swerve::odometry::SwervePose estimated_pose{
       .position = {pdcsu::units::inch_t{pose_estimator.position()[0]},
           pdcsu::units::inch_t{pose_estimator.position()[1]}},
       .bearing = bearing,
-      .velocity = {pdcsu::units::fps_t{pose_vel[0]},
-          pdcsu::units::fps_t{pose_vel[1]}},
+      .velocity = {pdcsu::units::fps_t{pose_vel_ips[0] / 12.0},
+          pdcsu::units::fps_t{pose_vel_ips[1] / 12.0}},
   };
 
   if (frc::RobotBase::IsSimulation()) {
@@ -614,7 +642,7 @@ DrivetrainReadings DrivetrainSubsystem::ReadFromHardware() {
   if (path_logger_.IsRecording()) { path_logger_.RecordPose(estimated_pose); }
 
   return {new_pose, tag_pos.pos, estimated_pose, yaw_rate, accel_mag,
-      see_tag_counter_};
+      see_tag_counter_, pitch, roll};
 }
 
 pdcsu::util::math::uVec<pdcsu::units::fps_t, 2>
