@@ -37,6 +37,8 @@ void FunkyRobot::OnInitialize() {
   ShootingCalculator::Setup();
 
   ADD_AUTO_VARIANTS(CS2Auto, "CS2");
+  ADD_AUTO_VARIANTS(TrailDepotAuto, "TrailDepot");
+  ADD_AUTO_VARIANTS(TrailSafeAuto, "TrailSafe");
   ADD_AUTO_VARIANTS(CompatibilityAuto, "LEM");
   ADD_AUTO_VARIANTS(OPAuto, "OP");
   ADD_AUTO_VARIANTS(SafeOPAuto, "SafeOP");
