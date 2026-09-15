@@ -62,8 +62,10 @@ private:
   ms_t last_time_ = -1.0_ms_;
 
   radps2_t accel_est_ = 0.0_radps2_;
+  second_t last_dt_ = 0.02_s_;
 
   size_t zero_walk_ctr_ = 0;
+  size_t crt_diag_ctr_ = 0;
 
   degree_t wrap_offset_ = 0.0_deg_;
 };

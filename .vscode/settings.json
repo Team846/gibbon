@@ -130,5 +130,27 @@
   "wpilib.useWindbgX": true,
   "C_Cpp.errorSquiggles": "enabled",
   "wpilib.skipTests": true,
-  "editor.suggestSelection": "recentlyUsedByPrefix"
+  "editor.suggestSelection": "recentlyUsedByPrefix",
+  "C_Cpp.files.exclude": {
+    "**/build": true,
+    "**/logs": true,
+    "**/nt_backups": true,
+    "**/graphify-out": true,
+    "**/MonkeySee": true,
+    "**/.git": true,
+    "**/*.gch": true,
+    "**/*.pch": true
+  },
+  "files.watcherExclude": {
+    "**/build/**": true,
+    "**/logs/**": true,
+    "**/nt_backups/**": true,
+    "**/graphify-out/**": true
+  },
+  "search.exclude": {
+    "**/build": true,
+    "**/logs": true,
+    "**/nt_backups": true,
+    "**/graphify-out": true
+  }
 }
