@@ -89,7 +89,7 @@ SwerveOdometryOutput SwerveOdometryCalculator::calculate(
       inch_t wy_pred = dy + dtheta_ratio * r_x[i];
       inch_t ex = wx[i] - wx_pred;
       inch_t ey = wy[i] - wy_pred;
-      res[i] = u_sqrt(ex * ex + ey * ey);
+      res[i] = Vec2D{ex, ey}.magnitude();
     }
     std::array<inch_t, kNumWheels> res_sorted = res;
     std::sort(res_sorted.begin(), res_sorted.end(),

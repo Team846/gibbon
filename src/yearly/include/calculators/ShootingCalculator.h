@@ -34,6 +34,7 @@ public:
   static degree_t GetShotAngle(foot_t shot_distance);
   static radps_t GetShotAngleVel(foot_t shot_distance, fps_t vel_in_dir);
   static fps_t GetBaseVelocity(degree_t shot_angle, foot_t shot_distance);
+  static fps_t GetTableVelocity(inch_t distance);
 
   static ShootingCalculatorOutputs GetOutputs() { return outputs_; };
   static pdcsu::util::math::Vector2D SimulateTrajectory(
