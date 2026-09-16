@@ -139,10 +139,10 @@ using FPT = funkit::math::FieldPoint;
 #define P1C1_TRAIL_PT MKPT(78.2_in_, 265.4_in_, 170_deg_ + 180_deg_, 10_fps_)
 #define P2C1_TRAIL_PT MKPT(80.5_in_, 305.3_in_, 0_deg_, 9_fps_)
 #define P3C1_TRAIL_PT MKPT(137.75_in_, 307.2_in_, 100_deg_, 8_fps_)
-#define P4C1_TRAIL_PT MKPT(150.75_in_, 269.2_in_, 130_deg_, 6_fps_)
-#define P5C1_TRAIL_PT MKPT(134.75_in_, 251.2_in_, 30_deg_ + 180_deg_, 4_fps_)
-#define P6C1_TRAIL_PT MKPT(100.75_in_, 248.2_in_, 70_deg_ + 180_deg_, 2_fps_)
-#define END_BUMP_TRAIL_PT MKPT(98_in_, 229.61_in_, 180_deg_, 7_fps_)
+#define P4C1_TRAIL_PT MKPT(150.75_in_, 273.2_in_, 130_deg_, 6_fps_)
+#define P5C1_TRAIL_PT MKPT(134.75_in_, 262.2_in_, 30_deg_ + 180_deg_, 4_fps_)
+#define P6C1_TRAIL_PT MKPT(120.75_in_, 255.2_in_, 70_deg_ + 180_deg_, 2_fps_)
+#define END_BUMP_TRAIL_PT MKPT(98_in_, 229.61_in_, 180_deg_, 6_fps_)
 #define START_BUMP_TRAIL_PT MKPT(98_in_, 125.61_in_, 180_deg_, 8_fps_)
 
 
