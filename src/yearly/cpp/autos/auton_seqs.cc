@@ -158,7 +158,7 @@ using FPT = funkit::math::FieldPoint;
 #define END_BUMP_TRAIL_PT MKPT(98_in_, 229.61_in_, 180_deg_, 6_fps_)
 #define START_BUMP_TRAIL_PT MKPT(98_in_, 125.61_in_, 180_deg_, 8_fps_)
 
-#define CENTER8_SHOT MKPT(158.85_in_, 125.35_in_, 180_deg_, 0_fps_)
+#define CENTER8_SHOT MKPT(158.85_in_, 125.35_in_, 0_deg_, 0_fps_)
 
 #define P3C1_INTAKE_PT_SAFEOP MKPT(120.75_in_, 305.2_in_, 70_deg_, 0_fps_)
 
@@ -166,12 +166,6 @@ using FPT = funkit::math::FieldPoint;
   MKPT(funkit::math::FieldPoint::field_size_x / 2.0 - 78.38_in_, 20_in_, \
       180_deg_, 0_fps_)
 
-#define PDEPOT                                                           \
-  MKPT(funkit::math::FieldPoint::field_size_x / 2.0 - 78.38_in_, 20_in_, \
-      135_deg_, 0_fps_)
-#define DEPOT94                                                          \
-  MKPT(funkit::math::FieldPoint::field_size_x / 2.0 - 58.38_in_, 20_in_, \
-      135_deg_, 0_fps_)
 
 #define __AUTO__(codeName, stringName)                                 \
   codeName::codeName(                                                  \
@@ -357,12 +351,15 @@ SEQUENCE {
 
 __AUTO__(Center8Depot, "C8D")
 SEQUENCE {
-  START2(157.8_in_, 144.54_in_, 180_deg_), TRACK(),
-      DRIVE_PT(CS2, CENTER8_SHOT, NORM), INTAKE(HoptakeState::kIntake),
-      DRIVE_PT_BEARING(CS2, PDEPOT, NORM), WAIT{1.0_s},
-      PARALLEL_DEADLINE(WAIT{2.5_s}, SHOOT()), TRACK(),
-      DRIVE_PT_BEARING(CS2, DEPOT, SWIM), DRIVE_PT_BEARING(CS2, PDEPOT, NORM),
-      frc2::ParallelDeadlineGroup(WAIT{10_s}, SHOOT())
+  START2(157.8_in_, 144.54_in_, 0_deg_), DRIVE_PT(CS2, CENTER8_SHOT, NORM),
+      PARALLEL_DEADLINE(WAIT{2.5_s}, SHOOT()), INTAKE(HoptakeState::kIntake),
+      frc2::ConditionalCommand(
+          frc2::ParallelDeadlineGroup(
+              frc2::SequentialCommandGroup{
+                  DRIVE_PT_BEARING(CS2, DEPOT, SWIM), WAIT{5_s}},
+              SHOOT()),
+          frc2::ParallelDeadlineGroup(WAIT{10_s}, SHOOT()),
+          [left = is_left_side]() { return left; })
 }
 }
 {}
