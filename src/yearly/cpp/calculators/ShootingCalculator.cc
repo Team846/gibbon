@@ -54,6 +54,8 @@ void ShootingCalculator::Setup() {
   loggable_opt->RegisterPreference("swim/drawTwdDriver", 0.25);
   loggable_opt->RegisterPreference("pass/passGain", 1.07);
   loggable_opt->RegisterPreference("bump/tilt_tol", 2.0_deg_);
+  loggable_opt->RegisterPreference("2ptvel/kPointBlank", 23.7_fps_);
+  loggable_opt->RegisterPreference("2ptvel/kAdditive", 5.06846);
 }
 
 double ShootingCalculator::GetYawRateFactor() {
@@ -188,8 +190,12 @@ void ShootingCalculator::Calculate(
   loggable.Graph("vel_perp", vel_perp);
   loggable.Graph("delta_mag", inch_t{delta_mag});
 
-  outputs_.shooter_vel = GetTableVelocity(delta_mag);
-  loggable.Graph("table_vel", outputs_.shooter_vel);
+  auto shot_ptbvel = GetBaseVelocity(outputs_.shot_angle, kPointblankDistance);
+  auto shot_vel = GetBaseVelocity(outputs_.shot_angle, delta_mag);
+  outputs_.shooter_vel =
+      loggable.GetPreferenceValue_unit_type<fps_t>("2ptvel/kPointBlank") +
+      loggable.GetPreferenceValue_double("2ptvel/kAdditive") *
+          (shot_vel - shot_ptbvel);
 
   /* Calculate and apply turret targets */
   outputs_.aim_angle =
@@ -251,7 +257,7 @@ void ShootingCalculator::Calculate(
   if (delta_mag > fullEffortDistance) {
     if (effort_when_invald) {
       outputs_.shooter_vel =
-          outputs_.shooter_vel *
+          GetTableVelocity(delta_mag) *
           loggable.GetPreferenceValue_double("pass/passGain");
     } else {
       outputs_.shooter_vel = 20_fps_;
