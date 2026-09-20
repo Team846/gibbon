@@ -126,6 +126,7 @@ using FPT = funkit::math::FieldPoint;
 
 #define END_BUMPC1_PT MKPT(98_in_, 223.61_in_, 0_deg_, 7_fps_)
 #define START_BUMPC1_PT MKPT(98_in_, 125.61_in_, 35_deg_, 8_fps_)
+#define START_BUMP_BACK_PT MKPT(98_in_, 125.61_in_, 0_deg_, 4_fps_)
 // 8_fps
 #define END_BUMPC23_PT MKPT(107_in_, 223.61_in_, 0_deg_ + 180_deg_, 3_fps_)
 #define START_BUMPC23_PT MKPT(107_in_, 135.61_in_, 35_deg_ + 180_deg_, 8_fps_)
@@ -259,6 +260,25 @@ SEQUENCE {
           frc2::SequentialCommandGroup{WAIT{0.25_s},
               DRIVE_PT_BEARING(CS2, CENTER8_SHOT, SWIM), WAIT{10_s}},
           SHOOT())
+}
+}
+{}
+
+__AUTO__(TrailShiftAuto, "TrailShift")
+SEQUENCE {
+  START2(157.8_in_, 144.54_in_, 0_deg_), PARALLEL_DEADLINE(WAIT{2.5_s}, DRIVE_PT(CS2, CENTER8_SHOT, NORM)),
+      PARALLEL_DEADLINE(WAIT{6.5_s}, SHOOT()), DRIVE_PT(CS2, START_BUMP_BACK_PT, NORM), 
+      PARALLEL_DEADLINE(DRIVE_PT(CS2, END_BUMPC1_PT, NORM),
+          SEQUENCE(WAIT{0.25_s}, INTAKE(HoptakeState::kIntake))),
+      INTAKE(HoptakeState::kIntake), DRIVE_PT_TANK(CS2, P1C1_TRAIL_PT, NORM),
+      DRIVE_PT_TANK(CS2, P2C1_TRAIL_PT, NORM), TRACK(),
+      DRIVE_PT_TANK(CS2, P3C1_TRAIL_PT, NORM),
+      DRIVE_PT_TANK(CS2, P4C1_TRAIL_PT, NORM),
+      DRIVE_PT(CS2, P5C1_TRAIL_PT, NORM), DRIVE_PT(CS2, P6C1_TRAIL_PT, NORM),
+      INTAKE(HoptakeState::kBump), DRIVE_PT(CS2, PRE_BUMP_TRAIL_PT, NORM),
+      DRIVE_PT(CS2, END_BUMP_TRAIL_PT, NORM), TRACK(),
+      DRIVE_PT(CS2, START_BUMP_TRAIL_PT, BUMP), SHOOT()
+
 }
 }
 {}

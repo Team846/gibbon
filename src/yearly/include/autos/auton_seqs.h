@@ -26,6 +26,13 @@ public:
       RobotContainer& container, bool is_blue_side, bool is_left_side);
 };
 
+class TrailShiftAuto : public funkit::robot::GenericCommandGroup<RobotContainer,
+                           TrailShiftAuto, frc2::SequentialCommandGroup> {
+public:
+  TrailShiftAuto(
+      RobotContainer& container, bool is_blue_side, bool is_left_side);
+};
+
 class TrailSafeAuto : public funkit::robot::GenericCommandGroup<RobotContainer,
                           TrailSafeAuto, frc2::SequentialCommandGroup> {
 public:
