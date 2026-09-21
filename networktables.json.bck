@@ -1964,7 +1964,7 @@
   {
     "name": "/Preferences/ShootingCalculator/pass/passGain",
     "type": "double",
-    "value": 1.0,
+    "value": 1.03,
     "properties": {
       "persistent": true
     }
@@ -2120,7 +2120,7 @@
   {
     "name": "/Preferences/ShootingCalculator/velTable/d080in (ft s^-1)",
     "type": "double",
-    "value": 29.7,
+    "value": 27.7,
     "properties": {
       "persistent": true
     }
@@ -2144,7 +2144,7 @@
   {
     "name": "/Preferences/ShootingCalculator/velTable/d200in (ft s^-1)",
     "type": "double",
-    "value": 37.9,
+    "value": 35.9,
     "properties": {
       "persistent": true
     }
