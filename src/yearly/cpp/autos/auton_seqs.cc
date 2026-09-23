@@ -1,6 +1,8 @@
 #include "autos/auton_seqs.h"
 
+#include <frc/Preferences.h>
 #include <frc2/command/ConditionalCommand.h>
+#include <frc2/command/DeferredCommand.h>
 #include <frc2/command/ParallelDeadlineGroup.h>
 #include <frc2/command/ParallelRaceGroup.h>
 #include <frc2/command/WaitCommand.h>
@@ -112,8 +114,19 @@ using FPT = funkit::math::FieldPoint;
 
 #define PASS() AutoScorerCommand(container, false, true)
 
+#define TRAIL_INITIAL_WAIT                                                  \
+  frc2::DeferredCommand {                                                   \
+    []() -> frc2::CommandPtr {                                              \
+      return frc2::WaitCommand{units::second_t{frc::Preferences::GetDouble( \
+                                   "Robot/trail_initial_wait_s", 4.0)}}     \
+          .ToPtr();                                                         \
+    },                                                                      \
+        frc2::Requirements {}                                               \
+  }
+
 #define END_BUMPC1_PT MKPT(98_in_, 223.61_in_, 0_deg_, 7_fps_)
 #define START_BUMPC1_PT MKPT(98_in_, 125.61_in_, 35_deg_, 8_fps_)
+#define START_BUMP_BACK_PT MKPT(98_in_, 125.61_in_, 0_deg_, 4_fps_)
 // 8_fps
 #define END_BUMPC23_PT MKPT(107_in_, 223.61_in_, 0_deg_ + 180_deg_, 3_fps_)
 #define START_BUMPC23_PT MKPT(107_in_, 135.61_in_, 35_deg_ + 180_deg_, 8_fps_)
@@ -136,20 +149,23 @@ using FPT = funkit::math::FieldPoint;
 #define P2C2_COMPATIBILITY_PT MKPT(135.35_in_, 305.42_in_, 30_deg_, 7_fps_)
 #define P3C2_COMPATIBILITY_PT MKPT(145.85_in_, 324.35_in_, 45_deg_, 0_fps_)
 
-#define CENTER8_SHOT MKPT(158.85_in_, 125.35_in_, 180_deg_, 0_fps_)
+#define P1C1_TRAIL_PT MKPT(78.2_in_, 265.4_in_, 170_deg_ + 180_deg_, 10_fps_)
+#define P2C1_TRAIL_PT MKPT(80.5_in_, 305.3_in_, 0_deg_, 9_fps_)
+#define P3C1_TRAIL_PT MKPT(137.75_in_, 307.2_in_, 100_deg_, 8_fps_)
+#define P4C1_TRAIL_PT MKPT(150.75_in_, 273.2_in_, 130_deg_, 6_fps_)
+#define P5C1_TRAIL_PT MKPT(130.75_in_, 262.2_in_, 30_deg_ + 180_deg_, 4_fps_)
+#define P6C1_TRAIL_PT MKPT(116.75_in_, 255.2_in_, 70_deg_ + 180_deg_, 2_fps_)
+#define PRE_BUMP_TRAIL_PT MKPT(100_in_, 240_in_, 20_deg_ + 180_deg_, 3_fps_)
+#define END_BUMP_TRAIL_PT MKPT(98_in_, 229.61_in_, 180_deg_, 6_fps_)
+#define START_BUMP_TRAIL_PT MKPT(98_in_, 125.61_in_, 180_deg_, 8_fps_)
+
+#define CENTER8_SHOT MKPT(158.85_in_, 125.35_in_, 0_deg_, 0_fps_)
 
 #define P3C1_INTAKE_PT_SAFEOP MKPT(120.75_in_, 305.2_in_, 70_deg_, 0_fps_)
 
 #define DEPOT                                                            \
   MKPT(funkit::math::FieldPoint::field_size_x / 2.0 - 78.38_in_, 20_in_, \
       180_deg_, 0_fps_)
-
-#define PDEPOT                                                           \
-  MKPT(funkit::math::FieldPoint::field_size_x / 2.0 - 78.38_in_, 20_in_, \
-      135_deg_, 0_fps_)
-#define DEPOT94                                                          \
-  MKPT(funkit::math::FieldPoint::field_size_x / 2.0 - 58.38_in_, 20_in_, \
-      135_deg_, 0_fps_)
 
 #define __AUTO__(codeName, stringName)                                 \
   codeName::codeName(                                                  \
@@ -201,6 +217,68 @@ SEQUENCE {
           frc2::SequentialCommandGroup(DRIVE_PT(CS2, START_BUMPC23_PT_R, BUMP),
               frc2::ParallelDeadlineGroup(WAIT{10_s}, SHOOT())),
           [left = is_left_side]() { return left; })
+}
+}
+{}
+
+__AUTO__(TrailDepotAuto, "TrailDepot")
+SEQUENCE {
+  START2(92.5_in_, 144.54_in_, 0_deg_), TRAIL_INITIAL_WAIT,
+      PARALLEL_DEADLINE(DRIVE_PT(CS2, END_BUMPC1_PT, NORM),
+          SEQUENCE(WAIT{0.25_s}, INTAKE(HoptakeState::kIntake))),
+      INTAKE(HoptakeState::kIntake), DRIVE_PT_TANK(CS2, P1C1_TRAIL_PT, NORM),
+      DRIVE_PT_TANK(CS2, P2C1_TRAIL_PT, NORM), TRACK(),
+      DRIVE_PT_TANK(CS2, P3C1_TRAIL_PT, NORM),
+      DRIVE_PT_TANK(CS2, P4C1_TRAIL_PT, NORM),
+      DRIVE_PT(CS2, P5C1_TRAIL_PT, NORM), DRIVE_PT(CS2, P6C1_TRAIL_PT, NORM),
+      INTAKE(HoptakeState::kBump), DRIVE_PT(CS2, PRE_BUMP_TRAIL_PT, NORM),
+      DRIVE_PT(CS2, END_BUMP_TRAIL_PT, NORM), TRACK(),
+      DRIVE_PT(CS2, START_BUMP_TRAIL_PT, BUMP),
+      frc2::ParallelDeadlineGroup(
+          frc2::SequentialCommandGroup{
+              WAIT{0.5_s}, DRIVE_PT_BEARING(CS2, DEPOT, SWIM), WAIT{5_s}},
+          SHOOT())
+}
+}
+{}
+
+__AUTO__(TrailSafeAuto, "TrailSafe")
+SEQUENCE {
+  START2(92.5_in_, 144.54_in_, 0_deg_), TRAIL_INITIAL_WAIT,
+      PARALLEL_DEADLINE(DRIVE_PT(CS2, END_BUMPC1_PT, NORM),
+          SEQUENCE(WAIT{0.25_s}, INTAKE(HoptakeState::kIntake))),
+      INTAKE(HoptakeState::kIntake), DRIVE_PT_TANK(CS2, P1C1_TRAIL_PT, NORM),
+      DRIVE_PT_TANK(CS2, P2C1_TRAIL_PT, NORM), TRACK(),
+      DRIVE_PT_TANK(CS2, P3C1_TRAIL_PT, NORM),
+      DRIVE_PT_TANK(CS2, P4C1_TRAIL_PT, NORM),
+      DRIVE_PT(CS2, P5C1_TRAIL_PT, NORM), DRIVE_PT(CS2, P6C1_TRAIL_PT, NORM),
+      INTAKE(HoptakeState::kBump), DRIVE_PT(CS2, PRE_BUMP_TRAIL_PT, NORM),
+      DRIVE_PT(CS2, END_BUMP_TRAIL_PT, NORM), TRACK(),
+      DRIVE_PT(CS2, START_BUMP_TRAIL_PT, BUMP),
+      frc2::ParallelDeadlineGroup(
+          frc2::SequentialCommandGroup{WAIT{0.25_s},
+              DRIVE_PT_BEARING(CS2, CENTER8_SHOT, SWIM), WAIT{10_s}},
+          SHOOT())
+}
+}
+{}
+
+__AUTO__(TrailShiftAuto, "TrailShift")
+SEQUENCE {
+  START2(157.8_in_, 144.54_in_, 0_deg_),
+      PARALLEL_DEADLINE(WAIT{2.5_s}, DRIVE_PT(CS2, CENTER8_SHOT, NORM)),
+      PARALLEL_DEADLINE(WAIT{7.5_s}, SHOOT()),
+      DRIVE_PT(CS2, START_BUMP_BACK_PT, NORM),
+      PARALLEL_DEADLINE(DRIVE_PT(CS2, END_BUMPC1_PT, NORM),
+          SEQUENCE(WAIT{0.25_s}, INTAKE(HoptakeState::kIntake))),
+      INTAKE(HoptakeState::kIntake), DRIVE_PT_TANK(CS2, P1C1_TRAIL_PT, NORM),
+      DRIVE_PT_TANK(CS2, P2C1_TRAIL_PT, NORM), TRACK(),
+      DRIVE_PT_TANK(CS2, P3C1_TRAIL_PT, NORM),
+      DRIVE_PT_TANK(CS2, P4C1_TRAIL_PT, NORM),
+      DRIVE_PT(CS2, P5C1_TRAIL_PT, NORM), DRIVE_PT(CS2, P6C1_TRAIL_PT, NORM),
+      INTAKE(HoptakeState::kBump), DRIVE_PT(CS2, PRE_BUMP_TRAIL_PT, NORM),
+      DRIVE_PT(CS2, END_BUMP_TRAIL_PT, NORM), TRACK(),
+      DRIVE_PT(CS2, START_BUMP_TRAIL_PT, BUMP), SHOOT()
 }
 }
 {}
@@ -293,12 +371,15 @@ SEQUENCE {
 
 __AUTO__(Center8Depot, "C8D")
 SEQUENCE {
-  START2(157.8_in_, 144.54_in_, 180_deg_), TRACK(),
-      DRIVE_PT(CS2, CENTER8_SHOT, NORM), INTAKE(HoptakeState::kIntake),
-      DRIVE_PT_BEARING(CS2, PDEPOT, NORM), WAIT{1.0_s},
-      PARALLEL_DEADLINE(WAIT{2.5_s}, SHOOT()), TRACK(),
-      DRIVE_PT_BEARING(CS2, DEPOT, SWIM), DRIVE_PT_BEARING(CS2, PDEPOT, NORM),
-      frc2::ParallelDeadlineGroup(WAIT{10_s}, SHOOT())
+  START2(157.8_in_, 144.54_in_, 0_deg_), DRIVE_PT(CS2, CENTER8_SHOT, NORM),
+      PARALLEL_DEADLINE(WAIT{2.5_s}, SHOOT()), INTAKE(HoptakeState::kIntake),
+      frc2::ConditionalCommand(
+          frc2::ParallelDeadlineGroup(
+              frc2::SequentialCommandGroup{
+                  DRIVE_PT_BEARING(CS2, DEPOT, SWIM), WAIT{5_s}},
+              SHOOT()),
+          frc2::ParallelDeadlineGroup(WAIT{10_s}, SHOOT()),
+          [left = is_left_side]() { return left; })
 }
 }
 {}

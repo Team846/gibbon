@@ -26,6 +26,7 @@
 FunkyRobot::FunkyRobot() : GenericRobot{&container_} {
   RegisterPreference("num_coasting_loops", 1000);
   RegisterPreference("homing_flash_loops", 50);
+  RegisterPreference("trail_initial_wait_s", 4.0);
 
   // std::thread visionThread{[&]() {
   //   VisionThread(&container_);
@@ -37,11 +38,14 @@ void FunkyRobot::OnInitialize() {
   ShootingCalculator::Setup();
 
   ADD_AUTO_VARIANTS(CS2Auto, "CS2");
+  ADD_AUTO_VARIANTS(TrailDepotAuto, "TrailDepot");
+  ADD_AUTO_VARIANTS(TrailSafeAuto, "TrailSafe");
   ADD_AUTO_VARIANTS(CompatibilityAuto, "LEM");
   ADD_AUTO_VARIANTS(OPAuto, "OP");
   ADD_AUTO_VARIANTS(SafeOPAuto, "SafeOP");
   ADD_AUTO_VARIANTS(Center8, "C8");
   ADD_AUTO_VARIANTS(Center8Depot, "C8D");
+  ADD_AUTO_VARIANTS(TrailShiftAuto, "TrailShift");
 
   // Add dashboard buttons
   frc::SmartDashboard::PutData("set_cancoder_offsets",

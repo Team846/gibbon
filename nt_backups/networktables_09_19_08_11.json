@@ -42,7 +42,7 @@
   {
     "name": "/Preferences/SwerveDrivetrain/FR/cancoder_offset_ (deg)",
     "type": "double",
-    "value": -113.203125,
+    "value": -115.6640625,
     "properties": {
       "persistent": true
     }
@@ -50,7 +50,7 @@
   {
     "name": "/Preferences/SwerveDrivetrain/FL/cancoder_offset_ (deg)",
     "type": "double",
-    "value": 166.201171875,
+    "value": 166.640625,
     "properties": {
       "persistent": true
     }
@@ -58,7 +58,7 @@
   {
     "name": "/Preferences/SwerveDrivetrain/BL/cancoder_offset_ (deg)",
     "type": "double",
-    "value": 8.4375,
+    "value": 7.998046875,
     "properties": {
       "persistent": true
     }
@@ -66,7 +66,7 @@
   {
     "name": "/Preferences/SwerveDrivetrain/BR/cancoder_offset_ (deg)",
     "type": "double",
-    "value": -148.18359375,
+    "value": -149.4140625,
     "properties": {
       "persistent": true
     }
@@ -922,7 +922,7 @@
   {
     "name": "/Preferences/ShootingCalculator/2ptvel/kAdditive",
     "type": "double",
-    "value": 4.05,
+    "value": 3.7,
     "properties": {
       "persistent": true
     }
@@ -954,7 +954,7 @@
   {
     "name": "/Preferences/SwerveDrivetrain/april_tags/fudge_latency4 (ms)",
     "type": "double",
-    "value": 60.0,
+    "value": 0.0,
     "properties": {
       "persistent": true
     }
@@ -1122,7 +1122,7 @@
   {
     "name": "/Preferences/turret/encoder/offset1 (rot)",
     "type": "double",
-    "value": 0.270751953125,
+    "value": 0.281005859375,
     "properties": {
       "persistent": true
     }
@@ -1130,7 +1130,7 @@
   {
     "name": "/Preferences/turret/encoder/offset2 (rot)",
     "type": "double",
-    "value": 0.41186523437500006,
+    "value": 0.41357421875,
     "properties": {
       "persistent": true
     }
@@ -1298,7 +1298,7 @@
   {
     "name": "/Preferences/scorer_ss/point_blank/shooter_vel (ft s^-1)",
     "type": "double",
-    "value": 33.0,
+    "value": 27.0,
     "properties": {
       "persistent": true
     }
@@ -1964,7 +1964,7 @@
   {
     "name": "/Preferences/ShootingCalculator/pass/passGain",
     "type": "double",
-    "value": 1.03,
+    "value": 1.3,
     "properties": {
       "persistent": true
     }
@@ -2110,6 +2110,22 @@
     }
   },
   {
+    "name": "/Preferences/ShootingCalculator/2ptvel/kAdditiveFar",
+    "type": "double",
+    "value": 8.0,
+    "properties": {
+      "persistent": true
+    }
+  },
+  {
+    "name": "/Preferences/ShootingCalculator/2ptvel/kFarBreakDist (in)",
+    "type": "double",
+    "value": 170.0,
+    "properties": {
+      "persistent": true
+    }
+  },
+  {
     "name": "/Preferences/ShootingCalculator/velTable/d042in (ft s^-1)",
     "type": "double",
     "value": 24.2,
@@ -2120,7 +2136,7 @@
   {
     "name": "/Preferences/ShootingCalculator/velTable/d080in (ft s^-1)",
     "type": "double",
-    "value": 27.7,
+    "value": 31.1,
     "properties": {
       "persistent": true
     }
@@ -2128,7 +2144,7 @@
   {
     "name": "/Preferences/ShootingCalculator/velTable/d120in (ft s^-1)",
     "type": "double",
-    "value": 33.4,
+    "value": 33.6,
     "properties": {
       "persistent": true
     }
@@ -2136,7 +2152,7 @@
   {
     "name": "/Preferences/ShootingCalculator/velTable/d160in (ft s^-1)",
     "type": "double",
-    "value": 36.0,
+    "value": 37.4,
     "properties": {
       "persistent": true
     }
@@ -2144,7 +2160,7 @@
   {
     "name": "/Preferences/ShootingCalculator/velTable/d200in (ft s^-1)",
     "type": "double",
-    "value": 35.9,
+    "value": 40.0,
     "properties": {
       "persistent": true
     }
@@ -2152,7 +2168,7 @@
   {
     "name": "/Preferences/ShootingCalculator/velTable/d240in (ft s^-1)",
     "type": "double",
-    "value": 39.3,
+    "value": 44.8,
     "properties": {
       "persistent": true
     }
@@ -2160,15 +2176,7 @@
   {
     "name": "/Preferences/ShootingCalculator/velTable/d280in (ft s^-1)",
     "type": "double",
-    "value": 41.1,
-    "properties": {
-      "persistent": true
-    }
-  },
-  {
-    "name": "/Preferences/Robot/trail_initial_wait_s",
-    "type": "double",
-    "value": 4.0,
+    "value": 47.6,
     "properties": {
       "persistent": true
     }

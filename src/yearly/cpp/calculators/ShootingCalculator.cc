@@ -2,6 +2,10 @@
 
 #include <frc/DriverStation.h>
 
+#include <array>
+
+#include "funkit/math/quaternion.h"
+
 ShootingCalculatorOutputs ShootingCalculator::outputs_{
     0_deg_, 0_radps_, 60_deg_, 0_radps_, 0_fps_, false};
 std::optional<funkit::base::Loggable> ShootingCalculator::loggable_opt;
@@ -12,11 +16,26 @@ degree_t ShootingCalculator::swim_accum_angle_reduc = 0_deg_;
 const inch_t kDeltaHeight = 57.9_in_ - 24.9_in_;
 
 const degree_t kShotAngleMax = 75_deg_;
-const degree_t kShotAngleMin = 45_deg_;
+const degree_t kShotAngleMin = 50_deg_;
 const foot_t kShotMaxDist = 24_ft_;
 const foot_t kPointblankDistance = 41.925_in_;
 
 const foot_t fullEffortDistance = 310.0_in_;
+
+struct VelTableRow {
+  inch_t distance;
+  std::string_view key;
+  fps_t seed;
+};
+const std::array<VelTableRow, 7> kVelTable{{
+    {42_in_, "velTable/d042in", 24.2_fps_},
+    {80_in_, "velTable/d080in", 29.7_fps_},
+    {120_in_, "velTable/d120in", 33.4_fps_},
+    {160_in_, "velTable/d160in", 36.0_fps_},
+    {200_in_, "velTable/d200in", 37.9_fps_},
+    {240_in_, "velTable/d240in", 39.3_fps_},
+    {280_in_, "velTable/d280in", 40.1_fps_},
+}};
 
 const degree_t kSWIM_max_angle_reduc = 8_deg_;
 const auto kSWIM_reduc_accum_fac = 0_deg_ / (15_fps_ * 1_s_);
@@ -25,14 +44,18 @@ const fps_t kSWIM_minvel_reduc = 5_fps_;
 void ShootingCalculator::Setup() {
   if (loggable_opt.has_value()) { return; }
   loggable_opt.emplace(funkit::base::Loggable("ShootingCalculator"));
-  loggable_opt->RegisterPreference("2ptvel/kPointBlank", 23.7_fps_);
-  loggable_opt->RegisterPreference("2ptvel/kAdditive", 5.06846);
+  for (const auto& row : kVelTable) {
+    loggable_opt->RegisterPreference(row.key, row.seed);
+  }
   loggable_opt->RegisterPreference("swim/twistGain", -0.074);
   loggable_opt->RegisterPreference("swim/tofGain", 0.023);
   loggable_opt->RegisterPreference("swim/twistVelCompensation", 0.54);
   loggable_opt->RegisterPreference("swim/yawRateFactor", 1.01);
   loggable_opt->RegisterPreference("swim/drawTwdDriver", 0.25);
   loggable_opt->RegisterPreference("pass/passGain", 1.07);
+  loggable_opt->RegisterPreference("bump/tilt_tol", 2.0_deg_);
+  loggable_opt->RegisterPreference("2ptvel/kPointBlank", 23.7_fps_);
+  loggable_opt->RegisterPreference("2ptvel/kAdditive", 5.06846);
 }
 
 double ShootingCalculator::GetYawRateFactor() {
@@ -59,6 +82,25 @@ fps_t ShootingCalculator::GetBaseVelocity(
   UnitCompound<fps_t, fps_t> physics_vel_sksq =
       16.0_fps2_ * shot_distance * shot_distance / denom;
   return u_sqrt(physics_vel_sksq) / u_cos(shot_angle);
+}
+
+fps_t ShootingCalculator::GetTableVelocity(inch_t distance) {
+  auto& loggable = loggable_opt.value();
+  auto vel_at = [&](size_t i) {
+    return loggable.GetPreferenceValue_unit_type<fps_t>(kVelTable[i].key);
+  };
+
+  if (distance <= kVelTable.front().distance) { return vel_at(0); }
+
+  size_t i = 0;
+  while (i + 2 < kVelTable.size() && distance > kVelTable[i + 1].distance) {
+    i++;
+  }
+
+  const double frac = ((distance - kVelTable[i].distance) /
+                       (kVelTable[i + 1].distance - kVelTable[i].distance))
+                          .value();
+  return vel_at(i) + (vel_at(i + 1) - vel_at(i)) * frac;
 }
 
 void ShootingCalculator::Calculate(
@@ -128,7 +170,7 @@ void ShootingCalculator::Calculate(
     }  // Works when approaching TOF from below
 
     /*
-    2pt interpolation to get target shooting velocity.
+    Physics (drag-free) velocity, used only to estimate TOF.
     */
 
     auto shot_angle = GetShotAngle(delta_mag - kPointblankDistance);
@@ -143,12 +185,13 @@ void ShootingCalculator::Calculate(
   /* Apply shooter and hood targets */
   outputs_.shot_angle = GetShotAngle(delta_mag - kPointblankDistance);
   outputs_.shot_angle_vel = GetShotAngleVel(delta_mag, vel_in_dir);
-  auto shot_ptbvel = GetBaseVelocity(outputs_.shot_angle, kPointblankDistance);
 
   loggable.Graph("shot_angle", outputs_.shot_angle);
   loggable.Graph("vel_perp", vel_perp);
-  auto shot_vel = GetBaseVelocity(outputs_.shot_angle, delta_mag);
+  loggable.Graph("delta_mag", inch_t{delta_mag});
 
+  auto shot_ptbvel = GetBaseVelocity(outputs_.shot_angle, kPointblankDistance);
+  auto shot_vel = GetBaseVelocity(outputs_.shot_angle, delta_mag);
   outputs_.shooter_vel =
       loggable.GetPreferenceValue_unit_type<fps_t>("2ptvel/kPointBlank") +
       loggable.GetPreferenceValue_double("2ptvel/kAdditive") *
@@ -170,14 +213,51 @@ void ShootingCalculator::Calculate(
   outputs_.vel_aim_compensation = u_clamp(
       1_rad_ * (cross_product / distance_squared), -300_degps_, 300_degps_);
 
+  // diff axis reported by IMU, mounted 90deg off
+  degree_t pitch = drivetrain_readings.roll;
+  degree_t roll = drivetrain_readings.pitch;
+  const degree_t tilt_tol =
+      loggable.GetPreferenceValue_unit_type<degree_t>("bump/tilt_tol");
+
+  bool tilt_shot_reachable = true;
+  if (u_abs(pitch) > tilt_tol || u_abs(roll) > tilt_tol) {
+    degree_t aim_rel =
+        outputs_.aim_angle - drivetrain_readings.estimated_pose.bearing;
+
+    std::array<double, 3> shot_dir{u_sin(aim_rel) * u_cos(outputs_.shot_angle),
+        u_cos(aim_rel) * u_cos(outputs_.shot_angle),
+        u_sin(outputs_.shot_angle)};
+
+    std::array<double, 3> shot_robot_dir =
+        funkit::math::Quaternion::FromPitchRoll(pitch, roll)
+            .Conjugate()
+            .Rotate(shot_dir);
+
+    degree_t corr_shot_angle = u_asin(std::clamp(shot_robot_dir[2], -1.0, 1.0));
+
+    if (corr_shot_angle < kShotAngleMin || corr_shot_angle > kShotAngleMax) {
+      tilt_shot_reachable = false;
+    } else {
+      outputs_.shot_angle = corr_shot_angle;
+      outputs_.aim_angle =
+          drivetrain_readings.estimated_pose.bearing +
+          radian_t{std::atan2(shot_robot_dir[0], shot_robot_dir[1])};
+    }
+  }
+
+  loggable.Graph("tilt/shot_angle_corrected", outputs_.shot_angle);
+  loggable.Graph("tilt/aim_angle_corrected", outputs_.aim_angle);
+  loggable.Graph("tilt/reachable", tilt_shot_reachable);
+  loggable.Graph("shoot_vel", outputs_.shooter_vel);
+
   /* Determine shot validity and whether to apply full effort */
-  outputs_.is_valid =
-      delta_mag >= kPointblankDistance && delta_mag <= fullEffortDistance;
+  outputs_.is_valid = tilt_shot_reachable && delta_mag >= kPointblankDistance &&
+                      delta_mag <= fullEffortDistance;
 
   if (delta_mag > fullEffortDistance) {
     if (effort_when_invald) {
       outputs_.shooter_vel =
-          outputs_.shooter_vel *
+          GetTableVelocity(delta_mag) *
           loggable.GetPreferenceValue_double("pass/passGain");
     } else {
       outputs_.shooter_vel = 20_fps_;

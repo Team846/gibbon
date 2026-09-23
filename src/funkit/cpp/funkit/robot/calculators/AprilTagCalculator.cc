@@ -145,6 +145,13 @@ ATCalculatorOutput AprilTagCalculator::calculate(ATCalculatorInput input) {
     auto cam_table = camera.table;
     const auto& config = camera.config;
 
+    double frame_num = cam_table->GetNumber("curFrameNum", -1.0);
+    auto last_frame_it = last_frame_nums_.find(config.camera_id);
+    if (last_frame_it != last_frame_nums_.end() &&
+        last_frame_it->second == frame_num) {
+      continue;
+    }
+
     pdcsu::units::second_t delay =
         now - pdcsu::units::second_t{
                   cam_table->GetEntry("tl").GetLastChange() / 1000000.0};
@@ -173,6 +180,9 @@ ATCalculatorOutput AprilTagCalculator::calculate(ATCalculatorInput input) {
     if (effective_latency > 200_ms_) { continue; }
     pdcsu::units::second_t capture_time = now - effective_latency;
 
+    last_frame_nums_[config.camera_id] = frame_num;
+    output.new_frames++;
+
     std::vector<double> tags = cam_table->GetNumberArray("tags", {});
     pdcsu::units::degree_t imuBearingAtCapture = InterpolateRobotBearing(
         capture_time);  // input.pose.bearing - input.angular_velocity *
@@ -180,9 +190,7 @@ ATCalculatorOutput AprilTagCalculator::calculate(ATCalculatorInput input) {
     pdcsu::units::degree_t bearingAtCapture;
     if (camera.equiv_turret) {
       bearingAtCapture =
-          imuBearingAtCapture +
-          InterpolateTurretAngle(
-              capture_time);  // turret_angle + turret_vel * effective_latency;
+          imuBearingAtCapture + InterpolateTurretAngle(capture_time);
       view_full_turret_angle = bearingAtCapture;
     } else {
       bearingAtCapture = imuBearingAtCapture;
@@ -227,9 +235,10 @@ ATCalculatorOutput AprilTagCalculator::calculate(ATCalculatorInput input) {
         if (distances.at(j).value() < 300.0) {
           m_positions.push_back(position_compensated);
           inch_t distance_i = distances.at(j);
+          double distance_term = (distance_i.value() + 1.0) / 100.0;
           double var_i =
               input.aprilVarianceCoeff *
-                  (std::sqrt(distances.at(j).value() + 1.0) / 30.0 +
+                  (distance_term +
                       input.pose.velocity.magnitude().value() / 12.0 +
                       (input.angular_velocity +
                           (camera.equiv_turret ? 4.0 * turret_vel : 0_degps_))

@@ -19,6 +19,27 @@ public:
   CS2Auto(RobotContainer& container, bool is_blue_side, bool is_left_side);
 };
 
+class TrailDepotAuto : public funkit::robot::GenericCommandGroup<RobotContainer,
+                           TrailDepotAuto, frc2::SequentialCommandGroup> {
+public:
+  TrailDepotAuto(
+      RobotContainer& container, bool is_blue_side, bool is_left_side);
+};
+
+class TrailShiftAuto : public funkit::robot::GenericCommandGroup<RobotContainer,
+                           TrailShiftAuto, frc2::SequentialCommandGroup> {
+public:
+  TrailShiftAuto(
+      RobotContainer& container, bool is_blue_side, bool is_left_side);
+};
+
+class TrailSafeAuto : public funkit::robot::GenericCommandGroup<RobotContainer,
+                          TrailSafeAuto, frc2::SequentialCommandGroup> {
+public:
+  TrailSafeAuto(
+      RobotContainer& container, bool is_blue_side, bool is_left_side);
+};
+
 class CompatibilityAuto
     : public funkit::robot::GenericCommandGroup<RobotContainer,
           CompatibilityAuto, frc2::SequentialCommandGroup> {
