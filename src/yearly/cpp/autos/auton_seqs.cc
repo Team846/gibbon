@@ -167,7 +167,6 @@ using FPT = funkit::math::FieldPoint;
   MKPT(funkit::math::FieldPoint::field_size_x / 2.0 - 78.38_in_, 20_in_, \
       180_deg_, 0_fps_)
 
-
 #define __AUTO__(codeName, stringName)                                 \
   codeName::codeName(                                                  \
       RobotContainer& container, bool is_blue_side, bool is_left_side) \
@@ -266,8 +265,10 @@ SEQUENCE {
 
 __AUTO__(TrailShiftAuto, "TrailShift")
 SEQUENCE {
-  START2(157.8_in_, 144.54_in_, 0_deg_), PARALLEL_DEADLINE(WAIT{2.5_s}, DRIVE_PT(CS2, CENTER8_SHOT, NORM)),
-      PARALLEL_DEADLINE(WAIT{7.5_s}, SHOOT()), DRIVE_PT(CS2, START_BUMP_BACK_PT, NORM), 
+  START2(157.8_in_, 144.54_in_, 0_deg_),
+      PARALLEL_DEADLINE(WAIT{2.5_s}, DRIVE_PT(CS2, CENTER8_SHOT, NORM)),
+      PARALLEL_DEADLINE(WAIT{7.5_s}, SHOOT()),
+      DRIVE_PT(CS2, START_BUMP_BACK_PT, NORM),
       PARALLEL_DEADLINE(DRIVE_PT(CS2, END_BUMPC1_PT, NORM),
           SEQUENCE(WAIT{0.25_s}, INTAKE(HoptakeState::kIntake))),
       INTAKE(HoptakeState::kIntake), DRIVE_PT_TANK(CS2, P1C1_TRAIL_PT, NORM),
@@ -278,7 +279,6 @@ SEQUENCE {
       INTAKE(HoptakeState::kBump), DRIVE_PT(CS2, PRE_BUMP_TRAIL_PT, NORM),
       DRIVE_PT(CS2, END_BUMP_TRAIL_PT, NORM), TRACK(),
       DRIVE_PT(CS2, START_BUMP_TRAIL_PT, BUMP), SHOOT()
-
 }
 }
 {}
