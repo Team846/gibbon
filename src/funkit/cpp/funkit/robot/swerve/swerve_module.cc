@@ -56,6 +56,7 @@ SwerveModuleSubsystem::SwerveModuleSubsystem(Loggable& parent,
   auto free_speed_rpm_value = motor_specs.free_speed.value();
   auto drive_reduction_ft_per_rot = common_config.drive_reduction.value();
   max_speed_ = fps_t{free_speed_rpm_value * drive_reduction_ft_per_rot / 60.0};
+  drive_ft_per_motor_rot_ = drive_reduction_ft_per_rot;
 }
 
 std::pair<funkit::control::config::MotorConstructionParameters,
@@ -84,6 +85,10 @@ void SwerveModuleSubsystem::SetDriveGenome(
 void SwerveModuleSubsystem::SetSteerGenome(
     funkit::control::config::MotorGenome genome) {
   steer_genome_ = genome;
+}
+
+void SwerveModuleSubsystem::SetSteerCouplingRatio(double ratio) {
+  steer_coupling_ratio_ = ratio;
 }
 
 void SwerveModuleSubsystem::Setup() {
@@ -131,6 +136,8 @@ void SwerveModuleSubsystem::SetCANCoderOffset(degree_t offset) {
 }
 
 void SwerveModuleSubsystem::ZeroWithCANcoder() {
+  coupling_skip_reads_ = 5;
+
   if (frc::RobotBase::IsSimulation()) {
     steer_.SetPosition(radian_t{0});
     return;
@@ -173,14 +180,29 @@ void SwerveModuleSubsystem::ZeroWithCANcoder() {
 
 SwerveModuleReadings SwerveModuleSubsystem::ReadFromHardware() {
   SwerveModuleReadings readings;
-  auto drive_vel_mps = drive_.GetVelocity<mps_t>();
-  readings.vel = fps_t{drive_vel_mps.value() * 3.28084};
-  auto drive_pos_m = drive_.GetPosition<meter_t>();
-  readings.drive_pos = foot_t{drive_pos_m.value() * 3.28084};
   auto steer_pos_rad = steer_.GetPosition<radian_t>();
   readings.steer_pos = degree_t{steer_pos_rad};
-
   auto steer_vel_pdcsu = steer_.GetVelocity<radps_t>();
+
+  const double coupling_ft_per_steer_rot =
+      steer_coupling_ratio_ * drive_ft_per_motor_rot_;
+  const double steer_rot = rotation_t{steer_pos_rad}.value();
+  if (coupling_skip_reads_ > 0) {
+    coupling_skip_reads_--;
+  } else {
+    coupling_offset_ += foot_t{
+        coupling_ft_per_steer_rot * (steer_rot - last_coupling_steer_rot_)};
+  }
+  last_coupling_steer_rot_ = steer_rot;
+  const fps_t coupling_vel{
+      coupling_ft_per_steer_rot *
+      rotation_t{radian_t{steer_vel_pdcsu.value()}}.value()};
+
+  auto drive_vel_mps = drive_.GetVelocity<mps_t>();
+  readings.vel = fps_t{drive_vel_mps.value() * 3.28084} - coupling_vel;
+  auto drive_pos_m = drive_.GetPosition<meter_t>();
+  readings.drive_pos = foot_t{drive_pos_m.value() * 3.28084} - coupling_offset_;
+
   nm_t pred_steer_load = nm_t{steer_load_factor_.value() *
                               readings.vel.value() * steer_vel_pdcsu.value()};
 
@@ -189,7 +211,7 @@ SwerveModuleReadings SwerveModuleSubsystem::ReadFromHardware() {
   Graph("readings/pred_steer_load", pred_steer_load);
 
   Graph("readings/drive_motor_vel", readings.vel);
-  // Graph("readings/drive_motor_pos", readings.drive_pos);
+  Graph("readings/drive_motor_pos", readings.drive_pos);
   Graph("readings/steer_motor_pos", readings.steer_pos);
 
   units::degree_t cancoder_pos_wpi = cancoder_.GetAbsolutePosition().GetValue();
