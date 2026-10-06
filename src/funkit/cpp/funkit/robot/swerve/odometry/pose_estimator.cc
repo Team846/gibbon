@@ -30,7 +30,7 @@ void PoseEstimator::Update() {
   filter.Predict(Eigen::Matrix<double, 4, 1>(
       {{pose_process_var_}, {pose_process_var_}, {velocity_process_var_},
           {velocity_process_var_}})
-                     .asDiagonal());
+          .asDiagonal());
   state_ = filter.getEstimate();
 }
 

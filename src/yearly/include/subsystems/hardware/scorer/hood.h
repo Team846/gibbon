@@ -4,6 +4,7 @@
 #include <memory>
 
 #include "funkit/control/HigherMotorController.h"
+#include "funkit/control/base/current_logger.h"
 #include "funkit/robot/GenericRobot.h"
 #include "funkit/robot/GenericSubsystem.h"
 #include "funkit/wpilib/time.h"
@@ -36,6 +37,12 @@ public:
   void ZeroWithAbsoluteEncoder(bool retry = true);
   void ManualZero();
 
+  void StartCurrentRecording(const std::string& filename) {
+    current_logger_.StartRecording(filename);
+  }
+  bool StopCurrentRecording() { return current_logger_.StopRecording(); }
+  bool IsCurrentRecording() const { return current_logger_.IsRecording(); }
+
 private:
   HoodReadings ReadFromHardware() override;
   void WriteToHardware(HoodTarget target) override;
@@ -45,4 +52,6 @@ private:
   std::unique_ptr<pdcsu::control::ICNORPositionControl> icnor_controller_;
   std::unique_ptr<pdcsu::util::DefArmSys> arm_sys_;
   std::shared_ptr<pdcsu::control::ICNORLearner> icnor_learner_;
+
+  funkit::control::base::CurrentLogger current_logger_{"HoodCurrent"};
 };

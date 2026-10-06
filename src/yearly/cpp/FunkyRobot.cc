@@ -104,6 +104,26 @@ void FunkyRobot::OnInitialize() {
               "Failed to stop recording path data or no recording in progress");
         }
       }));
+
+  // Add current recording controls via superstructures
+  frc::SmartDashboard::PutData(
+      "start_current_recording", new funkit::wpilib::NTAction([this] {
+        auto timestamp =
+            std::chrono::system_clock::now().time_since_epoch().count();
+        std::string filename = "current_" + std::to_string(timestamp);
+        container_.hoptake_ss_.StartCurrentRecording(filename);
+        container_.scorer_ss_.StartCurrentRecording(filename);
+        Log("Started recording superstructure current data to {}.csv",
+            filename);
+      }));
+
+  frc::SmartDashboard::PutData(
+      "stop_current_recording", new funkit::wpilib::NTAction([this] {
+        container_.hoptake_ss_.StopCurrentRecording();
+        container_.scorer_ss_.StopCurrentRecording();
+        // Log("Successfully stopped recording current data and saved to "
+        //     "/home/lvuser/current_logs/");
+      }));
 }
 
 void FunkyRobot::OnEnable() {
@@ -126,6 +146,15 @@ void FunkyRobot::OnEnable() {
 }
 
 void FunkyRobot::OnDisable() {
+  if (container_.hoptake_ss_.IsCurrentRecording()) {
+    container_.hoptake_ss_.StopCurrentRecording();
+    Log("Auto-stopped hoptake current recording on disable");
+  }
+  if (container_.scorer_ss_.IsCurrentRecording()) {
+    container_.scorer_ss_.StopCurrentRecording();
+    Log("Auto-stopped scorer current recording on disable");
+  }
+
   // Stop path recording
   // bool success = container_.drivetrain_.StopPathRecording();
   // if (success) {

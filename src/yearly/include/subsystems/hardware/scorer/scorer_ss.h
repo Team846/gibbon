@@ -61,6 +61,25 @@ public:
 
   void ZeroEncoders();
 
+  void StartCurrentRecording(const std::string& filename) {
+    turret.StartCurrentRecording(filename + "_turret");
+    hood.StartCurrentRecording(filename + "_hood");
+    shooter.StartCurrentRecording(filename + "_shooter");
+    dye_rotor.StartCurrentRecording(filename + "_dye_rotor");
+  }
+
+  void StopCurrentRecording() {
+    turret.StopCurrentRecording();
+    hood.StopCurrentRecording();
+    shooter.StopCurrentRecording();
+    dye_rotor.StopCurrentRecording();
+  }
+
+  bool IsCurrentRecording() const {
+    return turret.IsCurrentRecording() || hood.IsCurrentRecording() ||
+           shooter.IsCurrentRecording() || dye_rotor.IsCurrentRecording();
+  }
+
 private:
   struct HysteresisWindow {
     std::vector<uint8_t> samples;

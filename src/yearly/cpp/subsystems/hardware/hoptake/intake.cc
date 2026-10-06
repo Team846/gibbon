@@ -57,7 +57,8 @@ bool IntakeSubsystem::VerifyHardware() {
 
 IntakeReadings IntakeSubsystem::ReadFromHardware() {
   fps_t velocity_ = esc_.GetVelocity<mps_t>();
-
+  amp_t current = esc_.GetCurrent();
+  current_logger_.RecordCurrent(current);
   Graph("error", trgt_vel_ - velocity_);
 
   return IntakeReadings{velocity_};

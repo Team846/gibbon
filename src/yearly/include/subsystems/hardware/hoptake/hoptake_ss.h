@@ -48,6 +48,20 @@ public:
 
   void ZeroEncoders();
 
+  void StartCurrentRecording(const std::string& filename) {
+    intake.StartCurrentRecording(filename + "_intake");
+    pivot.StartCurrentRecording(filename + "_pivot");
+  }
+
+  void StopCurrentRecording() {
+    intake.StopCurrentRecording();
+    pivot.StopCurrentRecording();
+  }
+
+  bool IsCurrentRecording() const {
+    return intake.IsCurrentRecording() || pivot.IsCurrentRecording();
+  }
+
 private:
   HoptakeSSReadings ReadFromHardware() override;
 

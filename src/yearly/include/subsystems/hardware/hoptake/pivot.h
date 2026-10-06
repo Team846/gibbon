@@ -4,6 +4,7 @@
 #include <memory>
 
 #include "funkit/control/HigherMotorController.h"
+#include "funkit/control/base/current_logger.h"
 #include "funkit/robot/GenericRobot.h"
 #include "funkit/robot/GenericSubsystem.h"
 #include "funkit/wpilib/time.h"
@@ -35,6 +36,12 @@ public:
 
   void ZeroSubsystem(bool at_hardstop = false);
 
+  void StartCurrentRecording(const std::string& filename) {
+    current_logger_.StartRecording(filename);
+  }
+  bool StopCurrentRecording() { return current_logger_.StopRecording(); }
+  bool IsCurrentRecording() const { return current_logger_.IsRecording(); }
+
   bool homed = false;
 
 private:
@@ -51,4 +58,6 @@ private:
   int ctr_impact_follow_b = 0;
 
   int ctr_agitate = 0;
+
+  funkit::control::base::CurrentLogger current_logger_{"PivotCurrent"};
 };

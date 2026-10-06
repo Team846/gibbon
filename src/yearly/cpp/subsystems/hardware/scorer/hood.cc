@@ -183,6 +183,9 @@ HoodReadings HoodSubsystem::ReadFromHardware() {
   abs = 81_deg_ + delta;
   Graph("readings/absolute_encoder_pos", abs);
 
+  amp_t current = esc_.GetCurrent();
+  current_logger_.RecordCurrent(current);
+
   return readings;
 }
 

@@ -223,7 +223,8 @@ TurretReadings TurretSubsystem::ReadFromHardware() {
     readings.about_to_wrap_ = false;
   }
   Graph("debug/about_to_wrap", readings.about_to_wrap_);
-
+  amp_t current = esc_.GetCurrent();
+  current_logger_.RecordCurrent(current);
   return readings;
 }
 

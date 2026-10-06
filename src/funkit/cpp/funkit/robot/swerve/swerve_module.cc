@@ -195,6 +195,12 @@ SwerveModuleReadings SwerveModuleSubsystem::ReadFromHardware() {
   units::degree_t cancoder_pos_wpi = cancoder_.GetAbsolutePosition().GetValue();
   Graph("readings/cancoder_pos", degree_t{cancoder_pos_wpi.to<double>()});
 
+  auto drive_current = drive_.GetCurrent();
+  auto steer_current = steer_.GetCurrent();
+
+  Graph("readings/drive_current", drive_current);
+  Graph("readings/steer_current", steer_current);
+
   return readings;
 }
 

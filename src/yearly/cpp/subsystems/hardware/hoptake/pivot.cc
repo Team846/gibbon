@@ -96,7 +96,8 @@ PivotReadings PivotSubsystem::ReadFromHardware() {
   Graph("pos", degree_t{current_pos});
   Graph("pos2", degree_t{pos2});
 
-  // Graph("current", esc_.GetCurrent());
+  amp_t current = esc_.GetCurrent();
+  current_logger_.RecordCurrent(current);
 
   return PivotReadings{current_pos, pos2};
 }

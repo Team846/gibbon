@@ -6,6 +6,7 @@
 
 #include "calculators/TurretPositionCalculator.h"
 #include "funkit/control/HigherMotorController.h"
+#include "funkit/control/base/current_logger.h"
 #include "funkit/robot/GenericRobot.h"
 #include "funkit/robot/GenericSubsystem.h"
 #include "funkit/wpilib/time.h"
@@ -39,6 +40,12 @@ public:
   void ZeroEncoders();
   void ZeroWithCRT(bool retry = true);
 
+  void StartCurrentRecording(const std::string& filename) {
+    current_logger_.StartRecording(filename);
+  }
+  bool StopCurrentRecording() { return current_logger_.StopRecording(); }
+  bool IsCurrentRecording() const { return current_logger_.IsRecording(); }
+
 private:
   TurretReadings ReadFromHardware() override;
   void WriteToHardware(TurretTarget target) override;
@@ -68,4 +75,6 @@ private:
   size_t crt_diag_ctr_ = 0;
 
   degree_t wrap_offset_ = 0.0_deg_;
+
+  funkit::control::base::CurrentLogger current_logger_{"TurretCurrent"};
 };

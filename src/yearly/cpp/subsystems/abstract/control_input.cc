@@ -5,8 +5,8 @@
 
 ControlInputSubsystem::ControlInputSubsystem(
     funkit::robot::swerve::DrivetrainSubsystem* drivetrain_ss)
-    : funkit::robot::GenericSubsystem<ControlInputReadings,
-          ControlInputTarget>{"control_input"},
+    : funkit::robot::GenericSubsystem<ControlInputReadings, ControlInputTarget>{
+          "control_input"},
       drivetrain_ss_{drivetrain_ss} {}
 
 void ControlInputSubsystem::Setup() {

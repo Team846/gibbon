@@ -104,7 +104,10 @@ ShooterReadings ShooterSubsystem::ReadFromHardware() {
   }
 
   Graph("readings/is_spun_up", is_spun_up);
-
+  amp_t current_1 = esc_1_.GetCurrent();
+  amp_t current_2 = esc_2_.GetCurrent();
+  current_logger_1_.RecordCurrent(current_1);
+  current_logger_2_.RecordCurrent(current_2);
   return ShooterReadings{vel, is_spun_up};
 }
 
