@@ -47,7 +47,6 @@ void FunkyRobot::OnInitialize() {
   ADD_AUTO_VARIANTS(Center8Depot, "C8D");
   ADD_AUTO_VARIANTS(TrailShiftAuto, "TrailShift");
 
-
   // Add dashboard buttons
   frc::SmartDashboard::PutData("set_cancoder_offsets",
       new funkit::wpilib::NTAction(

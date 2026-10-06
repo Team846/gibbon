@@ -77,6 +77,7 @@ DrivetrainSubsystem::DrivetrainSubsystem(DrivetrainConfigs configs)
 
   RegisterPreference("odom_fudge_factor", 1.062855074);
   RegisterPreference("odom_variance", 0.2);
+  RegisterPreference("steer_coupling_ratio", -4.5);
 
   RegisterPreference("steer_lag", pdcsu::units::second_t{0.05});
   RegisterPreference("bearing_latency", pdcsu::units::second_t{0.0});
@@ -433,7 +434,13 @@ DrivetrainReadings DrivetrainSubsystem::ReadFromHardware() {
   pdcsu::util::math::uVec<pdcsu::units::fps_t, 2> velocity{
       pdcsu::units::fps_t{0}, pdcsu::units::fps_t{0}};
 
+  const double steer_coupling_ratio =
+      frc::RobotBase::IsSimulation()
+          ? 0.0
+          : GetPreferenceValue_double("steer_coupling_ratio");
+
   for (int i = 0; i < 4; i++) {
+    modules_[i]->SetSteerCouplingRatio(steer_coupling_ratio);
     modules_[i]->UpdateReadings();
     SwerveModuleReadings r = modules_[i]->GetReadings();
 

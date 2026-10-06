@@ -88,6 +88,8 @@ public:
 
   void ZeroWithCANcoder();
 
+  void SetSteerCouplingRatio(double ratio);
+
   /*
   SetDriveGenome()
 
@@ -162,6 +164,12 @@ private:
   double res_corr_denom_;
 
   pdcsu::units::nm_t steer_load_factor_;
+
+  double drive_ft_per_motor_rot_ = 0.0;
+  double steer_coupling_ratio_ = 0.0;
+  pdcsu::units::foot_t coupling_offset_{0.0};
+  double last_coupling_steer_rot_ = 0.0;
+  int coupling_skip_reads_ = 5;
 };
 
 }  // namespace funkit::robot::swerve
