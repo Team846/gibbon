@@ -105,7 +105,8 @@ ControlInputReadings ControlInputSubsystem::UpdateWithInput() {
 
   // ci_readings_.turret_no_spin = op_keyboard_readings.one_button;
 
-  ci_readings_.die_robot_die = op_readings.y_button;
+  ci_readings_.override_pass = op_readings.y_button;
+  ci_readings_.operator_pass = op_readings.b_button;
 
   ci_readings_.dye_rotor_pct_override = op_readings.right_stick_y;
 

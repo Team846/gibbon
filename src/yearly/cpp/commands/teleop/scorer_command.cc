@@ -23,7 +23,9 @@ void ScorerCommand::Periodic() {
   bool mirror_ =
       frc::DriverStation::GetAlliance() == frc::DriverStation::Alliance::kBlue;
 
-  if (ci_readings_.pass_mode) {
+  bool passing = (ci_readings_.pass_mode || ci_readings_.operator_pass) && !ci_readings_.override_pass;
+
+  if (passing) {
     pdcsu::util::math::Vector2D pass_point{-1000_in_, -1000_in_};
     if (container_.drivetrain_.GetReadings().estimated_pose.position[0] <
         158.5_in_) {
@@ -81,7 +83,7 @@ void ScorerCommand::Periodic() {
 
   shooting_outputs = ShootingCalculator::GetOutputs();
 
-  if (!ci_readings_.pass_mode) {
+  if (!passing) {
     if (!mirror_ &&
         container_.drivetrain_.GetReadings().estimated_pose.position[1] >
             141.61_in_) {
@@ -111,7 +113,7 @@ void ScorerCommand::Periodic() {
           !container_.scorer_ss_.turret.GetReadings()
                .about_to_wrap_ /* && AllianceShiftCalculator::shot_valid*/) ||  // TODO fix variance case
       ci_readings_.force_shoot ||
-      (ci_readings_.pass_mode &&
+      (passing &&
           !container_.scorer_ss_.turret.GetReadings().about_to_wrap_ &&
           container_.scorer_ss_.turret.GetReadings().error_ < 10_deg_);
 
@@ -126,7 +128,7 @@ void ScorerCommand::Periodic() {
     container_.drivetrain_.SetFieldTrajectory(
         shooting_outputs.start_traj, shooting_outputs.term_traj);
 
-    if (ci_readings_.pass_mode) {
+    if (passing) {
       container_.drivetrain_.SetFieldObjectPose(
           "shoot_point", {-1000_in_, -1000_in_}, 0.0_deg_);
       container_.drivetrain_.SetFieldObjectPose(

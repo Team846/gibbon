@@ -231,9 +231,7 @@ void FunkyRobot::OnPeriodic() {
     Graph("game_data/shot_valid", AllianceShiftCalculator::shot_valid, true);
   }
 
-  if (container_.control_input_.GetReadings().die_robot_die)
-    LEDsLogic::SetLEDsState(&container_, kLEDsKillRobot);
-  else if (homing_count_ > 0 && isDisabled)
+  if (homing_count_ > 0 && isDisabled)
     LEDsLogic::SetLEDsState(&container_, kLEDsHoming);
   else if (homing_count_gyro > 0 && isDisabled)
     LEDsLogic::SetLEDsState(&container_, kLEDsHomingGyro);
