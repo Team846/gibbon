@@ -23,7 +23,7 @@ void ScorerCommand::Periodic() {
   bool mirror_ =
       frc::DriverStation::GetAlliance() == frc::DriverStation::Alliance::kBlue;
 
-  bool passing = (ci_readings_.pass_mode || ci_readings_.operator_pass) && !ci_readings_.override_pass;
+  bool passing = ci_readings_.pass_mode && !ci_readings_.override_pass;
 
   if (passing) {
     pdcsu::util::math::Vector2D pass_point{-1000_in_, -1000_in_};

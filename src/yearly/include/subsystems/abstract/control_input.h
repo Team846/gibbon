@@ -42,7 +42,6 @@ struct ControlInputReadings {
   bool turret_no_spin;
 
   bool override_pass;
-  bool operator_pass;
 };
 
 struct ControlInputTarget {
