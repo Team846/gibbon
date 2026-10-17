@@ -41,9 +41,15 @@ public:
   void ZeroEncoders();
 
   void StartCurrentRecording(const std::string& filename) {
+    esc_.OverrideStatusFramePeriod(
+        funkit::control::config::StatusFrame::kCurrentFrame, 10_ms_);
     current_logger_.StartRecording(filename);
   }
-  bool StopCurrentRecording() { return current_logger_.StopRecording(); }
+  bool StopCurrentRecording() {
+    esc_.OverrideStatusFramePeriod(
+        funkit::control::config::StatusFrame::kCurrentFrame, 250_ms_);
+    return current_logger_.StopRecording();
+  }
   bool IsCurrentRecording() const { return current_logger_.IsRecording(); }
 
 private:

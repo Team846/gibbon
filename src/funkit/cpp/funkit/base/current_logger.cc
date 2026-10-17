@@ -5,6 +5,7 @@
 
 #include <filesystem>
 #include <fstream>
+#include <iomanip>
 #include <string>
 #include <vector>
 
@@ -81,11 +82,12 @@ bool CurrentLogger::SaveRecording() {
       return false;
     }
 
-    file << "timestamp,current" << std::endl;
+    file << "timestamp,current\n";
 
     for (const auto& record : recorded_currents_) {
-      file << record.timestamp.to<double>() << "," << record.current.value()
-           << std::endl;
+      file << std::fixed << std::setprecision(3)
+           << record.timestamp.to<double>() << "," << std::setprecision(1)
+           << record.current.value() << "\n";
     }
 
     file.close();

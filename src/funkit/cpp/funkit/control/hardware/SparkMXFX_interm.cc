@@ -226,6 +226,8 @@ void SparkMXFX_interm::OverrideStatusFramePeriod(
         static_cast<int>(period.value()));
   } else if (frame == config::StatusFrame::kSensorFrame) {
     configs.signals.AnalogPositionPeriodMs(20);
+  } else if (frame == config::StatusFrame::kCurrentFrame) {
+    configs.signals.OutputCurrentPeriodMs(static_cast<int>(period.value()));
   }
   APPLY_CONFIG_NO_RESET();
 }

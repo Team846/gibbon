@@ -37,11 +37,23 @@ public:
   void StartGraph();
 
   void StartCurrentRecording(const std::string& filename) {
+    esc_1_.OverrideStatusFramePeriod(
+        funkit::control::config::StatusFrame::kCurrentFrame, 10_ms_);
+
+    esc_2_.OverrideStatusFramePeriod(
+        funkit::control::config::StatusFrame::kCurrentFrame, 10_ms_);
+
     current_logger_1_.StartRecording(filename + "_motor1");
     current_logger_2_.StartRecording(filename + "_motor2");
   }
 
   bool StopCurrentRecording() {
+    esc_1_.OverrideStatusFramePeriod(
+        funkit::control::config::StatusFrame::kCurrentFrame, 250_ms_);
+
+    esc_2_.OverrideStatusFramePeriod(
+        funkit::control::config::StatusFrame::kCurrentFrame, 250_ms_);
+
     bool s1 = current_logger_1_.StopRecording();
     bool s2 = current_logger_2_.StopRecording();
     return s1 || s2;
