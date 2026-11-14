@@ -23,7 +23,7 @@ void ScorerCommand::Periodic() {
   bool mirror_ =
       frc::DriverStation::GetAlliance() == frc::DriverStation::Alliance::kBlue;
 
-  bool passing = (ci_readings_.pass_mode || ci_readings_.operator_pass) && !ci_readings_.override_pass;
+  bool passing = ci_readings_.pass_mode && !ci_readings_.override_pass;
 
   if (passing) {
     pdcsu::util::math::Vector2D pass_point{-1000_in_, -1000_in_};
@@ -71,6 +71,8 @@ void ScorerCommand::Periodic() {
     container_.scorer_ss_.AdjustHood(false);
   }
 
+  if (ci_readings_.reset_trims) { container_.scorer_ss_.ClearAdjustments(); }
+
   if (ci_readings_.turret_no_spin) {
     target.tracking_state = TrackingState::kLockTurret;
   } else if (ci_readings_.point_blank_shot) {
@@ -97,6 +99,7 @@ void ScorerCommand::Periodic() {
   }
 
   target.shooter_target = shooting_outputs.shooter_vel;
+  target.shot_distance = shooting_outputs.shot_distance;
   target.hood_target = {
       shooting_outputs.shot_angle, shooting_outputs.shot_angle_vel};
   target.turret_target = {shooting_outputs.aim_angle -
@@ -104,17 +107,23 @@ void ScorerCommand::Periodic() {
       shooting_outputs.vel_aim_compensation -
           container_.drivetrain_.GetReadings().yaw_rate *
               ShootingCalculator::GetYawRateFactor()};
+  const second_t max_tag_age =
+      container_.scorer_ss_.GetPreferenceValue_unit_type<second_t>(
+          "vision_gate/max_tag_age");
+  const bool recent_tag =
+      max_tag_age <= 0_s_ ||
+      container_.drivetrain_.TimeSinceLastTag() < max_tag_age;
+
   target.shoot =
       ci_readings_.point_blank_shot ||
       (shooting_outputs.is_valid && !ci_readings_.override_autoshoot &&
           container_.scorer_ss_.GetReadings().will_make_shot &&
           !frc::DriverStation::IsTest() &&
-          container_.drivetrain_.variance < 16.0 &&
+          container_.drivetrain_.variance < 16.0 && recent_tag &&
           !container_.scorer_ss_.turret.GetReadings()
                .about_to_wrap_ /* && AllianceShiftCalculator::shot_valid*/) ||  // TODO fix variance case
       ci_readings_.force_shoot ||
-      (passing &&
-          !container_.scorer_ss_.turret.GetReadings().about_to_wrap_ &&
+      (passing && !container_.scorer_ss_.turret.GetReadings().about_to_wrap_ &&
           container_.scorer_ss_.turret.GetReadings().error_ < 10_deg_);
 
   if (!target.shoot) {

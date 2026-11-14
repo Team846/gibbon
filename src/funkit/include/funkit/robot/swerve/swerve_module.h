@@ -90,6 +90,8 @@ public:
 
   void SetSteerCouplingRatio(double ratio);
 
+  void SetDriveVelocityGain(double kP);
+
   /*
   SetDriveGenome()
 
@@ -167,6 +169,7 @@ private:
 
   double drive_ft_per_motor_rot_ = 0.0;
   double steer_coupling_ratio_ = 0.0;
+  double drive_vel_kP_ = 0.0;
   pdcsu::units::foot_t coupling_offset_{0.0};
   double last_coupling_steer_rot_ = 0.0;
   int coupling_skip_reads_ = 5;

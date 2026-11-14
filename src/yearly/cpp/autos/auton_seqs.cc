@@ -8,6 +8,8 @@
 #include <frc2/command/WaitCommand.h>
 #include <frc2/command/WaitUntilCommand.h>
 
+#include <utility>
+
 #include "commands/general/auto_intake_command.h"
 #include "commands/general/auto_scorer_command.h"
 #include "funkit/robot/swerve/drive_to_point_command.h"
@@ -27,6 +29,19 @@ using SEQUENCE = frc2::SequentialCommandGroup;
 using WAIT = frc2::WaitCommand;
 
 using FPT = funkit::math::FieldPoint;
+
+namespace {
+std::optional<FPT> pending_auto_start;
+
+FPT RecordAutoStart(FPT start_point, bool set_bearing) {
+  if (set_bearing) { pending_auto_start = start_point; }
+  return start_point;
+}
+}  // namespace
+
+std::optional<FPT> TakeAutoStartPoint() {
+  return std::exchange(pending_auto_start, std::nullopt);
+}
 
 #define MAX_ACCEL_CS2_NORM 30_fps2_
 #define MAX_DECEL_CS2_NORM 30_fps2_
@@ -67,18 +82,23 @@ using FPT = funkit::math::FieldPoint;
 #define MKPT(x, y, bearing, velocity) \
   FPT{{x, y}, bearing, velocity}.mirror(is_blue_side).mirrorOnlyX(!is_left_side)
 
-#define START2(x, y, start_bearing)                              \
-  INSTANT {                                                      \
-    [&, blue = is_blue_side, left = is_left_side]() {            \
-      if (!frc::RobotBase::IsSimulation()) return;               \
-      FPT start_point{{x, y}, start_bearing, 0_fps_};            \
-      start_point = start_point.mirror(blue).mirrorOnlyX(!left); \
-      container.drivetrain_.UpdateReadings();                    \
-      container.drivetrain_.SetPosition(                         \
-          {start_point.point[0], start_point.point[1]});         \
-      Log("Auto Start");                                         \
-    }                                                            \
+#define START_IMPL(x, y, start_bearing, set_bearing)                     \
+  INSTANT {                                                              \
+    [&, start_point = RecordAutoStart(FPT{{x, y}, start_bearing, 0_fps_} \
+                                          .mirror(is_blue_side)          \
+                                          .mirrorOnlyX(!is_left_side),   \
+            set_bearing)]() {                                            \
+      if (!frc::RobotBase::IsSimulation()) return;                       \
+      container.drivetrain_.UpdateReadings();                            \
+      container.drivetrain_.SetPosition(                                 \
+          {start_point.point[0], start_point.point[1]});                 \
+      Log("Auto Start");                                                 \
+    }                                                                    \
   }
+
+#define START2(x, y, start_bearing) START_IMPL(x, y, start_bearing, false)
+#define START2_SET_BEARING(x, y, start_bearing) \
+  START_IMPL(x, y, start_bearing, true)
 
 #define DRIVE(auto_name, x, y, bearing, final_velocity)                   \
   funkit::robot::swerve::DriveToPointCommand {                            \

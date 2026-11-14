@@ -42,7 +42,7 @@ double HorizontalDeadband(double input, double x_intercept, double max,
     pdcsu::units::degree_t angle, pdcsu::units::degree_t other_angle) {
   double angle_deg = angle.value();
   double other_deg = other_angle.value();
-  double diff = std::fmod(angle_deg, 360.0) - std::fmod(other_deg, 360.0);
+  double diff = std::fmod(angle_deg - other_deg, 360.0);
   if (diff > 180.0) {
     return pdcsu::units::degree_t{diff - 360.0};
   } else if (diff < -180.0) {

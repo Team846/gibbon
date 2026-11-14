@@ -36,8 +36,8 @@ HoodSubsystem::HoodSubsystem()
       esc_{base::SPARK_MAX_NEO550, ports::hood_::kHoodParams} {
   RegisterPreference("icnor/IPG", 1.0);
   RegisterPreference("icnor/friction_nm", 0.0_Nm_);
-  RegisterPreference("encoder/offset", 0.0_rot_);
-  RegisterPreference("encoder/scale", 1.0);
+  RegisterPreference("encoder/offset", 0.214_rot_);
+  RegisterPreference("encoder/scale", 1.08);
   RegisterPreference("tolerance", 3.0_deg_);
 }
 
@@ -115,11 +115,11 @@ degree_t UnwrapHoodAbsolute(degree_t raw_minus_offset) {
 void HoodSubsystem::ZeroWithAbsoluteEncoder(bool retry) {
   if (!is_initialized()) return;
 
-  degree_t raw = degree_t(rotation_t(
-      esc_.SpecialRead(funkit::control::hardware::ReadType::kAbsPosition)));
   degree_t offset_deg =
       degree_t(GetPreferenceValue_unit_type<rotation_t>("encoder/offset"));
   for (int i = 0; i < (retry ? 5 : 1); i++) {
+    degree_t raw = degree_t(rotation_t(
+        esc_.SpecialRead(funkit::control::hardware::ReadType::kAbsPosition)));
     degree_t abs = UnwrapHoodAbsolute(raw - offset_deg);
     if (abs > hood_absolute_max || abs < hood_absolute_min) {
       if (retry) {

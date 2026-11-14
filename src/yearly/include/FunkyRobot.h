@@ -3,9 +3,12 @@
 #include <cameraserver/CameraServer.h>
 #include <frc/DigitalInput.h>
 
+#include <map>
 #include <opencv2/core.hpp>
 #include <opencv2/imgproc.hpp>
+#include <string>
 
+#include "funkit/math/fieldpoints.h"
 #include "funkit/robot/GenericRobot.h"
 #include "subsystems/robot_container.h"
 
@@ -56,4 +59,7 @@ private:
   int coast_count_{0};
   int homing_count_gyro{0};
   int homing_count_{0};
+
+  std::map<std::string, funkit::math::FieldPoint> auto_start_points_;
+  std::string last_selected_auto_;
 };

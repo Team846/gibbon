@@ -1,10 +1,14 @@
 #pragma once
 
+#include <networktables/DoubleArrayTopic.h>
 #include <networktables/NetworkTable.h>
 
 #include <deque>
 #include <map>
 #include <memory>
+#include <mutex>
+#include <set>
+#include <vector>
 
 #include "funkit/math/calculator.h"
 #include "funkit/robot/swerve/odometry/swerve_pose.h"
@@ -21,6 +25,22 @@ struct ATCalculatorInput {
 
   double aprilVarianceCoeff;
   std::map<size_t, pdcsu::units::second_t> fudge_latency;
+
+  bool priority_tags_blue = false;
+  double priority_variance_scale = 1.0;
+
+  pdcsu::units::degree_t heading_offset{0};
+};
+
+struct TagObservation {
+  Vector2D tag_pos;
+  Vector2D cam_offset;
+  Vector2D odom_since_capture;
+  pdcsu::units::degree_t gyro_bearing_at_capture;
+  pdcsu::units::degree_t yaw_offset;
+  pdcsu::units::degree_t tx;
+  pdcsu::units::inch_t distance;
+  double variance;
 };
 
 struct AprilTagCameraResult {
@@ -37,6 +57,7 @@ struct ATCalculatorOutput {
   bool camera_disconnect = false;
   int new_frames = 0;
   std::map<size_t, AprilTagCameraResult> camera_results{};
+  std::vector<TagObservation> observations{};
 };
 
 struct AprilTagData {
@@ -69,10 +90,25 @@ struct TurretTagCamera {
   std::shared_ptr<nt::NetworkTable> table;
 };
 
+struct TagFrame {
+  pdcsu::units::second_t arrival;
+  std::vector<double> result;
+};
+
+struct TagFrameQueue {
+  nt::DoubleArraySubscriber subscriber;
+  std::mutex mutex;
+  std::vector<TagFrame> pending;
+  std::vector<TagFrame> draining;
+  pdcsu::units::second_t last_arrival{0};
+};
+
 struct ATCalculatorConstants {
   std::map<size_t, AprilTagData> tag_locations;
   std::vector<AprilTagCamera> cameras;
   std::optional<TurretTagCamera> turret_camera;
+  std::set<size_t> priority_tags_red{};
+  std::set<size_t> priority_tags_blue{};
 };
 
 class AprilTagCalculator : public funkit::math::Calculator<ATCalculatorInput,
@@ -109,6 +145,8 @@ public:
   Vector2D correction;
 
 private:
-  std::map<size_t, double> last_frame_nums_{};
+  static constexpr size_t kMaxPendingFrames = 32;
+  TagFrameQueue& GetFrameQueue(const AprilTagCamera& camera);
+  std::map<size_t, std::shared_ptr<TagFrameQueue>> frame_queues_{};
 };
 }

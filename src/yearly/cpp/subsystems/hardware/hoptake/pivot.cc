@@ -12,7 +12,7 @@ PivotSubsystem::PivotSubsystem()
       esc2_{base::TALON_FX_KRAKENX44, ports::pivot_::kPivot2Params} {
   RegisterPreference("pos_stow", -57.0_deg_);
   RegisterPreference("pos_intake", -76.0_deg_);
-  RegisterPreference("pos_collapsed", -10.0_deg_);
+  RegisterPreference("pos_collapsed", -5.0_deg_);
 
   RegisterPreference("agigtate/on_loop_count", 10);
   RegisterPreference("agigtate/off_loop_count", 20);

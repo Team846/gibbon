@@ -33,7 +33,7 @@ gradle.taskGraph.whenReady {
         def zipFile = layout.buildDirectory.file("tmp/pdcsu_${pdcsuVersion}.zip").get().asFile
         mkdir zipFile.parentFile
 
-        new URL("https://github.com/VyaasBaskar/PDCSU/releases/download/${pdcsuVersion}/pdcsu_${pdcsuGroup}${pdcsuReleaseNumber}.zip")
+        new URL("https://github.com/prak132/PDCSU/releases/download/${pdcsuVersion}/pdcsu_${pdcsuGroup}${pdcsuReleaseNumber}.zip")
             .withInputStream { i -> zipFile.withOutputStream { it << i } }
 
         copy {

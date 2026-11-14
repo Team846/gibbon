@@ -159,6 +159,7 @@ class FunkyRobot : public funkit::robot::GenericRobot {
 - Teleop default commands: `DriveCommand`, `ShooterCommand`, `IntakeCommand`; trigger binding via `ControlTriggerInitializer::InitTeleopTriggers` (from `control_triggers.h`)
 - Simulation: `configureSignalHandlers()` from `rsighandler.h` in `main()`; FunkyFMS control mode for DS state
 - `ShootingCalculator::Setup` in `OnInitialize`; `ShootingCalculator::Calculate` in `OnPeriodic`
+- Auto start pose (opt-in per auto): while disabled, when the selected auto changes, `OnPeriodic` sets drivetrain bearing and position to that auto's start point. Only autos that begin with `START2_SET_BEARING` (instead of `START2`) in `auton_seqs.cc` record a start point at construction; `ADD_AUTO_VARIANT` stores it in `auto_start_points_` keyed by chooser name. Autos using plain `START2` get no reset.
 
 ### RobotContainer
 
@@ -457,6 +458,13 @@ Warn("Warning message: {}", warning_value);
 Error("Error message: {}", error_value);
 Graph("key", value);  // Publish to SmartDashboard
 ```
+
+### On-Robot Data Logs
+
+- `GenericRobot` starts `frc::DataLogManager`, which records every NetworkTables value to a `.wpilog` on the roboRIO (`/u/logs` if a USB drive is present, else `/home/lvuser/logs`).
+- When the FMS is connected, non-persist `Graph()` calls skip NetworkTables (field bandwidth) and append straight to the log under the same `NT:/SmartDashboard/...` names, so match and practice logs share keys.
+- `src/yearly/resources/pull_logs-mac.sh` (Windows: `pull_logs.bat`) copies robot logs, event subfolders included, into `robot_logs/` (git-ignored). `logs/` holds simulation logs. The mac script runs from any directory and only copies files that are new or whose size changed, so a log that was still being written gets re-copied next time. It also saves the robot prefs to `nt_backups/networktables_MM_DD_HH_MM.json` and the ICNOR `*.iclearn` files to `robot_logs/iclearn/<stamp>/`. Set `ROBOT=lvuser@172.22.11.2` to pull over USB. Copying large logs loads the roboRIO, so run it while disabled.
+- `src/yearly/resources/wpilog.py LOG` lists entries; `wpilog.py LOG key...` prints `time_s,name,value` CSV. No WPILib install needed.
 
 ### Logging Hierarchy
 
@@ -859,7 +867,8 @@ The swerve drive implementation (`funkit::robot::swerve`) includes:
 - **4 swerve modules**: Each with drive and steer motors
 - **Odometry**: Position tracking via module encoders and gyro
 - **Pose estimation**: Kalman filter fusion with AprilTag vision
-- **Open-loop control**: Velocity-based control for teleop
+- **PoseEKF** (`odometry/pose_ekf.h`): EKF over `[x, y, heading offset]` that runs every loop alongside the linear `PoseEstimator`. Odometry is the predict step; each tag's raw `(distance, tx)` is a separate correction, with a chi² gate that releases after `ekf/gate_release_count` rejections in a row. `pose_estimator/use_ekf` (default false) makes it drive `estimated_pose.position`, `variance`, and `bearing_correction_at_` (the tag heading correction). Velocity always comes from `PoseEstimator`. `ekf/*` graphs are published in both modes. `AprilTagCalculator` history stores gyro-only bearing (`pose.bearing - heading_offset`), and its `observations` output carries the per-tag data the EKF uses.
+- **Open-loop control**: Velocity-based control for teleop. Modules drive by duty cycle (`target / max_speed`, times the cosine of steer error). `SwerveDrivetrain/drive_vel_kP` (default 0, off) adds per-module wheel-speed feedback, `kP * (target - measured)` in duty cycle per ft/s, clamped to ±0.15 and applied only when the target is above 0.5 ft/s. It is graphed as `<module>/target/drive_vel_fb_dc`. It exists because modules given the same duty cycle ran 3–5% apart (right side slower, Nov 2026), which made the robot drift while spinning in place.
 - **Path following**: Commands for driving to points and locking
 
 ### Update Groups
@@ -924,6 +933,8 @@ The drivetrain includes path recording functionality:
 12. **Inverted drive gear ratio**: The drive gear ratio formula in `DrivetrainConstructor.cc` was inverted, causing drive position readings to be 68x too small. PDCSU's `DefLinearSys` expects `gear_ratio` (type `UnitDivision<radian_t, meter_t>`) to represent "motor radians per meter" because it uses `toReal(motor_radians) = motor_radians / gear_ratio` to get meters. The formula was `(drive_reduction_value * 12.0) / 3.14159265358979323846` which gave ~1.94 rad/m, but should be `(2.0 * 3.14159265358979323846 * 3.28084) / drive_reduction_value` which gives ~132.9 rad/m. **For DefLinearSys**: gear_ratio = (2π × conversion_to_feet) / (feet_per_motor_rotation).
 
 13. **Loggable non-copyable NT handle members**: `Loggable` caches `nt::DoublePublisher` / `nt::DoubleEntry` handles in `std::unordered_map`s for the `Graph(double)` / `GetPreferenceValue_double` hot paths. Both NT types inherit from `nt::Publisher` / `nt::Subscriber`, which explicitly `= delete` their copy constructors. This makes the unordered_map's copy constructor **declared but ill-formed when instantiated** (libc++ fails inside `insert(__u.begin(), __u.end())`). Without explicit special members, the compiler may instantiate `Loggable`'s implicit copy constructor during overload resolution (e.g. for `frc2::CommandHelper::ToPtr()`'s `std::make_unique<CRTP>(std::move(*this))`), producing cryptic `__construct_at` errors in `<__memory/allocator_traits.h>`. Fix in `Loggable.h`: explicitly `Loggable(const Loggable&) = delete;`, `Loggable& operator=(const Loggable&) = delete;`, and `Loggable(Loggable&&) = default;`. Because `GenericCommand` has a user-declared virtual destructor (which suppresses the implicit move constructor), it must also declare `GenericCommand(GenericCommand&&) = default;` so that `make_unique<CRTP>(std::move(*this))` resolves to a real move and doesn't fall back to copy. Also avoid taking `Loggable` by value: `SubsystemBase` previously took `Loggable parent` by value, forcing a copy at the call site (e.g. `SwerveModuleSubsystem`); use `const Loggable& parent` instead. **Rule**: any `Loggable`-derived class with a user-declared destructor needs `T(T&&) = default;` for `CommandHelper::ToPtr` (and other move-into-unique_ptr patterns) to compile, and never pass `Loggable` by value.
+
+14. **PDCSU is now hosted at `github.com/prak132/PDCSU`**: `build.gradle` downloads the `tr_19` release asset `pdcsu_tr19.zip`, which needs a top-level `pdcsu_tr19/` folder (`git archive --prefix=pdcsu_tr19/ -o pdcsu_tr19.zip HEAD`). The working repo is `~/Downloads/robotics/PDCSU`; its files are CRLF in the working tree and LF in git. `src/pdcsu_tr19/` is git-ignored in gibbon, and gradle only downloads it when the folder is missing. Edit both copies, or publish a new release and delete the local folder. The new release has no GCC PCHs (`*.h.gch`); old releases shipped PCHs built from unpatched headers that GCC could use instead of edited headers. Patches on top of the original tr19: ICNOR plan coefficients (`icnor.h` `make_solve_context` rhs terms), learner confidence (`conf = (r2 - 0.5) * 2`), FFModel friction sign (`util.h`), and LS3x3 B/C Cramer terms (`solvers.h`), all from 2026-11-09.
 
 ### Windows Terminal Environment
 

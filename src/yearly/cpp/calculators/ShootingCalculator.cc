@@ -47,15 +47,15 @@ void ShootingCalculator::Setup() {
   for (const auto& row : kVelTable) {
     loggable_opt->RegisterPreference(row.key, row.seed);
   }
-  loggable_opt->RegisterPreference("swim/twistGain", -0.074);
-  loggable_opt->RegisterPreference("swim/tofGain", 0.023);
+  loggable_opt->RegisterPreference("swim/twistGain", -1.43);
+  loggable_opt->RegisterPreference("swim/tofGain", 0.35);
   loggable_opt->RegisterPreference("swim/twistVelCompensation", 0.54);
-  loggable_opt->RegisterPreference("swim/yawRateFactor", 1.01);
-  loggable_opt->RegisterPreference("swim/drawTwdDriver", 0.25);
-  loggable_opt->RegisterPreference("pass/passGain", 1.07);
+  loggable_opt->RegisterPreference("swim/yawRateFactor", 1.85);
+  loggable_opt->RegisterPreference("swim/drawTwdDriver", 0.0);
+  loggable_opt->RegisterPreference("pass/passGain", 1.45);
   loggable_opt->RegisterPreference("bump/tilt_tol", 2.0_deg_);
-  loggable_opt->RegisterPreference("2ptvel/kPointBlank", 23.7_fps_);
-  loggable_opt->RegisterPreference("2ptvel/kAdditive", 5.06846);
+  loggable_opt->RegisterPreference("2ptvel/kPointBlank", 24.2_fps_);
+  loggable_opt->RegisterPreference("2ptvel/kAdditive", 4.05);
 }
 
 double ShootingCalculator::GetYawRateFactor() {
@@ -181,6 +181,7 @@ void ShootingCalculator::Calculate(
   }
 
   delta_mag = delta.magnitude();
+  outputs_.shot_distance = delta_mag;
 
   /* Apply shooter and hood targets */
   outputs_.shot_angle = GetShotAngle(delta_mag - kPointblankDistance);

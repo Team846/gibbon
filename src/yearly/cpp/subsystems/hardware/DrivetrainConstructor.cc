@@ -1,6 +1,7 @@
 #include "subsystems/hardware/DrivetrainConstructor.h"
 
 #include <cmath>
+#include <set>
 
 #include "funkit/control/calculators/CircuitResistanceCalculator.h"
 #include "funkit/math/constants.h"
@@ -54,6 +55,8 @@ struct UserSettableValues {
   std::optional<funkit::robot::calculators::TurretTagCameraConfig>
       turret_camera_config;
   std::map<size_t, funkit::robot::calculators::AprilTagData> april_locations;
+  std::set<size_t> prioritzed_tags_red;
+  std::set<size_t> prioritzed_tags_blue;
 };
 
 //--------------------------------------------------------
@@ -107,7 +110,9 @@ UserSettableValues GetUserSettableValues() {
           {26U, {158.84_in_, 492.88_in_}}, {27U, {135.09_in_, 483.11_in_}},
           {28U, {25.37_in_, 470.58_in_}}, {29U, {26.22_in_, 650.92_in_}},
           {30U, {43.22_in_, 650.92_in_}}, {31U, {147.47_in_, 650.90_in_}},
-          {32U, {164.47_in_, 650.90_in_}}}};
+          {32U, {164.47_in_, 650.90_in_}}},
+      .prioritzed_tags_red = {2U, 3U, 4U, 5U, 8U, 9U, 10U, 11U},
+      .prioritzed_tags_blue = {18U, 19U, 20U, 21U, 24U, 25U, 26U, 27U}};
 }
 
 //--------------------------------------------------------
@@ -243,7 +248,9 @@ swerve::DrivetrainConfigs DrivetrainConstructor::getDrivetrainConfigs() {
       .april_camera_configs = user_values.april_camera_configs,
       .april_locations = user_values.april_locations,
       .turret_camera_config = user_values.turret_camera_config,
-      .max_accel = fps2_t{max_accel_mps2.value() * 3.28084}};
+      .max_accel = fps2_t{max_accel_mps2.value() * 3.28084},
+      .april_priority_tags_red = user_values.prioritzed_tags_red,
+      .april_priority_tags_blue = user_values.prioritzed_tags_blue};
 
   return configs;
 }

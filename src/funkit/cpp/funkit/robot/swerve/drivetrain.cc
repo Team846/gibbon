@@ -1,5 +1,7 @@
 #include "funkit/robot/swerve/drivetrain.h"
 
+#include <algorithm>
+#include <cmath>
 #include <iostream>
 #include <thread>
 
@@ -61,11 +63,11 @@ DrivetrainSubsystem::DrivetrainSubsystem(DrivetrainConfigs configs)
   funkit::control::config::SubsystemGenomeHelper::CreateGenomePreferences(
       *this, "steer_genome", steer_genome_backup);
 
-  RegisterPreference("scalar_pigeon", 1.010101010101010101010101010101);
+  RegisterPreference("scalar_pigeon", 1.0134215435713);
 
-  RegisterPreference("bearing_gains/_kP", 9);
+  RegisterPreference("bearing_gains/_kP", 2.2);
   RegisterPreference("bearing_gains/_kI", 0.0);
-  RegisterPreference("bearing_gains/_kD", -0.6);
+  RegisterPreference("bearing_gains/_kD", -0.03);
   RegisterPreference("bearing_gains/_kF", -0.3);
   RegisterPreference("bearing_gains/deadband", pdcsu::units::degps_t{3.0});
 
@@ -73,11 +75,12 @@ DrivetrainSubsystem::DrivetrainSubsystem(DrivetrainConfigs configs)
 
   RegisterPreference("max_speed", pdcsu::units::fps_t{14.9});
   RegisterPreference("max_omega", pdcsu::units::degps_t{180});
-  RegisterPreference("max_omega_cut", pdcsu::units::degps_t{40});
+  RegisterPreference("max_omega_cut", pdcsu::units::degps_t{180});
 
-  RegisterPreference("odom_fudge_factor", 1.062855074);
+  RegisterPreference("odom_fudge_factor", 0.973855);
   RegisterPreference("odom_variance", 0.2);
   RegisterPreference("steer_coupling_ratio", -4.5);
+  RegisterPreference("drive_vel_kP", 0.0);
 
   RegisterPreference("steer_lag", pdcsu::units::second_t{0.05});
   RegisterPreference("bearing_latency", pdcsu::units::second_t{0.0});
@@ -86,12 +89,13 @@ DrivetrainSubsystem::DrivetrainSubsystem(DrivetrainConfigs configs)
   RegisterPreference("pose_estimator/pose_process_var", 1e-4);
   RegisterPreference("pose_estimator/velocity_process_var", 0.03);
 
-  RegisterPreference("pitch_roll_thresh", pdcsu::units::degree_t{10});
+  RegisterPreference("pitch_roll_thresh", pdcsu::units::degree_t{7});
 
-  RegisterPreference("imu/invert_pitch", false);
-  RegisterPreference("imu/invert_roll", false);
+  RegisterPreference("imu/invert_pitch", true);
+  RegisterPreference("imu/invert_roll", true);
 
-  RegisterPreference("april_tags/april_variance_coeff", 0.2);
+  RegisterPreference("april_tags/april_variance_coeff", 0.15);
+  RegisterPreference("april_tags/prioritized_tag_variance_scale", 0.4);
   for (const auto& config : configs.april_camera_configs) {
     RegisterPreference(
         "april_tags/fudge_latency" + std::to_string(config.camera_id),
@@ -104,20 +108,29 @@ DrivetrainSubsystem::DrivetrainSubsystem(DrivetrainConfigs configs)
         pdcsu::units::ms_t{50.0});
   }
 
-  RegisterPreference("drive_to_point/kC", 0.5);
-  RegisterPreference("drive_to_point/kA", 0.05);
-  RegisterPreference("drive_to_point/kE", 5.0);
+  RegisterPreference("drive_to_point/kC", 0.9);
+  RegisterPreference("drive_to_point/kA", 0.5);
+  RegisterPreference("drive_to_point/kE", 7.0);
   RegisterPreference("drive_to_point/threshold", pdcsu::units::inch_t{6});
   RegisterPreference(
       "drive_to_point/bearing_threshold", pdcsu::units::degree_t{5});
 
-  RegisterPreference("ramp_rate_limit_step", 5.0);
+  RegisterPreference("ramp_rate_limit_step", 0.3);
 
-  RegisterPreference("april_tags/bearing_corr_gain", 0.1);
+  RegisterPreference("april_tags/bearing_corr_gain", 0.0);
 
-  RegisterPreference("skid/threshold_fps2", pdcsu::units::fps2_t{20.0});
-  RegisterPreference("skid/filter_alpha", 0.85);
+  RegisterPreference("skid/threshold_fps2", pdcsu::units::fps2_t{15.0});
+  RegisterPreference("skid/filter_alpha", 0.8);
   RegisterPreference("skid/variance_multiplier", 50.0);
+
+  RegisterPreference("pose_estimator/use_ekf", false);
+  RegisterPreference("ekf/odom_var_per_in", 0.04);
+  RegisterPreference("ekf/heading_var_per_deg", 1e-4);
+  RegisterPreference("ekf/heading_var_per_s", 1e-4);
+  RegisterPreference("ekf/tag_range_var_scale", 1.0);
+  RegisterPreference("ekf/tag_bearing_var_scale", 1.0);
+  RegisterPreference("ekf/gate_chi2", 13.8);
+  RegisterPreference("ekf/gate_release_count", 10);
 
   odometry_.setConstants(
       {.forward_wheelbase_dim = configs.wheelbase_forward_dim,
@@ -143,7 +156,9 @@ DrivetrainSubsystem::DrivetrainSubsystem(DrivetrainConfigs configs)
   }
   tag_pos_calculator.setConstants({.tag_locations = configs.april_locations,
       .cameras = cameras,
-      .turret_camera = turret_tag_camera});
+      .turret_camera = turret_tag_camera,
+      .priority_tags_red = configs.april_priority_tags_red,
+      .priority_tags_blue = configs.april_priority_tags_blue});
 
   for (const auto& config : configs.april_camera_configs) {
     std::string base =
@@ -210,6 +225,7 @@ void DrivetrainSubsystem::ZeroBearing() {
   if (!is_initialized()) return;
 
   bearing_correction_at_ = 0.0_deg_;
+  pose_ekf_.SetHeadingOffset(0_deg_);
 
   constexpr int kMaxAttempts = 5;
   constexpr int kSleepTimeMs = 500;
@@ -278,21 +294,32 @@ void DrivetrainSubsystem::ZeroWithCANCoders() {
   }
 }
 
+pdcsu::units::second_t DrivetrainSubsystem::TimeSinceLastTag() const {
+  return funkit::wpilib::CurrentFPGATime() - last_tag_time_;
+}
+
 void DrivetrainSubsystem::FlipBearing() {
   bearing_offset_ += pdcsu::units::degree_t{180};
 }
 
 void DrivetrainSubsystem::SetBearing(pdcsu::units::degree_t bearing) {
   bearing_offset_ = bearing - (GetReadings().pose.bearing - bearing_offset_);
+  pose_ekf_.SetHeadingOffset(bearing_correction_at_);
 }
 
 void DrivetrainSubsystem::SetPosition(Vector2D position) {
   odometry_.SetPosition(position);
   pose_estimator.SetPoint({position[0].value(), position[1].value()});
+  pose_ekf_.SetPosition(position);
 }
 
 void DrivetrainSubsystem::SetOdomBearing(pdcsu::units::degree_t odom_bearing) {
   odometry_.SetOdomBearing(odom_bearing);
+}
+
+void DrivetrainSubsystem::ClearBearingCorrection() {
+  bearing_correction_at_ = 0_deg_;
+  pose_ekf_.SetHeadingOffset(0_deg_);
 }
 
 void DrivetrainSubsystem::SetCANCoderOffsets() {
@@ -388,14 +415,15 @@ pdcsu::units::degps_t DrivetrainSubsystem::GetYawRate() {
 
 pdcsu::util::math::uVec<pdcsu::units::fps2_t, 2>
 DrivetrainSubsystem::GetAcceleration() {
+  static constexpr double g_to_fps2 =
+      funkit::math::constants::physics::g.to<double>();
   if (pigeon_.has_value()) {
-    return {pdcsu::units::fps2_t{
-                pigeon_->GetAccelerationX().GetValue().to<double>()},
+    return {
         pdcsu::units::fps2_t{
-            pigeon_->GetAccelerationY().GetValue().to<double>()}};
+            pigeon_->GetAccelerationX().GetValue().to<double>() * g_to_fps2},
+        pdcsu::units::fps2_t{
+            pigeon_->GetAccelerationY().GetValue().to<double>() * g_to_fps2}};
   } else if (navX_.has_value()) {
-    static constexpr double g_to_fps2 =
-        funkit::math::constants::physics::g.to<double>() * 3.28084;
     return {pdcsu::units::fps2_t{navX_->GetWorldLinearAccelX() * g_to_fps2},
         pdcsu::units::fps2_t{navX_->GetWorldLinearAccelY() * g_to_fps2}};
   }
@@ -407,6 +435,7 @@ DrivetrainReadings DrivetrainSubsystem::ReadFromHardware() {
       GetPreferenceValue_double("pose_estimator/pose_process_var"),
       GetPreferenceValue_double("pose_estimator/velocity_process_var"));
   pose_estimator.Update();
+  cached_use_ekf_ = GetPreferenceValue_bool("pose_estimator/use_ekf");
 
   pdcsu::units::degree_t bearing = GetBearing();
   pdcsu::units::degps_t yaw_rate = GetYawRate();
@@ -419,6 +448,7 @@ DrivetrainReadings DrivetrainSubsystem::ReadFromHardware() {
 
   degree_t og_bearing = bearing;
 
+  if (cached_use_ekf_) { bearing_correction_at_ = pose_ekf_.heading_offset(); }
   bearing += bearing_correction_at_;
 
   if (frc::RobotBase::IsSimulation()) { bearing = odometry_.GetOdomBearing(); }
@@ -477,7 +507,14 @@ DrivetrainReadings DrivetrainSubsystem::ReadFromHardware() {
     prev_odom_bearing_time_ = now;
   }
 
-  Vector2D delta_pos = odom_output.position - GetReadings().pose.position;
+  const auto is_finite = [](const Vector2D& v) {
+    return std::isfinite(v[0].value()) && std::isfinite(v[1].value());
+  };
+  Vector2D prev_position = GetReadings().pose.position;
+  if (!is_finite(prev_position) && is_finite(odom_output.position)) {
+    prev_position = odom_output.position;
+  }
+  Vector2D delta_pos = odom_output.position - prev_position;
 
   pdcsu::units::degree_t pitch = GetPitch();
   pdcsu::units::degree_t roll = GetRoll();
@@ -489,15 +526,19 @@ DrivetrainReadings DrivetrainSubsystem::ReadFromHardware() {
   Graph("readings/roll", roll);
   Graph("tilt_x", tilt_field_x);
   Graph("tilt_y", tilt_field_y);
-  Vector2D compensated_delta{delta_pos[0] * pdcsu::units::u_cos(tilt_field_x),
-      delta_pos[1] * pdcsu::units::u_cos(tilt_field_y)};
+  Vector2D compensated_delta{
+      delta_pos[0] * std::max(0.0, pdcsu::units::u_cos(tilt_field_x)),
+      delta_pos[1] * std::max(0.0, pdcsu::units::u_cos(tilt_field_y))};
+  if (!is_finite(compensated_delta)) { compensated_delta = Vector2D{}; }
 
   funkit::robot::swerve::odometry::SwervePose new_pose{
-      .position = GetReadings().pose.position + compensated_delta,
+      .position = prev_position + compensated_delta,
       .bearing = bearing,
       .velocity = velocity,
   };
 
+  Vector2D ekf_delta{};
+  double ekf_odom_scale = 1.0;
   if (compensated_delta.magnitude().value() < 10.0) {
     cached_odom_variance_ = GetPreferenceValue_double("odom_variance");
 
@@ -506,9 +547,8 @@ DrivetrainReadings DrivetrainSubsystem::ReadFromHardware() {
     pdcsu::util::math::uVec<pdcsu::units::fps2_t, 2> wheel_accel{
         dv[0] / dt, dv[1] / dt};
     prev_wheel_velocity_ = velocity;
-    auto imu_accel = GetAcceleration().rotate(bearing_offset_);
-
-    auto accel_disagreement = (wheel_accel - imu_accel).magnitude();
+    auto accel_disagreement = pdcsu::units::u_abs(
+        wheel_accel.magnitude() - GetAcceleration().magnitude());
     Graph("skid/accel_disagreement", accel_disagreement);
 
     double is_skidding =
@@ -520,19 +560,34 @@ DrivetrainReadings DrivetrainSubsystem::ReadFromHardware() {
     skid_ratio_ = alpha * skid_ratio_ + (1.0 - alpha) * is_skidding;
     Graph("skid/ratio", skid_ratio_);
 
-    cached_odom_variance_ *=
-        (1.0 + skid_ratio_ *
-                   GetPreferenceValue_double("skid/variance_multiplier"));
+    const double skid_variance_multiplier =
+        GetPreferenceValue_double("skid/variance_multiplier");
+    ekf_odom_scale = 1.0 + skid_ratio_ * skid_variance_multiplier;
+    cached_odom_variance_ *= ekf_odom_scale;
 
     if ((u_abs(pitch) + u_abs(roll)) >
         GetPreferenceValue_unit_type<pdcsu::units::degree_t>(
             "pitch_roll_thresh")) {
       cached_odom_variance_ = 1000000.0;
+      ekf_odom_scale = 1.0 + skid_variance_multiplier;
     }
     pose_estimator.AddOdometryMeasurement(
         {compensated_delta[0].value(), compensated_delta[1].value()},
         cached_odom_variance_);
+    ekf_delta = compensated_delta.rotate(
+        pose_ekf_.heading_offset() - bearing_correction_at_);
   }
+
+  const degree_t ekf_heading_step =
+      u_abs(yaw_rate) * funkit::robot::GenericRobot::kPeriod;
+  pose_ekf_.Predict(ekf_delta,
+      GetPreferenceValue_double("pose_estimator/pose_process_var") +
+          GetPreferenceValue_double("ekf/odom_var_per_in") *
+              ekf_delta.magnitude().value() * ekf_odom_scale,
+      GetPreferenceValue_double("ekf/heading_var_per_deg") *
+              ekf_heading_step.value() +
+          GetPreferenceValue_double("ekf/heading_var_per_s") *
+              funkit::robot::GenericRobot::kPeriod.value());
 
   cached_april_variance_coeff_ =
       GetPreferenceValue_double("april_tags/april_variance_coeff");
@@ -549,9 +604,16 @@ DrivetrainReadings DrivetrainSubsystem::ReadFromHardware() {
             "april_tags/fudge_latency" + std::to_string(camera_id));
   }
 
+  const bool is_blue =
+      frc::DriverStation::GetAlliance() == frc::DriverStation::Alliance::kBlue;
+  const double prioritzed_variance_scale = std::clamp(
+      GetPreferenceValue_double("april_tags/prioritized_tag_variance_scale"),
+      0.05, 20.0);
+
   funkit::robot::calculators::ATCalculatorOutput tag_pos =
       tag_pos_calculator.calculate({new_pose, yaw_rate,
-          cached_april_variance_coeff_, cached_fudge_latencies_});
+          cached_april_variance_coeff_, cached_fudge_latencies_, is_blue,
+          prioritzed_variance_scale, bearing_correction_at_});
 
   if (tag_pos.camera_disconnect && !previous_camera_disconnect) {
     Error("Camera disconnect");
@@ -560,11 +622,27 @@ DrivetrainReadings DrivetrainSubsystem::ReadFromHardware() {
 
   Graph("april_tags/new_frames", tag_pos.new_frames);
 
+  const funkit::robot::swerve::odometry::PoseEKFTagParams ekf_tag_params{
+      .range_var_scale = GetPreferenceValue_double("ekf/tag_range_var_scale"),
+      .bearing_var_scale =
+          GetPreferenceValue_double("ekf/tag_bearing_var_scale"),
+      .gate_chi2 = GetPreferenceValue_double("ekf/gate_chi2"),
+      .gate_release_count = GetPreferenceValue_int("ekf/gate_release_count"),
+  };
+  int ekf_accepted = 0;
+  for (const auto& obs : tag_pos.observations) {
+    if (pose_ekf_.Correct(obs, ekf_tag_params)) { ekf_accepted++; }
+  }
+  Graph("ekf/tags_accepted", ekf_accepted);
+  Graph("ekf/tags_rejected",
+      static_cast<int>(tag_pos.observations.size()) - ekf_accepted);
+
   if (tag_pos.variance >= 0) {
     pose_estimator.AddVisionMeasurement(
         std::array<double, 2>{tag_pos.pos[0].value(), tag_pos.pos[1].value()},
         tag_pos.variance);
     see_tag_counter_ = 0;
+    last_tag_time_ = funkit::wpilib::CurrentFPGATime();
   } else {
     see_tag_counter_++;
   }
@@ -581,7 +659,8 @@ DrivetrainReadings DrivetrainSubsystem::ReadFromHardware() {
     Graph(keys->second.variance, camera_result.variance);
     Graph(keys->second.tag_count, camera_result.tag_count);
   }
-  if (tag_pos.bearing_from_tags_valid && velocity.magnitude() < 2_fps_) {
+  if (!cached_use_ekf_ && tag_pos.bearing_from_tags_valid &&
+      velocity.magnitude() < 2_fps_) {
     Graph("april_tags/bearing_from_tags", tag_pos.bearing_from_tags);
     degree_t new_bearing_correction_at_ =
         tag_pos.bearing_from_tags - og_bearing;
@@ -614,6 +693,8 @@ DrivetrainReadings DrivetrainSubsystem::ReadFromHardware() {
           pdcsu::units::fps_t{pose_vel_ips[1] / 12.0}},
   };
 
+  if (cached_use_ekf_) { estimated_pose.position = pose_ekf_.position(); }
+
   if (frc::RobotBase::IsSimulation()) {
     estimated_pose.position = odom_output.position;
     estimated_pose.velocity = velocity;
@@ -626,8 +707,16 @@ DrivetrainReadings DrivetrainSubsystem::ReadFromHardware() {
   Graph("estimated_pose/position_y", estimated_pose.position[1]);
   Graph("estimated_pose/velocity_x", estimated_pose.velocity[0]);
   Graph("estimated_pose/velocity_y", estimated_pose.velocity[1]);
-  Graph("estimated_pose/variance", pose_estimator.getVariance());
-  variance = pose_estimator.getVariance();
+  variance = cached_use_ekf_ ? pose_ekf_.position_variance()
+                             : pose_estimator.getVariance();
+  Graph("estimated_pose/variance", variance);
+
+  const Vector2D ekf_position = pose_ekf_.position();
+  Graph("ekf/position_x", ekf_position[0]);
+  Graph("ekf/position_y", ekf_position[1]);
+  Graph("ekf/heading_offset", pose_ekf_.heading_offset());
+  Graph("ekf/heading_stddev", pose_ekf_.heading_stddev());
+  Graph("ekf/variance", pose_ekf_.position_variance());
 
   Graph("readings/position_x", new_pose.position[0]);
   Graph("readings/position_y", new_pose.position[1]);
@@ -736,8 +825,10 @@ void DrivetrainSubsystem::WriteToHardware(DrivetrainTarget target) {
     target.angular_velocity = 0_degps_;
   }
 
+  const double drive_vel_kP = GetPreferenceValue_double("drive_vel_kP");
   for (int i = 0; i < 4; i++) {
     modules_[i]->ModifySwerveGenome(drive_genome, steer_genome);
+    modules_[i]->SetDriveVelocityGain(drive_vel_kP);
   }
 
   cached_max_omega_cut_ =

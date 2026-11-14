@@ -43,6 +43,9 @@ private:
   TurretReadings ReadFromHardware() override;
   void WriteToHardware(TurretTarget target) override;
 
+  degree_t PickBranch(degree_t target_pos, degps_t target_vel,
+      degree_t wrap_negative, degree_t wrap_positive);
+
   static constexpr double teethA = 21.0;
   static constexpr double teethB = 23.0;
   static constexpr double mainTeeth = 90.0;
@@ -66,6 +69,9 @@ private:
 
   size_t zero_walk_ctr_ = 0;
   size_t crt_diag_ctr_ = 0;
+  int wrap_hold_ctr_ = 0;
 
-  degree_t wrap_offset_ = 0.0_deg_;
+  bool has_last_branch_ = false;
+  degree_t last_branch_cmd_ = 0.0_deg_;
+  degree_t last_wrapped_target_ = 0.0_deg_;
 };

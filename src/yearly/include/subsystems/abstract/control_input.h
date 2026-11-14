@@ -26,6 +26,7 @@ struct ControlInputReadings {
   bool hood_trim_ccw;
   bool turret_trim_cw;
   bool turret_trim_ccw;
+  bool reset_trims;
   bool pass_mode;
   bool descend_l1;
   bool override_force_assist;
@@ -42,7 +43,6 @@ struct ControlInputReadings {
   bool turret_no_spin;
 
   bool override_pass;
-  bool operator_pass;
 };
 
 struct ControlInputTarget {

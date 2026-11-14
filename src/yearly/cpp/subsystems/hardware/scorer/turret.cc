@@ -4,6 +4,7 @@
 #include <frc/RobotBase.h>
 #include <funkit/math/collection.h>
 
+#include <array>
 #include <cmath>
 
 #include "funkit/control/config/genome.h"
@@ -51,18 +52,22 @@ TurretSubsystem::TurretSubsystem()
   RegisterPreference("icnor/IPG", 1.0);
   RegisterPreference("icnor/friction_nm", 2.0_Nm_);
   RegisterPreference("icnor/load_nm", 2.5_Nm_);
-  RegisterPreference("encoder/offset1", 0.0_rot_);
-  RegisterPreference("encoder/offset2", 0.0_rot_);
-  RegisterPreference("encoder/min_rots", -3.0_rot_);
-  RegisterPreference("encoder/max_rots", 3.0_rot_);
-  RegisterPreference("encoder/max_tolerance", 0.015_rot_);
-  RegisterPreference("tolerance", 20_deg_);
+  RegisterPreference("encoder/offset1", 0.129150390625_rot_);
+  RegisterPreference("encoder/offset2", 0.329833984375_rot_);
+  RegisterPreference("encoder/min_rots", -1.1_rot_);
+  RegisterPreference("encoder/max_rots", 1.1_rot_);
+  RegisterPreference("encoder/max_tolerance", 0.008_rot_);
+  RegisterPreference("tolerance", 5_deg_);
 
-  RegisterPreference("wrap/positive", 220_deg_);
-  RegisterPreference("wrap/negative", -240_deg_);
-  RegisterPreference("wrap/project_stop", 0.1_s_);
+  RegisterPreference("wrap/positive", 195_deg_);
+  RegisterPreference("wrap/negative", -245_deg_);
+  RegisterPreference("wrap/project_stop", 0.38_s_);
+  RegisterPreference("wrap/rebranch_jump", 60_deg_);
+  RegisterPreference("wrap/rebranch_horizon", 0.5_s_);
+  RegisterPreference("wrap/rebranch_vel_deadband", 10_degps_);
+  RegisterPreference("wrap/hold_loops", 10);
 
-  RegisterPreference("accel_factor", 4.0);
+  RegisterPreference("accel_factor", 5.0);
   RegisterPreference("accel_alpha", 0.3);
 }
 
@@ -125,26 +130,28 @@ TurretTarget TurretSubsystem::ZeroTarget() const {
 void TurretSubsystem::ZeroWithCRT(bool retry) {
   if (!is_initialized()) return;
 
-  auto abs1 = rotation_t{cancoder_1_.GetAbsolutePosition().GetValueAsDouble()};
-  auto abs2 = rotation_t{cancoder_2_.GetAbsolutePosition().GetValueAsDouble()};
-
-  abs1 = abs1 - GetPreferenceValue_unit_type<rotation_t>("encoder/offset1");
-  abs2 = abs2 - GetPreferenceValue_unit_type<rotation_t>("encoder/offset2");
-
-  TurretPositionCalculator::CrtInputs inputs{abs1, abs2, teethA, teethB,
-      mainTeeth, GetPreferenceValue_unit_type<rotation_t>("encoder/min_rots"),
-      GetPreferenceValue_unit_type<rotation_t>("encoder/max_rots"),
-      GetPreferenceValue_unit_type<rotation_t>("encoder/max_tolerance")};
-
   bool zeroed = false;
   for (int i = 0; i < (retry ? 5 : 1); i++) {
+    auto abs1 =
+        rotation_t{cancoder_1_.GetAbsolutePosition().GetValueAsDouble()};
+    auto abs2 =
+        rotation_t{cancoder_2_.GetAbsolutePosition().GetValueAsDouble()};
+
+    abs1 = abs1 - GetPreferenceValue_unit_type<rotation_t>("encoder/offset1");
+    abs2 = abs2 - GetPreferenceValue_unit_type<rotation_t>("encoder/offset2");
+
+    TurretPositionCalculator::CrtInputs inputs{abs1, abs2, teethA, teethB,
+        mainTeeth, GetPreferenceValue_unit_type<rotation_t>("encoder/min_rots"),
+        GetPreferenceValue_unit_type<rotation_t>("encoder/max_rots"),
+        GetPreferenceValue_unit_type<rotation_t>("encoder/max_tolerance")};
+
     auto sol = TurretPositionCalculator::GetPosition(inputs);
     if (sol.isValid) {
       esc_.SetPosition(sol.turretRotations);
       zeroed = true;
       break;
     }
-    std::this_thread::sleep_for(std::chrono::milliseconds(200));
+    if (retry) { std::this_thread::sleep_for(std::chrono::milliseconds(200)); }
   }
   if (retry && !zeroed) {
     Error("Unable to zero turret with CRT after 5 attempts");
@@ -176,7 +183,9 @@ TurretReadings TurretSubsystem::ReadFromHardware() {
   TurretReadings readings{pos_real, vel_real, false, false, 0_deg_};
 
   degree_t error =
-      funkit::math::CoterminalDifference(GetTarget().pos_, pos_real);
+      has_last_branch_
+          ? degree_t{last_branch_cmd_ - degree_t(pos_real)}
+          : funkit::math::CoterminalDifference(GetTarget().pos_, pos_real);
   Graph("readings/pos", degree_t(pos_real), true);
   Graph("debug/error", error);
 
@@ -211,20 +220,94 @@ TurretReadings TurretSubsystem::ReadFromHardware() {
     Graph("sol/valid", sol.isValid);
   }
 
+  const degree_t wrap_positive =
+      GetPreferenceValue_unit_type<degree_t>("wrap/positive");
+  const degree_t wrap_negative =
+      GetPreferenceValue_unit_type<degree_t>("wrap/negative");
   radian_t pos_project_wrap =
       pos_real +
       vel_real * GetPreferenceValue_unit_type<second_t>("wrap/project_stop");
-  if (pos_project_wrap >=
-          GetPreferenceValue_unit_type<degree_t>("wrap/positive") ||
-      pos_project_wrap <=
-          GetPreferenceValue_unit_type<degree_t>("wrap/negative")) {
-    readings.about_to_wrap_ = true;
-  } else {
-    readings.about_to_wrap_ = false;
+  const bool wrapping = pos_project_wrap >= wrap_positive ||
+                        pos_project_wrap <= wrap_negative ||
+                        pos_real >= wrap_positive ||
+                        pos_real <= wrap_negative || u_abs(error) > 180_deg_;
+  if (wrapping) {
+    wrap_hold_ctr_ = GetPreferenceValue_int("wrap/hold_loops");
+  } else if (wrap_hold_ctr_ > 0) {
+    wrap_hold_ctr_--;
   }
+  readings.about_to_wrap_ = wrapping || wrap_hold_ctr_ > 0;
   Graph("debug/about_to_wrap", readings.about_to_wrap_);
 
   return readings;
+}
+
+degree_t TurretSubsystem::PickBranch(degree_t target_pos, degps_t target_vel,
+    degree_t wrap_negative, degree_t wrap_positive) {
+  degree_t wrapped = funkit::math::CoterminalDifference(target_pos, 0_deg_);
+
+  std::array<degree_t, 5> candidates{};
+  size_t count = 0;
+  for (int k = -2; k <= 2; k++) {
+    degree_t c = wrapped + degree_t{360.0 * k};
+    if (c >= wrap_negative && c <= wrap_positive) { candidates[count++] = c; }
+  }
+
+  degree_t current = GetReadings().pos_;
+  auto nearest = [&](degree_t ref) {
+    degree_t best = candidates[0];
+    for (size_t i = 1; i < count; i++) {
+      if (u_abs(candidates[i] - ref) < u_abs(best - ref)) {
+        best = candidates[i];
+      }
+    }
+    return best;
+  };
+  auto room = [&](degree_t c) -> degree_t {
+    return target_vel >= 0_degps_ ? degree_t{wrap_positive - c}
+                                  : degree_t{c - wrap_negative};
+  };
+
+  degree_t cmd;
+  if (count == 0) {
+    cmd = u_clamp(wrapped, wrap_negative, wrap_positive);
+  } else if (count == 1) {
+    cmd = candidates[0];
+  } else if (!has_last_branch_) {
+    cmd = nearest(current);
+  } else if (u_abs(funkit::math::CoterminalDifference(
+                 wrapped, last_wrapped_target_)) <
+             GetPreferenceValue_unit_type<degree_t>("wrap/rebranch_jump")) {
+    cmd = nearest(last_branch_cmd_);
+  } else {
+    degree_t near = candidates[0];
+    for (size_t i = 1; i < count; i++) {
+      degree_t d = u_abs(candidates[i] - current);
+      degree_t d_near = u_abs(near - current);
+      if (d < d_near - 1_deg_ ||
+          (u_abs(d - d_near) <= 1_deg_ && room(candidates[i]) > room(near))) {
+        near = candidates[i];
+      }
+    }
+    degree_t other = near;
+    for (size_t i = 0; i < count; i++) {
+      if (candidates[i] != near &&
+          (other == near || room(candidates[i]) > room(other))) {
+        other = candidates[i];
+      }
+    }
+    degree_t needed =
+        u_abs(target_vel) *
+        GetPreferenceValue_unit_type<second_t>("wrap/rebranch_horizon");
+    bool moving = u_abs(target_vel) > GetPreferenceValue_unit_type<degps_t>(
+                                          "wrap/rebranch_vel_deadband");
+    cmd = (moving && room(near) < needed) ? other : near;
+  }
+
+  has_last_branch_ = true;
+  last_branch_cmd_ = cmd;
+  last_wrapped_target_ = wrapped;
+  return cmd;
 }
 
 void TurretSubsystem::WriteToHardware(TurretTarget target) {
@@ -246,6 +329,7 @@ void TurretSubsystem::WriteToHardware(TurretTarget target) {
   }
 
   if (!std::isfinite(target.pos_.value())) {
+    has_last_branch_ = false;
     esc_.WriteDC(0.0);
     return;
   }
@@ -257,20 +341,10 @@ void TurretSubsystem::WriteToHardware(TurretTarget target) {
   degree_t wrap_negative =
       GetPreferenceValue_unit_type<degree_t>("wrap/negative");
 
-  degree_t ntarget = wrap_offset_ + target.pos_;
+  target.pos_ =
+      PickBranch(target.pos_, target.vel_, wrap_negative, wrap_positive);
 
-  while (ntarget > wrap_positive) {
-    wrap_offset_ -= 360_deg_;
-    ntarget = wrap_offset_ + target.pos_;
-  }
-  while (ntarget < wrap_negative) {
-    wrap_offset_ += 360_deg_;
-    ntarget = wrap_offset_ + target.pos_;
-  }
-
-  target.pos_ = ntarget;
-
-  Graph("target/pos", ntarget);
+  Graph("target/pos", target.pos_);
   Graph("target/vel", target.vel_);
 
   radian_t target_pos_native = arm_sys_->toNative(target.pos_);

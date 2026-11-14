@@ -1,12 +1,27 @@
 #include "funkit/base/Loggable.h"
 
 #include <fmt/core.h>
+#include <frc/DataLogManager.h>
 #include <networktables/NetworkTableInstance.h>
 
 #include <iostream>
 #include <sstream>
 
 namespace funkit::base {
+
+namespace {
+template <typename Map, typename T>
+void LogGraphIfChanged(
+    Map& logs, std::string_view name, std::string_view key, const T& value) {
+  auto it = logs.find(key);
+  if (it == logs.end()) {
+    it = logs.try_emplace(std::string{key}, frc::DataLogManager::GetLog(),
+                 fmt::format("NT:/SmartDashboard/{}/{}", name, key))
+             .first;
+  }
+  it->second.Update(value);
+}
+}  // namespace
 
 std::string Loggable::Join(const std::string& p, const std::string& n) {
   return p + "/" + n;
@@ -24,7 +39,10 @@ unsigned int Loggable::error_count_ = 0;
 bool Loggable::fms_connected_ = false;
 
 void Loggable::Graph(std::string_view key, double value, bool persist) const {
-  if (!persist && !ShouldGraph()) return;
+  if (!persist && !ShouldGraph()) {
+    LogGraphIfChanged(graph_double_logs_, name_, key, value);
+    return;
+  }
   auto it = graph_doubles_.find(key);
   if (it == graph_doubles_.end()) {
     it = graph_doubles_
@@ -39,18 +57,28 @@ void Loggable::Graph(std::string_view key, double value, bool persist) const {
 }
 
 void Loggable::Graph(std::string_view key, int value, bool persist) const {
-  if (!persist && !ShouldGraph()) return;
+  if (!persist && !ShouldGraph()) {
+    LogGraphIfChanged(
+        graph_double_logs_, name_, key, static_cast<double>(value));
+    return;
+  }
   frc::SmartDashboard::PutNumber(fmt::format("{}/{}", name_, key), value);
 }
 
 void Loggable::Graph(std::string_view key, bool value, bool persist) const {
-  if (!persist && !ShouldGraph()) return;
+  if (!persist && !ShouldGraph()) {
+    LogGraphIfChanged(graph_bool_logs_, name_, key, value);
+    return;
+  }
   frc::SmartDashboard::PutBoolean(fmt::format("{}/{}", name_, key), value);
 }
 
 void Loggable::Graph(
     std::string_view key, const std::string& value, bool persist) const {
-  if (!persist && !ShouldGraph()) return;
+  if (!persist && !ShouldGraph()) {
+    LogGraphIfChanged(graph_string_logs_, name_, key, value);
+    return;
+  }
   frc::SmartDashboard::PutString(fmt::format("{}/{}", name_, key), value);
 }
 

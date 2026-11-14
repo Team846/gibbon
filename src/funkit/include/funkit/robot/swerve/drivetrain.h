@@ -6,6 +6,7 @@
 #include <map>
 #include <memory>
 #include <optional>
+#include <set>
 #include <string>
 #include <variant>
 
@@ -13,6 +14,7 @@
 #include "funkit/robot/GenericSubsystem.h"
 #include "funkit/robot/calculators/AprilTagCalculator.h"
 #include "funkit/robot/swerve/control/swerve_ol_calculator.h"
+#include "funkit/robot/swerve/odometry/pose_ekf.h"
 #include "funkit/robot/swerve/odometry/pose_estimator.h"
 #include "funkit/robot/swerve/odometry/swerve_odometry_calculator.h"
 #include "funkit/robot/swerve/odometry/swerve_pose.h"
@@ -63,6 +65,9 @@ struct DrivetrainConfigs {
   std::optional<funkit::robot::calculators::TurretTagCameraConfig>
       turret_camera_config;
   pdcsu::units::fps2_t max_accel;
+
+  std::set<size_t> april_priority_tags_red{};
+  std::set<size_t> april_priority_tags_blue{};
 };
 
 struct DrivetrainReadings {
@@ -106,9 +111,12 @@ public:
   void ZeroWithCANCoders();
   void FlipBearing();
 
+  pdcsu::units::second_t TimeSinceLastTag() const;
+
   void SetBearing(pdcsu::units::degree_t bearing);
   void SetPosition(Vector2D position);
   void SetOdomBearing(pdcsu::units::degree_t odom_bearing);
+  void ClearBearingCorrection();
 
   void SetCANCoderOffsets();
 
@@ -194,6 +202,8 @@ private:
   funkit::robot::swerve::odometry::PoseEstimator pose_estimator{
       {pdcsu::units::inch_t{0}, pdcsu::units::inch_t{0}},
       {pdcsu::units::fps_t{0}, pdcsu::units::fps_t{0}}};
+  funkit::robot::swerve::odometry::PoseEKF pose_ekf_;
+  bool cached_use_ekf_ = false;
 
   // Path logger for recording odometry data
   PathLogger path_logger_;
@@ -203,6 +213,7 @@ private:
   pdcsu::units::degree_t bearing_offset_ = pdcsu::units::degree_t{0};
 
   int see_tag_counter_ = 100001;
+  pdcsu::units::second_t last_tag_time_{-1000.0};
 
   pdcsu::units::degps_t cached_max_omega_cut_{pdcsu::units::degps_t{0}};
   pdcsu::units::fps_t cached_max_speed_{pdcsu::units::fps_t{0}};

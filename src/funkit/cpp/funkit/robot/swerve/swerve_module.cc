@@ -91,6 +91,10 @@ void SwerveModuleSubsystem::SetSteerCouplingRatio(double ratio) {
   steer_coupling_ratio_ = ratio;
 }
 
+void SwerveModuleSubsystem::SetDriveVelocityGain(double kP) {
+  drive_vel_kP_ = kP;
+}
+
 void SwerveModuleSubsystem::Setup() {
   using namespace funkit::control::config;
   using namespace pdcsu::units;
@@ -243,6 +247,13 @@ void SwerveModuleSubsystem::WriteToHardware(SwerveModuleTarget target) {
 
   auto target_drive_val = target.drive.value();
   auto current_vel_val = GetReadings().vel.value();
+  double vel_fb_dc = 0.0;
+  if (drive_vel_kP_ > 0.0 && std::abs(target_drive_val) > 0.5) {
+    vel_fb_dc = std::clamp(
+        drive_vel_kP_ * (cosine_comp * target_drive_val - current_vel_val),
+        -0.15, 0.15);
+  }
+  Graph("target/drive_vel_fb_dc", vel_fb_dc);
   if (std::abs(target_drive_val) > std::abs(current_vel_val)) {
     target.drive =
         fps_t{(target_drive_val - current_vel_val) * res_corr_factor +
@@ -254,7 +265,7 @@ void SwerveModuleSubsystem::WriteToHardware(SwerveModuleTarget target) {
   // Graph("target/cosine_comp", cosine_comp);
 
   double drive_duty_cycle =
-      cosine_comp * target.drive.value() / max_speed_.value();
+      cosine_comp * target.drive.value() / max_speed_.value() + vel_fb_dc;
 
   Graph("target/drive_dc", drive_duty_cycle);
 

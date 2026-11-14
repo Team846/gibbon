@@ -34,7 +34,7 @@
   {
     "name": "/Preferences/SwerveDrivetrain/steer_genome/brake_mode",
     "type": "boolean",
-    "value": false,
+    "value": true,
     "properties": {
       "persistent": true
     }
@@ -42,7 +42,7 @@
   {
     "name": "/Preferences/SwerveDrivetrain/FR/cancoder_offset_ (deg)",
     "type": "double",
-    "value": -115.6640625,
+    "value": -114.5125,
     "properties": {
       "persistent": true
     }
@@ -50,7 +50,7 @@
   {
     "name": "/Preferences/SwerveDrivetrain/FL/cancoder_offset_ (deg)",
     "type": "double",
-    "value": 165.640625,
+    "value": 164.35546875,
     "properties": {
       "persistent": true
     }
@@ -58,7 +58,7 @@
   {
     "name": "/Preferences/SwerveDrivetrain/BL/cancoder_offset_ (deg)",
     "type": "double",
-    "value": 7.998046875,
+    "value": 7.91015625,
     "properties": {
       "persistent": true
     }
@@ -66,7 +66,7 @@
   {
     "name": "/Preferences/SwerveDrivetrain/BR/cancoder_offset_ (deg)",
     "type": "double",
-    "value": -149.4140625,
+    "value": -148.6231,
     "properties": {
       "persistent": true
     }
@@ -98,7 +98,7 @@
   {
     "name": "/Preferences/SwerveDrivetrain/drive_genome/brake_mode",
     "type": "boolean",
-    "value": false,
+    "value": true,
     "properties": {
       "persistent": true
     }
@@ -322,7 +322,7 @@
   {
     "name": "/Preferences/SwerveDrivetrain/april_tags/april_variance_coeff",
     "type": "double",
-    "value": 0.15,
+    "value": 0.3,
     "properties": {
       "persistent": true
     }
@@ -594,7 +594,7 @@
   {
     "name": "/Preferences/robot_container/init_drivetrain",
     "type": "boolean",
-    "value": false,
+    "value": true,
     "properties": {
       "persistent": true
     }
@@ -882,7 +882,7 @@
   {
     "name": "/Preferences/robot_container/init_shooter",
     "type": "boolean",
-    "value": false,
+    "value": true,
     "properties": {
       "persistent": true
     }
@@ -922,7 +922,7 @@
   {
     "name": "/Preferences/ShootingCalculator/2ptvel/kAdditive",
     "type": "double",
-    "value": 3.9,
+    "value": 4.0,
     "properties": {
       "persistent": true
     }
@@ -1122,7 +1122,7 @@
   {
     "name": "/Preferences/turret/encoder/offset1 (rot)",
     "type": "double",
-    "value": 0.129150390625,
+    "value": 0.014648437500000002,
     "properties": {
       "persistent": true
     }
@@ -1130,7 +1130,7 @@
   {
     "name": "/Preferences/turret/encoder/offset2 (rot)",
     "type": "double",
-    "value": 0.329833984375,
+    "value": 0.264892578125,
     "properties": {
       "persistent": true
     }
@@ -1154,7 +1154,7 @@
   {
     "name": "/Preferences/turret/tolerance (deg)",
     "type": "double",
-    "value": 20.0,
+    "value": 10.0,
     "properties": {
       "persistent": true
     }
@@ -1242,7 +1242,7 @@
   {
     "name": "/Preferences/DyeRotor/speed_idle (min^-1 rot)",
     "type": "double",
-    "value": -50.0,
+    "value": 0.0,
     "properties": {
       "persistent": true
     }
@@ -2185,6 +2185,22 @@
     "name": "/Preferences/Robot/trail_initial_wait_s",
     "type": "double",
     "value": 4.0,
+    "properties": {
+      "persistent": true
+    }
+  },
+  {
+    "name": "/Preferences/SwerveDrivetrain/steer_coupling_ratio",
+    "type": "double",
+    "value": -4.5,
+    "properties": {
+      "persistent": true
+    }
+  },
+  {
+    "name": "/Preferences/ShootingCalculator/kShotAngleMulti",
+    "type": "double",
+    "value": 1.0,
     "properties": {
       "persistent": true
     }

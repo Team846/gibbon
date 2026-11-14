@@ -6,6 +6,7 @@
 #include <frc/smartdashboard/SmartDashboard.h>
 #include <networktables/DoubleTopic.h>
 #include <networktables/NetworkTableInstance.h>
+#include <wpi/DataLog.h>
 
 #include <string_view>
 #include <type_traits>
@@ -97,7 +98,6 @@ public:
   template <typename U>
   void Graph(std::string_view key, U value, bool persist = false) const {
     if constexpr (detail::is_pdcsu_unit_v<U>) {
-      if (!persist && !ShouldGraph()) return;
       Graph(ResolveUnitKey(key, value.dims()), value.value(), persist);
     } else {
       static_assert(detail::is_pdcsu_unit_v<U>, "must be a PDCSU unit type");
@@ -187,6 +187,15 @@ private:
   mutable std::unordered_map<std::string, nt::DoublePublisher, detail::SVHash,
       detail::SVEq>
       graph_doubles_;
+  mutable std::unordered_map<std::string, wpi::log::DoubleLogEntry,
+      detail::SVHash, detail::SVEq>
+      graph_double_logs_;
+  mutable std::unordered_map<std::string, wpi::log::BooleanLogEntry,
+      detail::SVHash, detail::SVEq>
+      graph_bool_logs_;
+  mutable std::unordered_map<std::string, wpi::log::StringLogEntry,
+      detail::SVHash, detail::SVEq>
+      graph_string_logs_;
   std::unordered_map<std::string, nt::DoubleEntry, detail::SVHash, detail::SVEq>
       pref_doubles_;
   mutable std::unordered_map<std::string, std::string, detail::SVHash,

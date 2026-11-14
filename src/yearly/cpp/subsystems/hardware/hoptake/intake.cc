@@ -10,9 +10,9 @@ IntakeSubsystem::IntakeSubsystem()
     : GenericSubsystem("Intake"),
       esc_{base::TALON_FX_KRAKENX60, ports::intake_::kIntakeParams} {
   RegisterPreference("speed_idle", 15.0_fps_);
-  RegisterPreference("speed_intake", 55.0_fps_);
-  RegisterPreference("speed_evac", -25.0_fps_);
-  RegisterPreference("dynamic_intake_gain", 1.0);
+  RegisterPreference("speed_intake", 56.0_fps_);
+  RegisterPreference("speed_evac", -35.0_fps_);
+  RegisterPreference("dynamic_intake_gain", 2.0);
 }
 
 IntakeSubsystem::~IntakeSubsystem() = default;

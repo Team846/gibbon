@@ -10,12 +10,12 @@ DyeRotorSubsystem::DyeRotorSubsystem()
     : GenericSubsystem("DyeRotor"),
       esc_{base::TALON_FX_KRAKENX60, ports::dye_rotor_::kDyeRotorParams} {
   // Theoretical 171.43 RPM maximum speed
-  RegisterPreference("speed_84bps", 150_rpm_);
+  RegisterPreference("speed_84bps", 130_rpm_);
   RegisterPreference("speed_slow_feed", 120_rpm_);
   RegisterPreference("speed_reverse", -100_rpm_);
   RegisterPreference("speed_idle", 0_rpm_);
 
-  RegisterPreference("ramp_rate", 30.0);
+  RegisterPreference("ramp_rate", 9.0);
 }
 
 radps_t DyeRotorSubsystem::getTargetRotorSpeed(DyeRotorState rotor_state) {

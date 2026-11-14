@@ -32,6 +32,7 @@ struct ScorerSSTarget {
   fps_t shooter_target;
   TrackingState tracking_state;
   bool shoot;
+  inch_t shot_distance = 0_in_;
 
   // Overrides
   bool reverse_rotor = false;

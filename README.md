@@ -206,4 +206,5 @@ To undo the going back:
 src/funkit/cpp/funkit/math/collection.cc:27:0: warning: The function 'VerticalDeadband' is never used. [unusedFunction]
 src/funkit/cpp/funkit/math/collection.cc:55:0: warning: The function 'CoterminalSum' is never used. [unusedFunction]
 src/funkit/cpp/funkit/math/collection.cc:69:0: warning: The function 'modulo' is never used. [unusedFunction]
+src/yearly/cpp/autos/auton_seqs.cc:42:0: warning: The function 'TakeAutoStartPoint' is never used. [unusedFunction]
 ```

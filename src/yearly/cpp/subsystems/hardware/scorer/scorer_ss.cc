@@ -14,22 +14,25 @@ ScorerSuperstructure::ScorerSuperstructure()
   RegisterPreference("init_shooter", true);
   RegisterPreference("init_dye_rotor", true);
 
-  RegisterPreference("passing/left_x", 70.0_in_);
+  RegisterPreference("passing/left_x", 87.0_in_);
   RegisterPreference("passing/left_y", 145.0_in_);
-  RegisterPreference("passing/right_x", 247.8_in_);
+  RegisterPreference("passing/right_x", 230.8_in_);
   RegisterPreference("passing/right_y", 145.0_in_);
 
   RegisterPreference("point_blank/turret_angle", 0_deg_);
   RegisterPreference("point_blank/hood_angle", 68.12_deg_);
-  RegisterPreference("point_blank/shooter_vel", 33.76_fps_);
+  RegisterPreference("point_blank/shooter_vel", 27.0_fps_);
 
   RegisterPreference("will_make_shot_hysteresis/on_percent", 70.0);
   RegisterPreference("will_make_shot_hysteresis/on_window_loops", 40);
   RegisterPreference("will_make_shot_hysteresis/off_percent", 50.0);
   RegisterPreference("will_make_shot_hysteresis/off_window_loops", 20);
   RegisterPreference("will_make_shot_hysteresis/off_recent_window_loops", 10);
+  RegisterPreference("will_make_shot/turret_allowed_miss", 12.0_in_);
 
-  RegisterPreference("rotor_reset_loops", 3);
+  RegisterPreference("rotor_reset_loops", 0);
+
+  RegisterPreference("vision_gate/max_tag_age", 0.5_s_);
 }
 
 ScorerSuperstructure::~ScorerSuperstructure() = default;
@@ -126,9 +129,16 @@ ScorerSSReadings ScorerSuperstructure::ReadFromHardware() {
   shooter.UpdateReadings();
   dye_rotor.UpdateReadings();
 
-  const bool raw_will_make_shot = turret.GetReadings().in_position_ &&
-                                  hood.GetReadings().in_position_ &&
-                                  shooter.GetReadings().is_spun_up;
+  const degree_t turret_allowed_error =
+      u_atan2(GetPreferenceValue_unit_type<inch_t>(
+                  "will_make_shot/turret_allowed_miss"),
+          GetTarget().shot_distance);
+  Graph("will_make_shot/turret_allowed_error", turret_allowed_error);
+
+  const bool raw_will_make_shot =
+      turret.GetReadings().in_position_ &&
+      turret.GetReadings().error_ < turret_allowed_error &&
+      hood.GetReadings().in_position_ && shooter.GetReadings().is_spun_up;
 
   ConfigureHysteresisWindows();
   on_window_.Push(raw_will_make_shot);
@@ -153,6 +163,7 @@ ScorerSSReadings ScorerSuperstructure::ReadFromHardware() {
              off_window_.Fraction() >= off_threshold &&
              off_recent_window_.Fraction() > off_threshold) {
     will_make_shot_hysteresis_ = false;
+    on_window_.Configure(on_window_loops_);
   }
 
   readings.will_make_shot = will_make_shot_hysteresis_;
@@ -166,7 +177,6 @@ void ScorerSuperstructure::AdjustTurret(bool cw) {
 
 void ScorerSuperstructure::AdjustHood(bool up) {
   (up) ? hood_adjustment_ += 0.05_deg_ : hood_adjustment_ -= 0.05_deg_;
-  turret_adjustment_ = 0_deg_;  // TODO fix
 }
 
 void ScorerSuperstructure::ClearAdjustments() {
@@ -215,6 +225,7 @@ void ScorerSuperstructure::WriteToHardware(ScorerSSTarget target) {
   if (target.reverse_rotor) { dye_rotor_trgt = {DyeRotorState::kRotorReverse}; }
 
   turret_trgt.pos_ += turret_adjustment_;
+  hood_trgt.pos_ += hood_adjustment_;
   dye_rotor_trgt.dye_rotor_pct_override = target.dye_rotor_pct_override;
 
   hood.SetTarget(hood_trgt);

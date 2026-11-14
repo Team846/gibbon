@@ -1,17 +1,25 @@
 #pragma once
 
+#include <optional>
+
+#include "funkit/math/fieldpoints.h"
 #include "funkit/robot/GenericCommand.h"
 #include "subsystems/robot_container.h"
 
-#define ADD_AUTO_VARIANTS(class_name, name_string) \
-  AddAuto(std::string(name_string) + "/R/L",       \
-      new class_name{container_, false, true});    \
-  AddAuto(std::string(name_string) + "/R/R",       \
-      new class_name{container_, false, false});   \
-  AddAuto(std::string(name_string) + "/B/L",       \
-      new class_name{container_, true, true});     \
-  AddAuto(std::string(name_string) + "/B/R",       \
-      new class_name{container_, true, false});
+std::optional<funkit::math::FieldPoint> TakeAutoStartPoint();
+
+#define ADD_AUTO_VARIANT(class_name, name, is_blue_side, is_left_side)   \
+  AddAuto(name, new class_name{container_, is_blue_side, is_left_side}); \
+  if (auto start = TakeAutoStartPoint()) {                               \
+    auto_start_points_.insert_or_assign(name, *start);                   \
+  }
+
+#define ADD_AUTO_VARIANTS(class_name, name_string)                             \
+  ADD_AUTO_VARIANT(class_name, std::string(name_string) + "/R/L", false, true) \
+  ADD_AUTO_VARIANT(                                                            \
+      class_name, std::string(name_string) + "/R/R", false, false)             \
+  ADD_AUTO_VARIANT(class_name, std::string(name_string) + "/B/L", true, true)  \
+  ADD_AUTO_VARIANT(class_name, std::string(name_string) + "/B/R", true, false)
 
 class CS2Auto : public funkit::robot::GenericCommandGroup<RobotContainer,
                     CS2Auto, frc2::SequentialCommandGroup> {

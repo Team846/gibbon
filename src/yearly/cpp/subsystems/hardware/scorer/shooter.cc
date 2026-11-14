@@ -17,10 +17,10 @@ ShooterSubsystem::ShooterSubsystem()
 
   RegisterPreference("coast_down_tolerance", 5_fps_);
 
-  RegisterPreference("accel_factor", 3.0);
+  RegisterPreference("accel_factor", 2.0);
   RegisterPreference("accel_alpha", 0.3);
 
-  RegisterPreference("ramp_rate", 40.0);
+  RegisterPreference("ramp_rate", 2.0);
 }
 
 ShooterSubsystem::~ShooterSubsystem() = default;

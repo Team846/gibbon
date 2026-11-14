@@ -18,6 +18,7 @@ struct ShootingCalculatorOutputs {
 
   /* General */
   bool is_valid;
+  pdcsu::units::inch_t shot_distance{0_in_};
 
   /* For trajectory simulation */
   pdcsu::util::math::Vector2D start_traj{-1000_in_, -1000_in_};

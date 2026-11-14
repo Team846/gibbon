@@ -82,7 +82,7 @@ void FunkyRobot::OnInitialize() {
 
   frc::SmartDashboard::PutData("clear_bearing_corr",
       new funkit::wpilib::NTAction(
-          [this] { container_.drivetrain_.bearing_correction_at_ = 0_deg_; }));
+          [this] { container_.drivetrain_.ClearBearingCorrection(); }));
 
   // Add path recording controls
   frc::SmartDashboard::PutData(
@@ -196,6 +196,19 @@ void FunkyRobot::OnPeriodic() {
         container_.drivetrain_.GetReadings().estimated_pose.position,
         container_.scorer_ss_.turret.GetReadings().pos_ +
             container_.drivetrain_.GetReadings().pose.bearing);
+  }
+
+  if (!IsEnabled()) {
+    const std::string selected_auto = GetSelectedAuto();
+    if (selected_auto != last_selected_auto_) {
+      last_selected_auto_ = selected_auto;
+      const auto start = auto_start_points_.find(selected_auto);
+      if (start != auto_start_points_.end()) {
+        container_.drivetrain_.SetBearing(start->second.bearing);
+        container_.drivetrain_.SetPosition(start->second.point);
+        Log("Reset pose to start of auto {}", selected_auto);
+      }
+    }
   }
 
   if (!gyro_switch_.Get() && !IsEnabled()) {

@@ -178,6 +178,7 @@ out/
 
 # Simulation data log directory
 logs/
+robot_logs/
 
 # Folder that has CTRE Phoenix Sim device config storage
 ctre_sim/
