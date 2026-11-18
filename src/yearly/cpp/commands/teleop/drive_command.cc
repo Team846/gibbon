@@ -1,5 +1,7 @@
 #include "commands/teleop/drive_command.h"
 
+#include <algorithm>
+#include <cmath>
 #include <utility>
 
 #include "calculators/ShootingCalculator.h"
@@ -18,21 +20,19 @@ void DriveCommand::Periodic() {
 
   funkit::robot::swerve::DrivetrainTarget target{};
 
-  double translate_x = funkit::math::HorizontalDeadband(
-      ci_readings_.translate_x,
+  const double stick_mag =
+      std::hypot(ci_readings_.translate_x, ci_readings_.translate_y);
+  const double shaped_mag = funkit::math::HorizontalDeadband(
+      std::min(stick_mag, 1.0),
       container_.control_input_.GetPreferenceValue_double(
           "translation_deadband"),
       1,
       container_.control_input_.GetPreferenceValue_int("translation_exponent"),
       1);
+  const double stick_scale = stick_mag > 0.0 ? shaped_mag / stick_mag : 0.0;
 
-  double translate_y = funkit::math::HorizontalDeadband(
-      ci_readings_.translate_y,
-      container_.control_input_.GetPreferenceValue_double(
-          "translation_deadband"),
-      1,
-      container_.control_input_.GetPreferenceValue_int("translation_exponent"),
-      1);
+  double translate_x = ci_readings_.translate_x * stick_scale;
+  double translate_y = ci_readings_.translate_y * stick_scale;
 
   double rotation = funkit::math::HorizontalDeadband(ci_readings_.rotation,
       container_.control_input_.GetPreferenceValue_double("rotation_deadband"),

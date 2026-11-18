@@ -22,7 +22,15 @@ TalonFX_interm::TalonFX_interm(int can_id, std::string_view bus,
       ctre::phoenix6::configs::MotorOutputConfigs{}.WithInverted(inverted));
 }
 
+void TalonFX_interm::RefreshSignals() {
+  if (signals_fresh_) return;
+  ctre::phoenix6::BaseStatusSignal::RefreshAll(talon_.GetPosition(false),
+      talon_.GetVelocity(false), talon_.GetAcceleration(false));
+  signals_fresh_ = true;
+}
+
 void TalonFX_interm::Tick() {
+  signals_fresh_ = false;
   ctre::phoenix::StatusCode last_status_code = ctre::phoenix::StatusCode::OK;
   if (last_follower_config_.has_value() &&
       last_follower_config_.value().leader_CAN_id >= 0) {
@@ -150,10 +158,10 @@ void TalonFX_interm::EnableStatusFrames(config::StatusFrameSelections frames,
       break;
     case funkit::control::config::StatusFrame::kLeader:
       last_status_code =
-          talon_.GetMotorVoltage().SetUpdateFrequency(400_Hz, max_wait_time_);
+          talon_.GetMotorVoltage().SetUpdateFrequency(100_Hz, max_wait_time_);
       if (last_status_code != ctre::phoenix::StatusCode::OK) break;
       last_status_code =
-          talon_.GetDutyCycle().SetUpdateFrequency(400_Hz, max_wait_time_);
+          talon_.GetDutyCycle().SetUpdateFrequency(100_Hz, max_wait_time_);
       break;
 
     default: break;
@@ -187,10 +195,10 @@ void TalonFX_interm::OverrideStatusFramePeriod(
     break;
   case funkit::control::config::StatusFrame::kLeader:
     last_status_code =
-        talon_.GetMotorVoltage().SetUpdateFrequency(400_Hz, max_wait_time_);
+        talon_.GetMotorVoltage().SetUpdateFrequency(100_Hz, max_wait_time_);
     if (last_status_code != ctre::phoenix::StatusCode::OK) break;
     last_status_code =
-        talon_.GetDutyCycle().SetUpdateFrequency(400_Hz, max_wait_time_);
+        talon_.GetDutyCycle().SetUpdateFrequency(100_Hz, max_wait_time_);
     break;
   default: break;
   }
@@ -222,13 +230,15 @@ bool TalonFX_interm::IsDuplicateControlMessage(base::ControlRequest cr) {
 ReadResponse TalonFX_interm::Read(ReadType type) {
   switch (type) {
   case ReadType::kReadPosition: {
+    RefreshSignals();
     auto pos_wpi = ctre::phoenix6::BaseStatusSignal::GetLatencyCompensatedValue(
-        talon_.GetPosition(), talon_.GetVelocity());
+        talon_.GetPosition(false), talon_.GetVelocity(false));
     return pos_wpi.to<double>() * 2.0 * 3.14159265358979323846;
   }
   case ReadType::kReadVelocity: {
+    RefreshSignals();
     auto vel_wpi = ctre::phoenix6::BaseStatusSignal::GetLatencyCompensatedValue(
-        talon_.GetVelocity(), talon_.GetAcceleration());
+        talon_.GetVelocity(false), talon_.GetAcceleration(false));
     return vel_wpi.to<double>() * 2.0 * 3.14159265358979323846;
   }
   case ReadType::kReadCurrent:
@@ -280,6 +290,7 @@ ControllerErrorCodes TalonFX_interm::GetLastErrorCode() {
 }
 
 void TalonFX_interm::ZeroEncoder(pdcsu::units::radian_t position) {
+  signals_fresh_ = false;
   last_error_ =
       getErrorCode(talon_.SetPosition(units::radian_t{position.value()}));
 }

@@ -1,5 +1,6 @@
 #include "subsystems/hardware/scorer/turret.h"
 
+#include <frc/DriverStation.h>
 #include <frc/Filesystem.h>
 #include <frc/RobotBase.h>
 #include <funkit/math/collection.h>
@@ -131,7 +132,8 @@ void TurretSubsystem::ZeroWithCRT(bool retry) {
   if (!is_initialized()) return;
 
   bool zeroed = false;
-  for (int i = 0; i < (retry ? 5 : 1); i++) {
+  const int attempts = (retry && !frc::DriverStation::IsEnabled()) ? 5 : 1;
+  for (int i = 0; i < attempts; i++) {
     auto abs1 =
         rotation_t{cancoder_1_.GetAbsolutePosition().GetValueAsDouble()};
     auto abs2 =
@@ -151,10 +153,12 @@ void TurretSubsystem::ZeroWithCRT(bool retry) {
       zeroed = true;
       break;
     }
-    if (retry) { std::this_thread::sleep_for(std::chrono::milliseconds(200)); }
+    if (i + 1 < attempts) {
+      std::this_thread::sleep_for(std::chrono::milliseconds(200));
+    }
   }
   if (retry && !zeroed) {
-    Error("Unable to zero turret with CRT after 5 attempts");
+    Error("Unable to zero turret with CRT after {} attempts", attempts);
   }
 }
 

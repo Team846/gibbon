@@ -31,8 +31,28 @@ void FunkyLogSystem::LogThread(int rateLimit, std::string logFileName) {
 #else
   logDir = "/home/lvuser/foresting";
 #endif
+  const std::filesystem::path fallbackDir = logDir;
+#if !defined(_WIN32) && !defined(__APPLE__)
+  {
+    std::error_code usb_ec;
+    auto usb = std::filesystem::status("/u", usb_ec);
+    if (!usb_ec && std::filesystem::is_directory(usb) &&
+        (usb.permissions() & std::filesystem::perms::others_write) !=
+            std::filesystem::perms::none) {
+      logDir = "/u/foresting";
+    }
+  }
+#endif
 
-  std::filesystem::create_directories(logDir);
+  std::error_code dir_ec;
+  std::filesystem::create_directories(logDir, dir_ec);
+  if (dir_ec && logDir != fallbackDir) {
+    std::cerr << "[WARNING] Could not use " << logDir << " ("
+              << dir_ec.message() << "); logging to " << fallbackDir
+              << std::endl;
+    logDir = fallbackDir;
+    std::filesystem::create_directories(logDir, dir_ec);
+  }
   std::filesystem::path logPath = logDir / logFileName;
 
   std::ofstream log_out(logPath, std::ios::trunc);
@@ -42,7 +62,7 @@ void FunkyLogSystem::LogThread(int rateLimit, std::string logFileName) {
   }
 
   try {
-    auto space_info = std::filesystem::space(logDir.root_path());
+    auto space_info = std::filesystem::space(logDir);
     if (space_info.available < FunkyLogSystem::MIN_SPACE) {
       std::cerr << "[WARNING] Storage space low: "
                 << (space_info.available / 1024 / 1024) << "MB available. "

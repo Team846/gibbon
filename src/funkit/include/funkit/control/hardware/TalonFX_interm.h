@@ -55,6 +55,9 @@ private:
   funkit::control::hardware::ControllerErrorCodes getErrorCode(
       ctre::phoenix::StatusCode code);
 
+  void RefreshSignals();
+  bool signals_fresh_ = false;
+
   base::ControlRequest last_command_;
   config::Gains gains_;
 

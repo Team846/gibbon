@@ -117,6 +117,7 @@ public:
 
 private:
   int last_rezero = 101;
+  int cancoder_graph_ctr_ = 0;
 
   /*
   getMotorParams()

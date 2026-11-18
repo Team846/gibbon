@@ -20,7 +20,7 @@ static amp_t ema_current_threshold = 50_A_;
 static volt_t tolerable_drop = 4.0_V_;
 
 std::map<size_t, double> SupremeLimiter::Limit(
-    std::vector<PerDeviceInformation> inputs, volt_t v_batt) {
+    const std::vector<PerDeviceInformation>& inputs, volt_t v_batt) {
   const volt_t safe_v_batt = u_max(v_batt, 1.0_V_);
   const double command_normalization_gain =
       std::clamp((12.0_V_ / safe_v_batt).value(), 0.5, 1.5);
@@ -30,12 +30,12 @@ std::map<size_t, double> SupremeLimiter::Limit(
   amp_t total_regen_current = 0_A_;
   std::vector<std::pair<size_t, amp_t>> supply_by_index;
   std::map<size_t, double> dcs_by_index;
-  std::map<size_t, PerDeviceInformation> info_by_index;
+  std::map<size_t, const PerDeviceInformation*> info_by_index;
 
   amp_t total_limitable_draw_current = 0_A_;
   amp_t total_limitable_regen_current = 0_A_;
-  for (PerDeviceInformation input : inputs) {
-    pdcsu::util::BasePlant plant = input.plant;
+  for (const PerDeviceInformation& input : inputs) {
+    const pdcsu::util::BasePlant& plant = input.plant;
     const pdcsu::units::amp_t supply =
         calculators::CurrentTorqueCalculator::predict_current_supply_signed(
             input.DC, input.speed, v_cmd_effective, input.circuit_resistance,
@@ -50,7 +50,7 @@ std::map<size_t, double> SupremeLimiter::Limit(
     }
     supply_by_index.push_back({input.device_id, supply});
     dcs_by_index[input.device_id] = input.DC;
-    info_by_index.emplace(input.device_id, input);
+    info_by_index.emplace(input.device_id, &input);
   }
 
   ema_v_batt_ =
@@ -61,8 +61,9 @@ std::map<size_t, double> SupremeLimiter::Limit(
   if (current_samples_ < 100U) {
     current_samples_++;
   } else if (ema_total_current_ > ema_current_threshold) {
-    amp_t new_draw_limit =
-        ema_total_current_ / (13.0_V_ - ema_v_batt_) * tolerable_drop;
+    amp_t new_draw_limit = ema_total_current_ /
+                           u_max(13.0_V_ - ema_v_batt_, 0.1_V_) *
+                           tolerable_drop;
 
     current_limit_ = current_limit_growth_factor * current_limit_ +
                      (1 - current_limit_growth_factor) * new_draw_limit;
@@ -92,7 +93,7 @@ std::map<size_t, double> SupremeLimiter::Limit(
   for (const auto& supply_entry : supply_by_index) {
     const size_t device_id = supply_entry.first;
     const amp_t supply_current = supply_entry.second;
-    const PerDeviceInformation info = info_by_index.at(device_id);
+    const PerDeviceInformation& info = *info_by_index.at(device_id);
     if (!info.is_limitable) continue;
 
     if (supply_current > 0_A_ && draw_scale_factor < 1.0) {

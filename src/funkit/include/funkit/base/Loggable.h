@@ -4,7 +4,9 @@
 #include <frc/Preferences.h>
 #include <frc/RobotBase.h>
 #include <frc/smartdashboard/SmartDashboard.h>
+#include <networktables/BooleanTopic.h>
 #include <networktables/DoubleTopic.h>
+#include <networktables/IntegerTopic.h>
 #include <networktables/NetworkTableInstance.h>
 #include <wpi/DataLog.h>
 
@@ -95,10 +97,15 @@ public:
   void Graph(std::string_view key, const std::string& value,
       bool persist = false) const;
 
+  template <typename U> static const std::string& UnitDims() {
+    static const std::string dims = U{}.dims();
+    return dims;
+  }
+
   template <typename U>
   void Graph(std::string_view key, U value, bool persist = false) const {
     if constexpr (detail::is_pdcsu_unit_v<U>) {
-      Graph(ResolveUnitKey(key, value.dims()), value.value(), persist);
+      Graph(ResolveUnitKey(key, UnitDims<U>()), value.value(), persist);
     } else {
       static_assert(detail::is_pdcsu_unit_v<U>, "must be a PDCSU unit type");
     }
@@ -107,8 +114,7 @@ public:
   template <typename U>
   void RegisterPreference(std::string_view key, U fallback) {
     if constexpr (detail::is_pdcsu_unit_v<U>) {
-      RegisterPreference(
-          ResolveUnitKey(key, fallback.dims()), fallback.value());
+      RegisterPreference(ResolveUnitKey(key, UnitDims<U>()), fallback.value());
     } else {
       static_assert(detail::is_pdcsu_unit_v<U>, "must be a PDCSU unit type");
     }
@@ -128,8 +134,7 @@ public:
 
   template <typename U> U GetPreferenceValue_unit_type(std::string_view key) {
     if constexpr (detail::is_pdcsu_unit_v<U>) {
-      U sample{};
-      return U{GetPreferenceValue_double(ResolveUnitKey(key, sample.dims()))};
+      return U{GetPreferenceValue_double(ResolveUnitKey(key, UnitDims<U>()))};
     } else {
       static_assert(detail::is_pdcsu_unit_v<U>, "must be a PDCSU unit type");
     }
@@ -149,7 +154,7 @@ public:
 
   template <typename U> void SetPreferenceValue(std::string_view key, U value) {
     if constexpr (detail::is_pdcsu_unit_v<U>) {
-      SetPreferenceValue(ResolveUnitKey(key, value.dims()), value.value());
+      SetPreferenceValue(ResolveUnitKey(key, UnitDims<U>()), value.value());
     } else {
       static_assert(detail::is_pdcsu_unit_v<U>, "must be a PDCSU unit type");
     }
@@ -187,6 +192,9 @@ private:
   mutable std::unordered_map<std::string, nt::DoublePublisher, detail::SVHash,
       detail::SVEq>
       graph_doubles_;
+  mutable std::unordered_map<std::string, nt::BooleanPublisher, detail::SVHash,
+      detail::SVEq>
+      graph_bools_;
   mutable std::unordered_map<std::string, wpi::log::DoubleLogEntry,
       detail::SVHash, detail::SVEq>
       graph_double_logs_;
@@ -198,6 +206,12 @@ private:
       graph_string_logs_;
   std::unordered_map<std::string, nt::DoubleEntry, detail::SVHash, detail::SVEq>
       pref_doubles_;
+  std::unordered_map<std::string, nt::BooleanEntry, detail::SVHash,
+      detail::SVEq>
+      pref_bools_;
+  std::unordered_map<std::string, nt::IntegerEntry, detail::SVHash,
+      detail::SVEq>
+      pref_ints_;
   mutable std::unordered_map<std::string, std::string, detail::SVHash,
       detail::SVEq>
       unit_key_cache_;

@@ -66,8 +66,9 @@ bool PoseEKF::Correct(const funkit::robot::calculators::TagObservation& obs,
     const double err2 = nu(0) * nu(0) + meas_r * meas_r * nu(1) * nu(1);
     P_.diagonal() += Eigen::Vector3d{err2, err2, kReleaseHeadingVar};
     S = H * P_ * H.transpose() + R;
+    rejected_streak_ = 0;
   }
-  rejected_streak_ = 0;
+  rejected_streak_ = std::max(rejected_streak_ - 1, 0);
 
   const Eigen::Matrix<double, 3, 2> K = P_ * H.transpose() * S.inverse();
   x_ += K * nu;

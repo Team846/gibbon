@@ -21,6 +21,8 @@ public:
   void OnDisable() override;
   void OnEnable() override;
 
+  void OnReadingsUpdated() override;
+
   void OnPeriodic() override;
 
   void InitTeleop() override;

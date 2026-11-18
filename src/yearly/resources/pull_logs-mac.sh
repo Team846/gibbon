@@ -7,20 +7,27 @@ STAMP=$(date +%m_%d_%H_%M)
 mkdir -p robot_logs nt_backups
 
 total=0
-for dir in /home/lvuser/logs /u/logs; do
-  listing=$(ssh "${SSH_OPTS[@]}" "$ROBOT" "cd $dir 2>/dev/null && find . -type f -exec ls -ln {} \\;") || continue
-  need=()
+pull() {
+  local dir=$1 dest=$2 listing size path have
+  listing=$(ssh "${SSH_OPTS[@]}" "$ROBOT" "cd $dir 2>/dev/null && find . -type f -exec ls -ln {} \\;") || return
+  local need=()
   while read -r _ _ _ _ size _ _ _ path; do
     [ -z "$path" ] && continue
     path=${path#./}
-    have=$(stat -f %z "robot_logs/$path" 2>/dev/null || echo -1)
+    have=$(stat -f %z "$dest/$path" 2>/dev/null || echo -1)
     [ "$have" != "$size" ] && need+=("$path")
   done <<< "$listing"
-  [ ${#need[@]} -eq 0 ] && continue
+  [ ${#need[@]} -eq 0 ] && return
   printf '  %s\n' "${need[@]}"
-  ssh "${SSH_OPTS[@]}" "$ROBOT" "cd $dir && tar cf - $(printf '%q ' "${need[@]}")" | tar xf - -C robot_logs
+  mkdir -p "$dest"
+  ssh "${SSH_OPTS[@]}" "$ROBOT" "cd $dir && tar cf - $(printf '%q ' "${need[@]}")" | tar xf - -C "$dest"
   total=$((total + ${#need[@]}))
-done
+}
+
+pull /home/lvuser/logs robot_logs
+pull /u/logs robot_logs
+pull /home/lvuser/foresting robot_logs/foresting
+pull /u/foresting robot_logs/foresting
 echo "Copied $total new or changed log files into robot_logs/"
 
 scp "${SSH_OPTS[@]}" -q "$ROBOT:/home/lvuser/networktables.json" "nt_backups/networktables_$STAMP.json" &&

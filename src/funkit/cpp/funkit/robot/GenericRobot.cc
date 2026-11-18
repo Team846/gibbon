@@ -13,6 +13,9 @@
 #include <hal/Notifier.h>
 #include <units/time.h>
 
+#include <algorithm>
+#include <array>
+#include <chrono>
 #include <ctre/phoenix6/SignalLogger.hpp>
 
 #include "frc2/command/ParallelDeadlineGroup.h"
@@ -21,6 +24,7 @@
 #include "funkit/control/MonkeyMaster.h"
 #include "funkit/robot/GenericCommand.h"
 #include "funkit/wpilib/NTAction.h"
+#include "funkit/wpilib/TimeSyncServer.h"
 #include "funkit/wpilib/time.h"
 
 namespace funkit::robot {
@@ -63,6 +67,8 @@ void GenericRobot::StartCompetition() {
 
   funkit::base::FunkyLogSystem::Start(20000);
 
+  funkit::wpilib::TimeSyncServer::Start(5809);
+
   // Setup MonkeyMaster
   funkit::control::MonkeyMaster::Setup();
 
@@ -98,6 +104,17 @@ void GenericRobot::StartCompetition() {
   Log("\n********** Robot initialized **********\n");
   HAL_ObserveUserProgramStarting();
 
+  auto ms = [](auto a, auto b) {
+    return std::chrono::duration<double, std::milli>(b - a).count();
+  };
+  constexpr int kProfileLoops = 100;
+  constexpr std::array<const char*, 8> kPhases{"mode", "reads", "scheduler",
+      "periodic", "writes", "motors", "reset_check", "rest"};
+  std::array<double, 8> phase_total{};
+  std::array<double, 8> phase_max{};
+  double loop_max_ms = 0.0;
+  int profile_loops = 0;
+
   for (;;) {
     frc::DriverStation::RefreshData();
     next_loop_time_ += kPeriod;
@@ -122,6 +139,7 @@ void GenericRobot::StartCompetition() {
 
     // Start loop timing
     auto loop_start_time = funkit::wpilib::CurrentFPGATime();
+    auto phase_start = std::chrono::steady_clock::now();
 
     // Get current control mode
     frc::DSControlWord word{};
@@ -159,8 +177,7 @@ void GenericRobot::StartCompetition() {
         // Clear command scheduler
         Log("Clearing command scheduler");
         frc2::CommandScheduler::GetInstance().CancelAll();
-        frc::EventLoop loop;
-        loop.Clear();
+        frc2::CommandScheduler::GetInstance().GetDefaultButtonLoop()->Clear();
         ClearDefaultCommands();
       } else if (mode == Mode::kAutonomous) {
         // Get and run selected auto command
@@ -204,24 +221,33 @@ void GenericRobot::StartCompetition() {
       last_mode_ = mode;
     }
 
+    auto t_mode = std::chrono::steady_clock::now();
+
     // Update subsystem readings
     generic_robot_container_->UpdateReadings();
+    OnReadingsUpdated();
+    auto t_reads = std::chrono::steady_clock::now();
 
     // Tick command scheduler
     frc2::CommandScheduler::GetInstance().Run();
+    auto t_scheduler = std::chrono::steady_clock::now();
 
     // Special-case periodic implemented in FunkyRobot
     OnPeriodic();
+    auto t_periodic = std::chrono::steady_clock::now();
 
     // Update subsystem hardware
     generic_robot_container_->UpdateHardware();
+    auto t_writes = std::chrono::steady_clock::now();
 
     // Tick MonkeyMaster
     funkit::control::MonkeyMaster::Tick(mode == Mode::kDisabled);
+    auto t_motors = std::chrono::steady_clock::now();
 
     if (update_tick_counter_ % 300 == 0 && !mode_changed) {
       funkit::control::MonkeyMaster::CheckForResets();
     }
+    auto t_resets = std::chrono::steady_clock::now();
 
     // Update dashboards
     update_tick_counter_ += 1;
@@ -241,9 +267,11 @@ void GenericRobot::StartCompetition() {
     // Graph("error_count", (int)funkit::base::Loggable::GetErrorCount());
     // Graph("warn_count", (int)funkit::base::Loggable::GetWarnCount());
 
-    Graph("can_bus_usage",
-        (double)(100 *
-                 frc::RobotController::GetCANStatus().percentBusUtilization));
+    if (profile_loops % 10 == 0) {
+      Graph("can_bus_usage",
+          (double)(100 *
+                   frc::RobotController::GetCANStatus().percentBusUtilization));
+    }
     // Graph(
     //     "can_bus_off_count",
     //     frc::RobotController::GetCANStatus().busOffCount);
@@ -255,10 +283,47 @@ void GenericRobot::StartCompetition() {
     ms_t loop_time = funkit::wpilib::CurrentFPGATime() - loop_start_time;
     Graph("loop_time", loop_time);
 
+    const std::array<double, 8> phases{ms(phase_start, t_mode),
+        ms(t_mode, t_reads), ms(t_reads, t_scheduler),
+        ms(t_scheduler, t_periodic), ms(t_periodic, t_writes),
+        ms(t_writes, t_motors), ms(t_motors, t_resets),
+        ms(t_resets, std::chrono::steady_clock::now())};
+    for (size_t i = 0; i < phases.size(); i++) {
+      phase_total[i] += phases[i];
+      phase_max[i] = std::max(phase_max[i], phases[i]);
+    }
+    loop_max_ms = std::max(loop_max_ms, loop_time.value());
+    if (++profile_loops == kProfileLoops) {
+      for (size_t i = 0; i < phases.size(); i++) {
+        Graph(fmt::format("profile/{}_avg_ms", kPhases[i]),
+            phase_total[i] / kProfileLoops);
+        Graph(fmt::format("profile/{}_max_ms", kPhases[i]), phase_max[i]);
+      }
+      auto& timings = generic_robot_container_->SubsystemTimings();
+      for (const auto& [subsystem, timing] : timings) {
+        Graph(fmt::format("profile/subsystem/{}_avg_ms", subsystem->name()),
+            timing.total_ms / kProfileLoops);
+        Graph(fmt::format("profile/subsystem/{}_max_ms", subsystem->name()),
+            timing.max_ms);
+      }
+      timings.clear();
+      Graph("profile/loop_max_ms", loop_max_ms);
+      phase_total.fill(0.0);
+      phase_max.fill(0.0);
+      loop_max_ms = 0.0;
+      profile_loops = 0;
+    }
+
     // Check loop time
     if (loop_time > 2.5 * kPeriod && !mode_changed) {
-      Warn("Loop overrun: {} ms (loop period: {} ms)", loop_time.value(),
-          kPeriod.value() * 1000.0);
+      Warn(
+          "Loop overrun: {} ms (loop period: {} ms) | mode {:.1f} reads {:.1f} "
+          "scheduler {:.1f} periodic {:.1f} writes {:.1f} motors {:.1f} "
+          "reset_check {:.1f} rest {:.1f} ms | slowest subsystem {} {:.1f} ms",
+          loop_time.value(), kPeriod.value() * 1000.0, phases[0], phases[1],
+          phases[2], phases[3], phases[4], phases[5], phases[6], phases[7],
+          generic_robot_container_->SlowestSubsystem(),
+          generic_robot_container_->SlowestSubsystemMs());
 
       next_loop_time_ += loop_time;
     }

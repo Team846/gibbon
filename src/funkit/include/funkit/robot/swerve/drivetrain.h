@@ -167,6 +167,10 @@ private:
     std::string pos_y;
     std::string variance;
     std::string tag_count;
+    std::string latency_ms;
+    std::string synced_latency_ms;
+    std::string sync_rtt_ms;
+    std::string used_synced;
   };
 
   DrivetrainReadings ReadFromHardware() override;
@@ -224,6 +228,7 @@ private:
   bool cached_pose_override_ = false;
   double cached_april_variance_coeff_ = 0.0;
   std::map<size_t, pdcsu::units::second_t> cached_fudge_latencies_{};
+  std::map<size_t, std::string> fudge_latency_keys_{};
   std::map<size_t, AprilTagCameraGraphKeys> april_camera_graph_keys_{};
 
   frc::Field2d MainField_;

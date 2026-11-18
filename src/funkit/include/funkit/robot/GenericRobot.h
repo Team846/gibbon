@@ -32,6 +32,8 @@ public:
 
   virtual void OnDisable() = 0;
 
+  virtual void OnReadingsUpdated() {}
+
   virtual void OnPeriodic() = 0;
 
   virtual void InitTeleop() = 0;

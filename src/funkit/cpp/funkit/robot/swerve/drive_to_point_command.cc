@@ -45,6 +45,8 @@ void DriveToPointCommand::Initialize() {
       initial_distance, initial_velocity, target_.velocity);
 
   Log("Estimated completion time: {} seconds", estimated_time_.value());
+
+  Execute();
 }
 
 void DriveToPointCommand::Execute() {
@@ -152,14 +154,18 @@ bool DriveToPointCommand::IsFinished() {
     }
   }
 
-  auto distance_traveled = (current_point - start_point_).magnitude();
-  auto total_distance = (target_.point - start_point_).magnitude();
+  auto path = target_.point - start_point_;
+  auto moved = current_point - start_point_;
+  auto total_distance = path.magnitude();
   auto distance_remaining = (target_.point - current_point).magnitude();
   auto position_threshold =
       drivetrain_->GetPreferenceValue_unit_type<pdcsu::units::inch_t>(
           "drive_to_point/threshold");
 
-  bool overshot = distance_traveled.value() >= total_distance.value();
+  double progress_in2 =
+      path[0].value() * moved[0].value() + path[1].value() * moved[1].value();
+  bool overshot =
+      progress_in2 >= total_distance.value() * total_distance.value();
   bool within_threshold =
       distance_remaining.value() < position_threshold.value();
 

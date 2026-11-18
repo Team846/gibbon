@@ -123,6 +123,7 @@ TagFrameQueue& AprilTagCalculator::GetFrameQueue(const AprilTagCamera& camera) {
   auto queue = std::make_shared<TagFrameQueue>();
   queue->subscriber = camera.table->GetDoubleArrayTopic("result").Subscribe(
       {}, {.periodic = 0.01, .sendAll = true});
+  queue->sync_rtt = camera.table->GetDoubleTopic("sync_rtt_ms").Subscribe(-1.0);
   nt::NetworkTableInstance::GetDefault().AddListener(queue->subscriber,
       nt::EventFlags::kValueRemote, [queue](const nt::Event& event) {
         pdcsu::units::second_t arrival = funkit::wpilib::CurrentFPGATime();
@@ -205,11 +206,33 @@ ATCalculatorOutput AprilTagCalculator::calculate(ATCalculatorInput input) {
       fudge = input.fudge_latency.at(config.camera_id);
     }
 
+    const double sync_rtt_ms = queue.sync_rtt.Get();
+    const bool sync_ok = sync_rtt_ms > 0.0 && sync_rtt_ms < 50.0;
+
     for (const TagFrame& frame : queue.draining) {
       const std::vector<double>& result = frame.result;
       if (result.size() < 2 || (result.size() - 2) % 3 != 0) { continue; }
       pdcsu::units::second_t capture_time =
           frame.arrival - pdcsu::units::second_t{result[1]} - fudge;
+      bool used_synced = false;
+      double synced_latency_ms = -1.0;
+      if (sync_ok && result[0] > 0.0) {
+        pdcsu::units::second_t synced_capture =
+            pdcsu::units::second_t{result[0]} - input.synced_capture_delay;
+        pdcsu::units::second_t synced_age = frame.arrival - synced_capture;
+        if (synced_age >= 0_s_ && synced_age < 250_ms_) {
+          synced_latency_ms = pdcsu::units::ms_t{now - synced_capture}.value();
+          if (input.use_synced_capture) {
+            capture_time = synced_capture;
+            used_synced = true;
+          }
+        }
+      }
+      AprilTagCameraTiming& timing = output.camera_timing[config.camera_id];
+      timing.latency_ms = pdcsu::units::ms_t{now - capture_time}.value();
+      timing.synced_latency_ms = synced_latency_ms;
+      timing.sync_rtt_ms = sync_rtt_ms;
+      timing.used_synced = used_synced;
       if (now - capture_time > 200_ms_) { continue; }
 
       output.new_frames++;

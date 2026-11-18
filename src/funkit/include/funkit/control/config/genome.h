@@ -4,6 +4,11 @@
 #include <units/time.h>
 #include <units/voltage.h>
 
+#include <chrono>
+#include <map>
+#include <string>
+#include <utility>
+
 #include "funkit/base/Loggable.h"
 #include "pdcsu_units.h"
 
@@ -125,6 +130,30 @@ struct SubsystemGenomeHelper {
   }
 
   static MotorGenome LoadGenomePreferences(
+      funkit::base::Loggable& sub, const std::string& genome_name) {
+    struct CachedGenome {
+      std::chrono::steady_clock::time_point loaded;
+      MotorGenome genome;
+    };
+    static std::map<std::pair<const funkit::base::Loggable*, std::string>,
+        CachedGenome>
+        cache;
+    auto now = std::chrono::steady_clock::now();
+    auto [it, inserted] =
+        cache.try_emplace(std::make_pair(&sub, genome_name), CachedGenome{});
+    if (inserted) {
+      it->second.genome = ReadGenomePreferences(sub, genome_name);
+      it->second.loaded =
+          now - std::chrono::milliseconds(125 * ((cache.size() - 1) % 8));
+    } else if (now - it->second.loaded > std::chrono::seconds(1)) {
+      it->second.genome = ReadGenomePreferences(sub, genome_name);
+      it->second.loaded = now;
+    }
+    return it->second.genome;
+  }
+
+private:
+  static MotorGenome ReadGenomePreferences(
       funkit::base::Loggable& sub, const std::string& genome_name) {
     MotorGenome genome;
 

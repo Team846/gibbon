@@ -1,6 +1,7 @@
 #pragma once
 
 #include <networktables/DoubleArrayTopic.h>
+#include <networktables/DoubleTopic.h>
 #include <networktables/NetworkTable.h>
 
 #include <deque>
@@ -30,6 +31,9 @@ struct ATCalculatorInput {
   double priority_variance_scale = 1.0;
 
   pdcsu::units::degree_t heading_offset{0};
+
+  bool use_synced_capture = false;
+  pdcsu::units::second_t synced_capture_delay{0};
 };
 
 struct TagObservation {
@@ -49,6 +53,13 @@ struct AprilTagCameraResult {
   int tag_count = 0;
 };
 
+struct AprilTagCameraTiming {
+  double latency_ms = -1.0;
+  double synced_latency_ms = -1.0;
+  double sync_rtt_ms = -1.0;
+  bool used_synced = false;
+};
+
 struct ATCalculatorOutput {
   Vector2D pos;
   double variance;
@@ -57,6 +68,7 @@ struct ATCalculatorOutput {
   bool camera_disconnect = false;
   int new_frames = 0;
   std::map<size_t, AprilTagCameraResult> camera_results{};
+  std::map<size_t, AprilTagCameraTiming> camera_timing{};
   std::vector<TagObservation> observations{};
 };
 
@@ -97,6 +109,7 @@ struct TagFrame {
 
 struct TagFrameQueue {
   nt::DoubleArraySubscriber subscriber;
+  nt::DoubleSubscriber sync_rtt;
   std::mutex mutex;
   std::vector<TagFrame> pending;
   std::vector<TagFrame> draining;

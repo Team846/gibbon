@@ -45,6 +45,7 @@ SparkMXFX_interm::SparkMXFX_interm(int can_id, pdcsu::units::ms_t max_wait_time,
       esc_->GetClosedLoopController()};
 
   set_last_error(esc_->Configure(configs, CONFIG_RESET, NO_PERSIST_PARAMS));
+  set_last_error(esc_->ClearFaults());
   set_last_error(esc_->SetCANTimeout(static_cast<int>(max_wait_time.value())));
 }
 

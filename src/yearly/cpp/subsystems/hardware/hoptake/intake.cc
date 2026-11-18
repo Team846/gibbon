@@ -41,7 +41,7 @@ void IntakeSubsystem::Setup() {
 
   esc_.EnableStatusFrames(
       {StatusFrame::kPositionFrame, StatusFrame::kVelocityFrame}, ms_t{20},
-      ms_t{5}, ms_t{5}, ms_t{20});
+      ms_t{10}, ms_t{10}, ms_t{20});
   esc_.SetPosition(meter_t{0});
 }
 

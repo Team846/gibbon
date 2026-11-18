@@ -3,6 +3,7 @@
 #include <frc/DriverStation.h>
 
 #include <array>
+#include <cmath>
 
 #include "funkit/math/quaternion.h"
 
@@ -48,14 +49,14 @@ void ShootingCalculator::Setup() {
     loggable_opt->RegisterPreference(row.key, row.seed);
   }
   loggable_opt->RegisterPreference("swim/twistGain", -1.43);
-  loggable_opt->RegisterPreference("swim/tofGain", 0.35);
+  loggable_opt->RegisterPreference("swim/tofGainPhys", 1.1483);
   loggable_opt->RegisterPreference("swim/twistVelCompensation", 0.54);
   loggable_opt->RegisterPreference("swim/yawRateFactor", 1.85);
   loggable_opt->RegisterPreference("swim/drawTwdDriver", 0.0);
   loggable_opt->RegisterPreference("pass/passGain", 1.45);
   loggable_opt->RegisterPreference("bump/tilt_tol", 2.0_deg_);
   loggable_opt->RegisterPreference("2ptvel/kPointBlank", 24.2_fps_);
-  loggable_opt->RegisterPreference("2ptvel/kAdditive", 4.05);
+  loggable_opt->RegisterPreference("2ptvel/kAdditivePhys", 1.2192);
 }
 
 double ShootingCalculator::GetYawRateFactor() {
@@ -81,7 +82,7 @@ fps_t ShootingCalculator::GetBaseVelocity(
   if (denom <= 0.02_in_) { return 0_fps_; }
   UnitCompound<fps_t, fps_t> physics_vel_sksq =
       16.0_fps2_ * shot_distance * shot_distance / denom;
-  return u_sqrt(physics_vel_sksq) / u_cos(shot_angle);
+  return fps_t{std::sqrt(physics_vel_sksq.value())} / u_cos(shot_angle);
 }
 
 fps_t ShootingCalculator::GetTableVelocity(inch_t distance) {
@@ -155,9 +156,9 @@ void ShootingCalculator::Calculate(
   foot_t delta_mag = delta.magnitude();
 
   second_t tof =
-      delta_mag / 100_in_ * 0.375_s_ *
+      delta_mag / 100_in_ * 0.1143_s_ *
       loggable.GetPreferenceValue_double(
-          "swim/tofGain");  // Initial guess (likely lower than actual)
+          "swim/tofGainPhys");  // Initial guess (likely lower than actual)
 
   // Recursive iteration to find TOF
   for (int i = 0; i < 10; i++) {
@@ -177,7 +178,7 @@ void ShootingCalculator::Calculate(
     auto shot_vel = GetBaseVelocity(shot_angle, delta_mag);
 
     tof = delta_mag / (shot_vel * u_cos(shot_angle)) *
-          loggable.GetPreferenceValue_double("swim/tofGain");
+          loggable.GetPreferenceValue_double("swim/tofGainPhys");
   }
 
   delta_mag = delta.magnitude();
@@ -195,7 +196,7 @@ void ShootingCalculator::Calculate(
   auto shot_vel = GetBaseVelocity(outputs_.shot_angle, delta_mag);
   outputs_.shooter_vel =
       loggable.GetPreferenceValue_unit_type<fps_t>("2ptvel/kPointBlank") +
-      loggable.GetPreferenceValue_double("2ptvel/kAdditive") *
+      loggable.GetPreferenceValue_double("2ptvel/kAdditivePhys") *
           (shot_vel - shot_ptbvel);
 
   /* Calculate and apply turret targets */
@@ -289,8 +290,9 @@ pdcsu::util::math::Vector2D ShootingCalculator::SimulateTrajectory(
   second_t time_to_apex = vertical_vel / 32.0_fps2_;
   foot_t height_at_apex = vertical_vel / 2.0 * time_to_apex;
 
-  second_t time_apex_to_target =
-      u_sqrt(2 * u_max(0_in_, height_at_apex - kDeltaHeight) / 32.0_fps2_);
+  second_t time_apex_to_target{
+      std::sqrt((2 * u_max(0_in_, height_at_apex - kDeltaHeight) / 32.0_fps2_)
+                    .to_base())};
 
   return {compl_vel[0] * u_max(0.25_s_, time_apex_to_target + time_to_apex),
       compl_vel[1] * u_max(0.25_s_, time_apex_to_target + time_to_apex)};

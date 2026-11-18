@@ -57,12 +57,7 @@ void Loggable::Graph(std::string_view key, double value, bool persist) const {
 }
 
 void Loggable::Graph(std::string_view key, int value, bool persist) const {
-  if (!persist && !ShouldGraph()) {
-    LogGraphIfChanged(
-        graph_double_logs_, name_, key, static_cast<double>(value));
-    return;
-  }
-  frc::SmartDashboard::PutNumber(fmt::format("{}/{}", name_, key), value);
+  Graph(key, static_cast<double>(value), persist);
 }
 
 void Loggable::Graph(std::string_view key, bool value, bool persist) const {
@@ -70,7 +65,17 @@ void Loggable::Graph(std::string_view key, bool value, bool persist) const {
     LogGraphIfChanged(graph_bool_logs_, name_, key, value);
     return;
   }
-  frc::SmartDashboard::PutBoolean(fmt::format("{}/{}", name_, key), value);
+  auto it = graph_bools_.find(key);
+  if (it == graph_bools_.end()) {
+    it = graph_bools_
+             .try_emplace(std::string{key},
+                 nt::NetworkTableInstance::GetDefault()
+                     .GetTable("SmartDashboard")
+                     ->GetBooleanTopic(fmt::format("{}/{}", name_, key))
+                     .Publish())
+             .first;
+  }
+  it->second.Set(value);
 }
 
 void Loggable::Graph(
@@ -155,13 +160,33 @@ double Loggable::GetPreferenceValue_double(std::string_view key) {
 }
 
 bool Loggable::GetPreferenceValue_bool(std::string_view key) {
-  if (!CheckPreferenceKeyExists(key)) { return false; }
-  return frc::Preferences::GetBoolean(fmt::format("{}/{}", name_, key));
+  auto it = pref_bools_.find(key);
+  if (it == pref_bools_.end()) {
+    if (!CheckPreferenceKeyExists(key)) { return false; }
+    it = pref_bools_
+             .try_emplace(std::string{key},
+                 nt::NetworkTableInstance::GetDefault()
+                     .GetTable("Preferences")
+                     ->GetBooleanTopic(fmt::format("{}/{}", name_, key))
+                     .GetEntry(false))
+             .first;
+  }
+  return it->second.Get();
 }
 
 int Loggable::GetPreferenceValue_int(std::string_view key) {
-  if (!CheckPreferenceKeyExists(key)) { return 0; }
-  return frc::Preferences::GetInt(fmt::format("{}/{}", name_, key));
+  auto it = pref_ints_.find(key);
+  if (it == pref_ints_.end()) {
+    if (!CheckPreferenceKeyExists(key)) { return 0; }
+    it = pref_ints_
+             .try_emplace(std::string{key},
+                 nt::NetworkTableInstance::GetDefault()
+                     .GetTable("Preferences")
+                     ->GetIntegerTopic(fmt::format("{}/{}", name_, key))
+                     .GetEntry(0))
+             .first;
+  }
+  return static_cast<int>(it->second.Get());
 }
 
 std::string Loggable::GetPreferenceValue_string(std::string_view key) {

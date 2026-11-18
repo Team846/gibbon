@@ -3,6 +3,7 @@
 #include <algorithm>
 #include <cmath>
 
+#include "funkit/math/collection.h"
 #include "pdcsu_units.h"
 #include "util/math/uvec.h"
 
@@ -29,8 +30,13 @@ SwerveOdometryOutput SwerveOdometryCalculator::calculate(
 
   std::array<Vec2D, 4> wheel_vecs;
   for (int i = 0; i < 4; i++) {
-    wheel_vecs[i] = Vec2D{module_diffs[i], inputs.steer_pos[i], true};
+    degree_t mid_steer =
+        inputs.steer_pos[i] - funkit::math::CoterminalDifference(
+                                  inputs.steer_pos[i], previous_steer_pos_[i]) /
+                                  2.0;
+    wheel_vecs[i] = Vec2D{module_diffs[i], mid_steer, true};
   }
+  previous_steer_pos_ = inputs.steer_pos;
 
   constexpr int kNumWheels = 4;
   std::array<inch_t, kNumWheels> wx;
@@ -103,24 +109,9 @@ SwerveOdometryOutput SwerveOdometryCalculator::calculate(
     }
   }
 
-  Vec2D displacement;
+  Vec2D displacement = Vec2D{dx, dy} * inputs.odom_ff_;
 
-  constexpr pdcsu::units::radian_t EPSILON_dtheta{1e-6};
-
-  if (pdcsu::units::u_abs(dtheta) > EPSILON_dtheta) {
-    double dtheta_val = dtheta.value();
-    double sin_term = pdcsu::units::u_sin(dtheta) / dtheta_val;
-    double cos_term = (1.0 - pdcsu::units::u_cos(dtheta)) / dtheta_val;
-
-    displacement =
-        Vec2D{dx * sin_term + dy * cos_term, dy * sin_term - dx * cos_term};
-  } else {
-    displacement = Vec2D{dx, dy};
-  }
-
-  displacement *= inputs.odom_ff_;
-
-  last_position_ += displacement.rotate(inputs.bearing - dtheta);
+  last_position_ += displacement.rotate(inputs.bearing - dtheta / 2.0);
 
   odom_bearing_ += dtheta;
 

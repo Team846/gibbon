@@ -96,16 +96,19 @@ DrivetrainSubsystem::DrivetrainSubsystem(DrivetrainConfigs configs)
 
   RegisterPreference("april_tags/april_variance_coeff", 0.15);
   RegisterPreference("april_tags/prioritized_tag_variance_scale", 0.4);
+  RegisterPreference("april_tags/use_synced_capture", false);
+  RegisterPreference("april_tags/synced_capture_delay", pdcsu::units::ms_t{0});
   for (const auto& config : configs.april_camera_configs) {
-    RegisterPreference(
-        "april_tags/fudge_latency" + std::to_string(config.camera_id),
-        pdcsu::units::ms_t{50.0});
+    fudge_latency_keys_[config.camera_id] =
+        "april_tags/fudge_latency" + std::to_string(config.camera_id);
   }
   if (configs.turret_camera_config.has_value()) {
-    RegisterPreference(
-        "april_tags/fudge_latency" +
-            std::to_string(configs.turret_camera_config.value().camera_id),
-        pdcsu::units::ms_t{50.0});
+    size_t camera_id = configs.turret_camera_config.value().camera_id;
+    fudge_latency_keys_[camera_id] =
+        "april_tags/fudge_latency" + std::to_string(camera_id);
+  }
+  for (const auto& [camera_id, key] : fudge_latency_keys_) {
+    RegisterPreference(key, pdcsu::units::ms_t{50.0});
   }
 
   RegisterPreference("drive_to_point/kC", 0.9);
@@ -168,6 +171,10 @@ DrivetrainSubsystem::DrivetrainSubsystem(DrivetrainConfigs configs)
         .pos_y = base + "pos_y",
         .variance = base + "variance",
         .tag_count = base + "tag_count",
+        .latency_ms = base + "latency_ms",
+        .synced_latency_ms = base + "synced_latency_ms",
+        .sync_rtt_ms = base + "sync_rtt_ms",
+        .used_synced = base + "used_synced",
     };
   }
   if (configs.turret_camera_config.has_value()) {
@@ -178,6 +185,10 @@ DrivetrainSubsystem::DrivetrainSubsystem(DrivetrainConfigs configs)
         .pos_y = base + "pos_y",
         .variance = base + "variance",
         .tag_count = base + "tag_count",
+        .latency_ms = base + "latency_ms",
+        .synced_latency_ms = base + "synced_latency_ms",
+        .sync_rtt_ms = base + "sync_rtt_ms",
+        .used_synced = base + "used_synced",
     };
   }
 
@@ -227,7 +238,7 @@ void DrivetrainSubsystem::ZeroBearing() {
   bearing_correction_at_ = 0.0_deg_;
   pose_ekf_.SetHeadingOffset(0_deg_);
 
-  constexpr int kMaxAttempts = 5;
+  const int kMaxAttempts = frc::DriverStation::IsEnabled() ? 1 : 5;
   constexpr int kSleepTimeMs = 500;
 
   if (!frc::DriverStation::IsAutonomous()) {
@@ -264,9 +275,10 @@ void DrivetrainSubsystem::ZeroBearing() {
       }
     }
 
-    Warn("Attempt to zero failed, sleeping {} ms...", kSleepTimeMs);
-
-    std::this_thread::sleep_for(std::chrono::milliseconds(kSleepTimeMs));
+    if (attempts < kMaxAttempts) {
+      Warn("Attempt to zero failed, sleeping {} ms...", kSleepTimeMs);
+      std::this_thread::sleep_for(std::chrono::milliseconds(kSleepTimeMs));
+    }
   }
   Error("Unable to zero after {} attempts, forcing zero", kMaxAttempts);
   std::cout << "Unable to zero after" << kMaxAttempts
@@ -537,6 +549,8 @@ DrivetrainReadings DrivetrainSubsystem::ReadFromHardware() {
       .velocity = velocity,
   };
 
+  pdcsu::util::math::uVec<pdcsu::units::fps2_t, 2> accl = GetAcceleration();
+
   Vector2D ekf_delta{};
   double ekf_odom_scale = 1.0;
   if (compensated_delta.magnitude().value() < 10.0) {
@@ -547,8 +561,8 @@ DrivetrainReadings DrivetrainSubsystem::ReadFromHardware() {
     pdcsu::util::math::uVec<pdcsu::units::fps2_t, 2> wheel_accel{
         dv[0] / dt, dv[1] / dt};
     prev_wheel_velocity_ = velocity;
-    auto accel_disagreement = pdcsu::units::u_abs(
-        wheel_accel.magnitude() - GetAcceleration().magnitude());
+    auto accel_disagreement =
+        pdcsu::units::u_abs(wheel_accel.magnitude() - accl.magnitude());
     Graph("skid/accel_disagreement", accel_disagreement);
 
     double is_skidding =
@@ -592,16 +606,9 @@ DrivetrainReadings DrivetrainSubsystem::ReadFromHardware() {
   cached_april_variance_coeff_ =
       GetPreferenceValue_double("april_tags/april_variance_coeff");
 
-  for (const auto& config : configs_.april_camera_configs) {
-    cached_fudge_latencies_[config.camera_id] =
-        GetPreferenceValue_unit_type<pdcsu::units::ms_t>(
-            "april_tags/fudge_latency" + std::to_string(config.camera_id));
-  }
-  if (configs_.turret_camera_config.has_value()) {
-    size_t camera_id = configs_.turret_camera_config.value().camera_id;
+  for (const auto& [camera_id, key] : fudge_latency_keys_) {
     cached_fudge_latencies_[camera_id] =
-        GetPreferenceValue_unit_type<pdcsu::units::ms_t>(
-            "april_tags/fudge_latency" + std::to_string(camera_id));
+        GetPreferenceValue_unit_type<pdcsu::units::ms_t>(key);
   }
 
   const bool is_blue =
@@ -613,7 +620,10 @@ DrivetrainReadings DrivetrainSubsystem::ReadFromHardware() {
   funkit::robot::calculators::ATCalculatorOutput tag_pos =
       tag_pos_calculator.calculate({new_pose, yaw_rate,
           cached_april_variance_coeff_, cached_fudge_latencies_, is_blue,
-          prioritzed_variance_scale, bearing_correction_at_});
+          prioritzed_variance_scale, bearing_correction_at_,
+          GetPreferenceValue_bool("april_tags/use_synced_capture"),
+          GetPreferenceValue_unit_type<pdcsu::units::ms_t>(
+              "april_tags/synced_capture_delay")});
 
   if (tag_pos.camera_disconnect && !previous_camera_disconnect) {
     Error("Camera disconnect");
@@ -658,6 +668,14 @@ DrivetrainReadings DrivetrainSubsystem::ReadFromHardware() {
     Graph(keys->second.pos_y, camera_result.pos[1]);
     Graph(keys->second.variance, camera_result.variance);
     Graph(keys->second.tag_count, camera_result.tag_count);
+  }
+  for (const auto& [camera_id, timing] : tag_pos.camera_timing) {
+    auto keys = april_camera_graph_keys_.find(camera_id);
+    if (keys == april_camera_graph_keys_.end()) { continue; }
+    Graph(keys->second.latency_ms, timing.latency_ms);
+    Graph(keys->second.synced_latency_ms, timing.synced_latency_ms);
+    Graph(keys->second.sync_rtt_ms, timing.sync_rtt_ms);
+    Graph(keys->second.used_synced, timing.used_synced ? 1.0 : 0.0);
   }
   if (!cached_use_ekf_ && tag_pos.bearing_from_tags_valid &&
       velocity.magnitude() < 2_fps_) {
@@ -723,8 +741,6 @@ DrivetrainReadings DrivetrainSubsystem::ReadFromHardware() {
   Graph("readings/velocity_x", new_pose.velocity[0]);
   Graph("readings/velocity_y", new_pose.velocity[1]);
   Graph("readings/odom_bearing", odom_output.odom_bearing);
-
-  pdcsu::util::math::uVec<pdcsu::units::fps2_t, 2> accl = GetAcceleration();
 
   Graph("readings/accel_x", accl[0]);
   Graph("readings/accel_y", accl[1]);

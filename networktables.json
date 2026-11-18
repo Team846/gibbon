@@ -488,9 +488,9 @@
     }
   },
   {
-    "name": "/Preferences/ShootingCalculator/2ptvel/kAdditive",
+    "name": "/Preferences/ShootingCalculator/2ptvel/kAdditivePhys",
     "type": "double",
-    "value": 4.0,
+    "value": 1.2192,
     "properties": {
       "persistent": true
     }
@@ -1320,9 +1320,9 @@
     }
   },
   {
-    "name": "/Preferences/ShootingCalculator/swim/tofGain",
+    "name": "/Preferences/ShootingCalculator/swim/tofGainPhys",
     "type": "double",
-    "value": 0.35,
+    "value": 1.1483,
     "properties": {
       "persistent": true
     }
@@ -1612,7 +1612,7 @@
   {
     "name": "/Preferences/SwerveDrivetrain/drive_vel_kP",
     "type": "double",
-    "value": 0.05,
+    "value": 0.0,
     "properties": {
       "persistent": true
     }

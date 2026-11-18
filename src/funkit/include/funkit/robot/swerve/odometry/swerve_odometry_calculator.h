@@ -46,6 +46,7 @@ public:
 
 private:
   pdcsu::util::math::uVec<pdcsu::units::inch_t, 4> previous_module_positions_;
+  std::array<pdcsu::units::degree_t, 4> previous_steer_pos_{};
 
   Vector2D last_position_;
 

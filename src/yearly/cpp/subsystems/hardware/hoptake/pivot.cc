@@ -49,14 +49,13 @@ void PivotSubsystem::Setup() {
   esc2_.Setup(genome_backup, pivot_plant);
 
   esc_.EnableStatusFrames(
-      {StatusFrame::kPositionFrame, StatusFrame::kVelocityFrame,
-          StatusFrame::kLeader},
-      ms_t{20}, ms_t{5}, ms_t{5}, ms_t{20});
+      {StatusFrame::kPositionFrame, StatusFrame::kVelocityFrame}, ms_t{20},
+      ms_t{10}, ms_t{10}, ms_t{20});
 
   esc_.SetPosition(radian_t{0});
 
   esc2_.EnableStatusFrames(
-      {StatusFrame::kPositionFrame}, ms_t{20}, ms_t{5}, ms_t{5}, ms_t{20});
+      {StatusFrame::kPositionFrame}, ms_t{20}, ms_t{10}, ms_t{10}, ms_t{20});
   esc2_.SetPosition(radian_t{0});
 }
 

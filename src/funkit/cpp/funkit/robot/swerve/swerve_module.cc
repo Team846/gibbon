@@ -218,8 +218,12 @@ SwerveModuleReadings SwerveModuleSubsystem::ReadFromHardware() {
   Graph("readings/drive_motor_pos", readings.drive_pos);
   Graph("readings/steer_motor_pos", readings.steer_pos);
 
-  units::degree_t cancoder_pos_wpi = cancoder_.GetAbsolutePosition().GetValue();
-  Graph("readings/cancoder_pos", degree_t{cancoder_pos_wpi.to<double>()});
+  if (++cancoder_graph_ctr_ >= 10) {
+    cancoder_graph_ctr_ = 0;
+    units::degree_t cancoder_pos_wpi =
+        cancoder_.GetAbsolutePosition().GetValue();
+    Graph("readings/cancoder_pos", degree_t{cancoder_pos_wpi.to<double>()});
+  }
 
   return readings;
 }

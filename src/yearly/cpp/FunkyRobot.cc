@@ -148,10 +148,12 @@ void FunkyRobot::ClearDefaultCommands() {
   container_.hoptake_ss_.RemoveDefaultCommand();
 }
 
-void FunkyRobot::OnPeriodic() {
+void FunkyRobot::OnReadingsUpdated() {
   ShootingCalculator::Calculate(
       &container_, container_.control_input_.GetReadings().pass_mode);
+}
 
+void FunkyRobot::OnPeriodic() {
   if (container_.control_input_.GetReadings().hood_trim_ccw) {
     container_.scorer_ss_.shooter.StartGraph();
   }
